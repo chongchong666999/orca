@@ -81,7 +81,7 @@ cocos-agent.app/Contents/Resources/
 | S4.1 | 全局安装器（链接、SDK、setup、MCP）                  | cocos-agent | S2.3、S1.4             | 我+你 | 待做     |
 | S4.2 | 检测旧的 npm 全局安装                                | cocos-agent | S4.1                   | 我    | 待做     |
 | S4.3 | 设置页入口，并隐藏 Orca 原有的「安装 orca 命令」     | cocos-agent | S4.2                   | 我+你 | 待做     |
-| S5.1 | 版本号和「关于」页                                   | cocos-agent | —                      | 我+你 | 待做     |
+| S5.1 | 版本号和「关于」页                                   | cocos-agent | —                      | 我+你 | 待你验证 |
 | S5.2 | ad-hoc 签名和首次打开说明                            | cocos-agent | S2.3                   | 我    | 待做     |
 | S5.3 | release 构建脚本（dmg、zip、sha256）                 | cocos-agent | S5.1、S5.2             | 我+你 | 待做     |
 | S5.4 | 在干净环境验收                                       | —           | S5.3                   | 你    | 待做     |
@@ -108,6 +108,7 @@ loop 不会因为这些步骤停下，会先做其他能做的步骤。做完了
   1. 已有编辑器标签时显示「Go to Cocos Creator」，点了回到那个标签，不会新建。
   2. 点「Stop Cocos Creator」：标签关闭，编辑器地址打不开；再点「Cocos Creator」会重新启动并打开新标签。
   3. 普通仓库的「+」菜单里没有这两项。
+- **S5.1**：用新打出的调试包（`node config/scripts/build-cocos-agent-mac.mjs --skip-typecheck`），打开后菜单「cocos-agent → 关于 cocos-agent」，应显示「Version 0.1.0 (Orca 版本号)」；设置 → 更新里的 Current version 仍是 Orca 版本。
 - **S3.4 端到端**（S1.6 之后）：
   1. 关掉编辑器标签，`ls ~/.context-engine/editor/running/` 里记录还在，编辑器进程还在；10 分钟后进程退出、记录消失。
   2. 在两个 Cocos 项目之间来回切换，编辑器标签不重新加载、端口不变。
@@ -196,7 +197,7 @@ loop 不会因为这些步骤停下，会先做其他能做的步骤。做完了
 - 用 IPC 暴露给渲染进程，preload 放在新文件里。
 - 开发模式（`pnpm dev`）用环境变量 `A5_GAME_CONTEXT_BIN` 指定 a5-game-context。
 - 上游改动：
-  - `src/main/startup/main-process-ready-runtime.ts`：加 1 行注册；
+  - `src/main/startup/main-process-ready-runtime.ts`：加 1 行注册（S5.1 时挪到 `main-process-ipc-bootstrap.ts`，见 COCOS-AGENT.md）；
   - `src/preload/index.ts`：加 1 行引入。
 - 完成标准：
   - 我：node 侧类型检查通过；解析和进程调用的逻辑有必要的测试（遵守 AGENTS.md 的测试规则）；
@@ -255,7 +256,7 @@ loop 不会因为这些步骤停下，会先做其他能做的步骤。做完了
 
 ### P5 本地出 v0.1.0（mac arm64）
 
-- **S5.1 版本号和「关于」页**：按 D4 实现。
+- **S5.1 版本号和「关于」页**：按 D4 实现。实际做法：`src/shared/cocos-agent/cocos-agent-version.ts` 定义 `COCOS_AGENT_VERSION = '0.1.0'`；`gpu-lifecycle.ts` 里「关于」面板的 `appVersion` 改用它（上游 1 行），mac 上显示「Version 0.1.0 (Orca 构建号)」。设置页「更新」里的 Current version 仍是 Orca 内部版本（上游测试断言了原文，D4 也只要求「关于」）。验证：你打开 cocos-agent → 菜单「关于 cocos-agent」，看到 0.1.0。
 - **S5.2 ad-hoc 签名和首次打开说明**：.app 和内置的 a5-game-context 原生二进制、dylib 都用 ad-hoc 签名，`codesign --verify --deep` 通过；在 `COCOS-AGENT.md` 写首次打开的方法（右键选「打开」，或 `xattr -dr com.apple.quarantine /Applications/cocos-agent.app`）。
 - **S5.3 release 构建脚本**：`build-cocos-agent-mac.mjs --release`，产出 arm64 的 dmg、zip 和 sha256。
 - **S5.4 在干净环境验收**：找另一台 Mac，或者新建一个系统用户：
@@ -340,3 +341,4 @@ loop 不会因为这些步骤停下，会先做其他能做的步骤。做完了
 | 2026-11-05 | S3.2 补提交 | 上游 `.gitignore` 忽略 `src/**/*.d.ts`，`window.cocosAgent` 的类型声明没进上一个提交，干净 checkout 会类型检查失败。改为 `src/renderer/src/cocos-agent/cocos-agent-window-types.ts`，内容不变；web 侧 tsc、oxlint 通过                                                                                                                                                                                                                 | 纯文件改名，未单独审核                                                                                                                                                                                                                                                                            | 见本行所在提交 |
 | 2026-11-06 | S3.3        | 待你验证。新增 `CocosEditorMenuItems.tsx`、`cocos-editor-tabs.ts`、`cocos-workspace-project.ts`（S3.2 的渲染进程代码拆分后共用）；上游 `tab-bar-static-create-menu.tsx` 3 行（计划写的是另外两个文件，见 S3.3 详情）。web 侧 tsc、oxlint 三套配置、oxfmt 通过；tab-bar 与首个界面相关 87 个测试文件、809 个测试通过                                                                                                                    | sol high full-access。第 1 轮 `f321c625`：1 medium（打开请求没合并，并发会建重复标签），已改。第 2 轮 `d91a2cc7`：pass                                                                                                                                                                            | 见本行所在提交 |
 | 2026-11-06 | S3.4        | 待你验证。新增 `src/main/cocos-agent/cocos-editor-quit.ts`、`src/renderer/src/cocos-agent/cocos-editor-tab-refresh.ts`；service 增加 `shutdownForQuit`；编辑器标签地址加 `cocos-agent=editor` 标记，恢复的旧标签自动换成可用的；没有新的上游改动。node 与 web 侧 tsc、oxlint 三套配置、oxfmt 通过；新增 2 个测试；90 个测试文件、819 个测试通过（中途修了测试替身缺 `window.setTimeout`、缺 `browserTabsByWorktree` 引起的 12 个失败） | sol high full-access。第 1 轮 `6ca95892`：4 medium（关唯一旧标签回欢迎页；焦点判断用错字段；用户关掉旧标签后仍新建；退出漏掉启动中的编辑器、停止排在打开后面），已改。第 2 轮 `3435d3ac`：pass                                                                                                    | 见本行所在提交 |
+| 2026-11-06 | S5.1        | 待你验证。新增 `COCOS_AGENT_VERSION`；`gpu-lifecycle.ts` 的「关于」面板改用它（上游 1 行）。另修 S3.1 回归：IPC 注册从 `main-process-ready-runtime.ts` 挪到 `main-process-ipc-bootstrap.ts`，上游启动测试恢复通过。node 侧 tsc、oxlint、oxfmt 通过；main/startup、menu、preload、cocos-agent、updater 共 1352 个测试通过，5 个失败均为沙箱禁止写 /tmp 的 updater 测试                                                                  | sol high full-access。第 1 轮 `a7b44146`：pass                                                                                                                                                                                                                                                    | 见本行所在提交 |

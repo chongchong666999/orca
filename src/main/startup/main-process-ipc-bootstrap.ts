@@ -14,8 +14,10 @@ import {
   structuredAgentSessionsHeld
 } from '../native-chat/agent-session-wire/structured-agent-session-registry'
 import { subscribeAgentSessionUploadRemoval } from '../native-chat/agent-session-attachments/agent-session-attachment-store-registry'
+import { registerCocosAgentIpc } from '../cocos-agent/cocos-agent-ipc'
 
 export function registerMainProcessIpcHandlers(): void {
+  registerCocosAgentIpc()
   ipcMain.handle('app:awaitFirstWindowStartupServices', async () => {
     await Promise.all([
       state.firstWindowStartupServicesReady,
