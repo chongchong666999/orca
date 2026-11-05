@@ -1,0 +1,70 @@
+# cocos-agent 分支说明
+
+cocos-agent 基于 [Orca](https://github.com/stablyai/orca)（MIT 协议，保留原版权声明）。分支 `dev/0.1.0` 从 Orca `main` 切出，并会定期同步上游。
+
+## 改动原则：尽量少碰上游文件
+
+- 品牌和打包相关的设置都放在**新文件**里。上游不会有同名文件，所以同步时不会冲突。
+- 必须改上游文件时，只改一行常量或一行代码，不移动代码。
+- 每改一处上游文件，都要登记在下面的表里。同步出现冲突时，先查这张表。
+
+### 新增文件（不会冲突）
+
+| 文件                                            | 作用                                                                    |
+| ----------------------------------------------- | ----------------------------------------------------------------------- |
+| `config/electron-builder.cocos-agent.cjs`       | 在 Orca 打包配置的基础上，改 appId、产品名、用户数据目录名和 URL scheme |
+| `config/scripts/build-cocos-agent-mac.mjs`      | 本机调试包：不签名，只打本机 CPU 架构，只生成 .app，不出 dmg            |
+| `src/main/updater/cocos-agent-updater-setup.ts` | 关闭自动更新（Orca 的更新源写死为 stablyai/orca）                       |
+| `COCOS-AGENT.md`                                | 本文件（上游 `.gitignore` 忽略了 `docs/`，所以放在根目录）              |
+
+### 改动的上游文件（可能冲突）
+
+| 文件                                        | 改动                                                                    | 冲突时                                                |
+| ------------------------------------------- | ----------------------------------------------------------------------- | ----------------------------------------------------- |
+| `src/main/startup/dev-instance-identity.ts` | 常量 `BASE_APP_NAME`、`BASE_APP_USER_MODEL_ID`                          | 保留上游的其他改动，把这两个常量改回 cocos-agent 的值 |
+| `src/renderer/index.html`                   | `<title>`                                                               | 同上                                                  |
+| `src/main/updater/updater-service.ts`       | `new UpdaterSetup()` 换成 `new CocosAgentUpdaterSetup()`，并调整 import | 保留上游改动，重新换成 `CocosAgentUpdaterSetup`       |
+| `resources/darwin/bin/orca`                 | `ELECTRON=` 一行：从 Info.plist 读取可执行文件名，不再写死 `MacOS/Orca` | 保留读取 Info.plist 的写法                            |
+
+上游如果改了 `UpdaterSetup` 中被覆盖的两个方法（`runBackgroundUpdateCheck`、`checkForUpdatesFromMenu`），`override` 会让类型检查报错，按报错调整即可。
+
+## 打调试包
+
+需要 Node 24、pnpm（用 corepack 启用 `package.json` 中 `packageManager` 指定的版本）、Xcode。
+
+```sh
+pnpm install
+pnpm -C mobile install --frozen-lockfile                         # 构建会打包手机 web 端，缺依赖会失败
+node config/scripts/build-cocos-agent-mac.mjs                    # 含类型检查
+node config/scripts/build-cocos-agent-mac.mjs --skip-typecheck   # 更快
+```
+
+产物在 `dist/mac-<arch>/cocos-agent.app`。用户数据在 `~/Library/Application Support/cocos-agent`，终端 daemon、socket 和 launchd 任务都根据这个目录区分，和 Orca 正式版互不影响。
+
+只改界面时不用打包，直接 `pnpm dev`。
+
+**不要给 `mac.executableName` 设值**：electron-builder 会同时用它给 .app 命名。设成 `Orca` 会打出一个 `Orca.app`，拖进「应用程序」时会覆盖正式版。
+
+## 和 Orca 正式版同时运行时的已知问题
+
+以下问题暂未处理，0.1.0 调试阶段先规避：
+
+- **不要在 cocos-agent 里点「安装命令行工具」**：它会把 `/usr/local/bin/orca` 改成指向 cocos-agent。
+- **不要在 cocos-agent 里重置「电脑操控（Computer Use）」权限**：辅助程序的 bundle id 仍是 `com.stablyai.orca.computer-use`，重置会同时清掉正式版的辅助功能和录屏授权。
+- **`~/.orca` 两边共用**：快捷键、agent hook 脚本、部分 API key 都在这里。加密的 key 两边互相解不开，在 cocos-agent 里保存会覆盖正式版那份。
+- **手机配对端口 6768**：谁先启动谁占用。cocos-agent 开着时重启正式版，正式版会换端口，已配对的手机要重新连接。
+- **两边合计最多 256 个终端**。
+- **界面文案里还有很多「Orca」**，图标也还是 Orca 的。之后单独处理。
+
+## 同步上游
+
+`origin` 指向 stablyai/orca，只用来拉上游代码。cocos-agent 自己的代码推到另一个 remote（公司仓库，由团队自己添加）。
+
+```sh
+git config rerere.enabled true   # 只需一次：记住冲突的解法，下次自动套用
+git fetch origin
+git switch dev/0.1.0
+git merge origin/main
+```
+
+用 merge，不用 rebase：分支推到公司仓库后还有其他人在用，rebase 会改写历史。合并之后，对照上表检查每处改动是否还在。

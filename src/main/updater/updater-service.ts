@@ -11,10 +11,11 @@ import type {
 } from '../../shared/remote-server-update'
 import type { ReleaseBuild, ReleaseChannel } from '../../shared/release-channel'
 import type { ReleaseBuildListOptions } from './releases/updater-release-build-cache'
-import { UpdaterSetup, type UpdaterSetupOptions } from './lifecycle/updater-setup'
+import type { UpdaterSetupOptions } from './lifecycle/updater-setup'
 import type { UpdateInstallMode } from './lifecycle/updater-state'
+import { CocosAgentUpdaterSetup } from './cocos-agent-updater-setup'
 
-const updater = new UpdaterSetup()
+const updater = new CocosAgentUpdaterSetup()
 
 export function resolveUpdateInstallMode(isServeMode: boolean): UpdateInstallMode {
   return updater.resolveUpdateInstallMode(isServeMode)
