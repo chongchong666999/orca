@@ -10,25 +10,31 @@ cocos-agent 基于 [Orca](https://github.com/stablyai/orca)（MIT 协议，保�
 
 ### 新增文件（不会冲突）
 
-| 文件                                            | 作用                                                                     |
-| ----------------------------------------------- | ------------------------------------------------------------------------ |
-| `config/electron-builder.cocos-agent.cjs`       | 在 Orca 打包配置的基础上，改 appId、产品名、用户数据目录名和 URL scheme  |
-| `config/scripts/build-cocos-agent-mac.mjs`      | 本机调试包：不签名，只打本机 CPU 架构，只生成 .app，不出 dmg             |
-| `src/main/updater/cocos-agent-updater-setup.ts` | 关闭自动更新（Orca 的更新源写死为 stablyai/orca）                        |
-| `src/shared/cocos-agent-brand.ts`               | i18next 后置处理器，把界面和菜单翻译里的 `Orca` 统一替换成 `cocos-agent` |
-| `resources/icon-source/cocos-agent-1024.png`    | 1024×1024 透明背景的图标原图                                             |
-| `COCOS-AGENT.md`                                | 本文件（上游 `.gitignore` 忽略了 `docs/`，所以放在根目录）               |
+| 文件                                            | 作用                                                                                              |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `config/electron-builder.cocos-agent.cjs`       | 在 Orca 打包配置的基础上，改 appId、产品名、用户数据目录名和 URL scheme                           |
+| `config/scripts/build-cocos-agent-mac.mjs`      | 本机调试包：不签名，只打本机 CPU 架构，只生成 .app，不出 dmg                                      |
+| `src/main/updater/cocos-agent-updater-setup.ts` | 关闭自动更新（Orca 的更新源写死为 stablyai/orca）                                                 |
+| `src/shared/cocos-agent-brand.ts`               | i18next 后置处理器，把界面和菜单翻译里的 `Orca` 统一替换成 `cocos-agent`                          |
+| `resources/icon-source/cocos-agent-1024.png`    | 1024×1024 透明背景的图标原图                                                                      |
+| `COCOS-AGENT.md`                                | 本文件（上游 `.gitignore` 忽略了 `docs/`，所以放在根目录）                                        |
+| `COCOS-AGENT-PLAN.md`                           | v0.1.0 路线和 loop 执行规则                                                                       |
+| `src/main/cocos-agent/`                         | 主进程 Cocos 编辑器服务：检测项目、调用 `a5-game-context editor open`、停止编辑器，以及对应的 IPC |
+| `src/shared/cocos-agent/`                       | 主进程和渲染进程共用的类型、IPC 通道名                                                            |
+| `src/preload/cocos-agent-preload.ts`            | 单独暴露 `window.cocosAgent`，不改上游的 `PreloadApi`                                             |
 
 ### 改动的上游文件（可能冲突）
 
-| 文件                                                                              | 改动                                                                       | 冲突时                                                   |
-| --------------------------------------------------------------------------------- | -------------------------------------------------------------------------- | -------------------------------------------------------- |
-| `src/main/startup/dev-instance-identity.ts`                                       | 常量 `BASE_APP_NAME`、`BASE_APP_USER_MODEL_ID`                             | 保留上游的其他改动，把这两个常量改回 cocos-agent 的值    |
-| `src/renderer/index.html`                                                         | `<title>`                                                                  | 同上                                                     |
-| `src/main/updater/updater-service.ts`                                             | `new UpdaterSetup()` 换成 `new CocosAgentUpdaterSetup()`，并调整 import    | 保留上游改动，重新换成 `CocosAgentUpdaterSetup`          |
-| `src/shared/orca-i18n-instance.ts`                                                | 注册 `cocosAgentBrandPostProcessor` 并启用 `postProcess`                   | 保留上游改动，重新挂上后置处理器                         |
-| `resources/darwin/bin/orca`                                                       | `ELECTRON=` 一行：从 Info.plist 读取可执行文件名，不再写死 `MacOS/Orca`    | 保留读取 Info.plist 的写法                               |
-| `resources/build/icon.{icns,png}`、`resources/icon.png`、`resources/icon-dev.png` | 换成 cocos-agent 图标（源图 `resources/icon-source/cocos-agent-1024.png`） | 二进制冲突直接用我们的版本：`git checkout --ours <文件>` |
+| 文件                                                                              | 改动                                                                                           | 冲突时                                                   |
+| --------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| `src/main/startup/dev-instance-identity.ts`                                       | 常量 `BASE_APP_NAME`、`BASE_APP_USER_MODEL_ID`                                                 | 保留上游的其他改动，把这两个常量改回 cocos-agent 的值    |
+| `src/renderer/index.html`                                                         | `<title>`                                                                                      | 同上                                                     |
+| `src/main/updater/updater-service.ts`                                             | `new UpdaterSetup()` 换成 `new CocosAgentUpdaterSetup()`，并调整 import                        | 保留上游改动，重新换成 `CocosAgentUpdaterSetup`          |
+| `src/shared/orca-i18n-instance.ts`                                                | 注册 `cocosAgentBrandPostProcessor` 并启用 `postProcess`                                       | 保留上游改动，重新挂上后置处理器                         |
+| `src/main/startup/main-process-ready-runtime.ts`                                  | 引入并调用 `registerCocosAgentIpc()`（在 `state.starNag.registerIpcHandlers()` 之后），共 2 行 | 保留上游改动，重新加上这 2 行                            |
+| `src/preload/index.ts`                                                            | `import './cocos-agent-preload'`，1 行                                                         | 保留上游改动，重新加上这 1 行                            |
+| `resources/darwin/bin/orca`                                                       | `ELECTRON=` 一行：从 Info.plist 读取可执行文件名，不再写死 `MacOS/Orca`                        | 保留读取 Info.plist 的写法                               |
+| `resources/build/icon.{icns,png}`、`resources/icon.png`、`resources/icon-dev.png` | 换成 cocos-agent 图标（源图 `resources/icon-source/cocos-agent-1024.png`）                     | 二进制冲突直接用我们的版本：`git checkout --ours <文件>` |
 
 上游如果改了 `UpdaterSetup` 中被覆盖的两个方法（`runBackgroundUpdateCheck`、`checkForUpdatesFromMenu`），`override` 会让类型检查报错，按报错调整即可。
 
@@ -45,7 +51,7 @@ node config/scripts/build-cocos-agent-mac.mjs --skip-typecheck   # 更快
 
 产物在 `dist/mac-<arch>/cocos-agent.app`。用户数据在 `~/Library/Application Support/cocos-agent`，终端 daemon、socket 和 launchd 任务都根据这个目录区分，和 Orca 正式版互不影响。
 
-只改界面时不用打包，直接 `pnpm dev`。
+只改界面时不用打包，直接 `pnpm dev`。开发模式下 app 里没有内置的 a5-game-context，用环境变量指定一个能用的版本：`A5_GAME_CONTEXT_BIN=<GitNexus>/context-engine/native-engine/bin/darwin-arm64/a5-game-context pnpm dev`。
 
 **不要给 `mac.executableName` 设值**：electron-builder 会同时用它给 .app 命名。设成 `Orca` 会打出一个 `Orca.app`，拖进「应用程序」时会覆盖正式版。
 

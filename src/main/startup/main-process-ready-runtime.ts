@@ -20,6 +20,7 @@ import { isAgentStatusHooksEnabledForAgent } from '../../shared/agent-hook-liste
 import { reconcileStartupManagedAgentHooks } from '../agent-hooks/managed-agent-hook-startup'
 import { shouldInstallManagedHooks } from './configure-process'
 import { mainProcessState as state } from './main-process-state'
+import { registerCocosAgentIpc } from '../cocos-agent/cocos-agent-ipc'
 import { initializeMainProcessObservers } from './main-process-observers'
 import { installFirstWorkRenameHookSubscription } from './branch-rename-hook'
 import { initializeMainProcessAccountServices } from './main-process-account-services'
@@ -65,6 +66,7 @@ export async function initializeReadyRuntimeServices(): Promise<void> {
   state.starNag = new StarNagService(store, state.stats!)
   state.starNag.start()
   state.starNag.registerIpcHandlers()
+  registerCocosAgentIpc()
   state.agentBrowserBridge = new AgentBrowserBridge(browserManager, {
     onTabsChanged: (worktreeId) => runtime.notifyMobileSessionTabsChanged(worktreeId)
   })
