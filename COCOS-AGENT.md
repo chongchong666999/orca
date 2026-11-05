@@ -10,12 +10,14 @@ cocos-agent 基于 [Orca](https://github.com/stablyai/orca)（MIT 协议，保�
 
 ### 新增文件（不会冲突）
 
-| 文件                                            | 作用                                                                    |
-| ----------------------------------------------- | ----------------------------------------------------------------------- |
-| `config/electron-builder.cocos-agent.cjs`       | 在 Orca 打包配置的基础上，改 appId、产品名、用户数据目录名和 URL scheme |
-| `config/scripts/build-cocos-agent-mac.mjs`      | 本机调试包：不签名，只打本机 CPU 架构，只生成 .app，不出 dmg            |
-| `src/main/updater/cocos-agent-updater-setup.ts` | 关闭自动更新（Orca 的更新源写死为 stablyai/orca）                       |
-| `COCOS-AGENT.md`                                | 本文件（上游 `.gitignore` 忽略了 `docs/`，所以放在根目录）              |
+| 文件                                            | 作用                                                                     |
+| ----------------------------------------------- | ------------------------------------------------------------------------ |
+| `config/electron-builder.cocos-agent.cjs`       | 在 Orca 打包配置的基础上，改 appId、产品名、用户数据目录名和 URL scheme  |
+| `config/scripts/build-cocos-agent-mac.mjs`      | 本机调试包：不签名，只打本机 CPU 架构，只生成 .app，不出 dmg             |
+| `src/main/updater/cocos-agent-updater-setup.ts` | 关闭自动更新（Orca 的更新源写死为 stablyai/orca）                        |
+| `src/shared/cocos-agent-brand.ts`               | i18next 后置处理器，把界面和菜单翻译里的 `Orca` 统一替换成 `cocos-agent` |
+| `resources/icon-source/cocos-agent-1024.png`    | 1024×1024 透明背景的图标原图                                             |
+| `COCOS-AGENT.md`                                | 本文件（上游 `.gitignore` 忽略了 `docs/`，所以放在根目录）               |
 
 ### 改动的上游文件（可能冲突）
 
@@ -24,6 +26,7 @@ cocos-agent 基于 [Orca](https://github.com/stablyai/orca)（MIT 协议，保�
 | `src/main/startup/dev-instance-identity.ts`                                       | 常量 `BASE_APP_NAME`、`BASE_APP_USER_MODEL_ID`                             | 保留上游的其他改动，把这两个常量改回 cocos-agent 的值    |
 | `src/renderer/index.html`                                                         | `<title>`                                                                  | 同上                                                     |
 | `src/main/updater/updater-service.ts`                                             | `new UpdaterSetup()` 换成 `new CocosAgentUpdaterSetup()`，并调整 import    | 保留上游改动，重新换成 `CocosAgentUpdaterSetup`          |
+| `src/shared/orca-i18n-instance.ts`                                                | 注册 `cocosAgentBrandPostProcessor` 并启用 `postProcess`                   | 保留上游改动，重新挂上后置处理器                         |
 | `resources/darwin/bin/orca`                                                       | `ELECTRON=` 一行：从 Info.plist 读取可执行文件名，不再写死 `MacOS/Orca`    | 保留读取 Info.plist 的写法                               |
 | `resources/build/icon.{icns,png}`、`resources/icon.png`、`resources/icon-dev.png` | 换成 cocos-agent 图标（源图 `resources/icon-source/cocos-agent-1024.png`） | 二进制冲突直接用我们的版本：`git checkout --ours <文件>` |
 
@@ -55,7 +58,7 @@ node config/scripts/build-cocos-agent-mac.mjs --skip-typecheck   # 更快
 - **`~/.orca` 两边共用**：快捷键、agent hook 脚本、部分 API key 都在这里。加密的 key 两边互相解不开，在 cocos-agent 里保存会覆盖正式版那份。
 - **手机配对端口 6768**：谁先启动谁占用。cocos-agent 开着时重启正式版，正式版会换端口，已配对的手机要重新连接。
 - **两边合计最多 256 个终端**。
-- **界面文案里还有很多「Orca」**。设置里可选的「水彩 / 蓝色」备选图标、Windows 的 `icon.ico`、Computer Use 辅助程序的图标也还是 Orca 的。之后单独处理。
+- **设置里可选的「水彩 / 蓝色」备选图标、Windows 的 `icon.ico`、Computer Use 辅助程序的图标**还是 Orca 的。之后单独处理。
 
 ## 同步上游
 
