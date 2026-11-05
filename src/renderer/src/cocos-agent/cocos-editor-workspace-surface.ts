@@ -11,6 +11,7 @@ import {
   localCocosWorkspacePath
 } from './cocos-workspace-project'
 import { openCocosEditorTab } from './cocos-editor-tabs'
+import { installRestoredEditorTabRefresh } from './cocos-editor-tab-refresh'
 
 // Why: the whole fallback chain after a failure (default chat, then its shell fallback) re-enters the seeder.
 const EDITOR_FAILURE_COOLDOWN_MS = 30_000
@@ -62,7 +63,7 @@ function openEditorAsFirstSurface(
   const release = holdEmptyWorkspaceDefaultSurfaceForLaunch(worktreeId)
   void openCocosEditorTab(worktreeId, projectPath, {
     executionHostId: opts?.executionHostId,
-    keepUserSurfaceFocused: true
+    focus: 'user-surface'
   }).then((outcome) => {
     release()
     if (outcome.kind !== 'failed') {
@@ -122,4 +123,10 @@ export function openCocosEditorInEmptyWorkspace(
   }
   openEditorAsFirstSurface(worktreeId, projectPath, opts)
   return true
+}
+
+// Why: this module loads with the first-surface seeder at renderer start; deferring past module evaluation keeps the
+// store import cycle from reading a store that is not initialized yet. Only the desktop preload provides the API.
+if (cocosAgentApi()) {
+  setTimeout(installRestoredEditorTabRefresh, 0)
 }

@@ -61,10 +61,14 @@ export class CocosEditorService {
   private readonly projectQueues = new Map<string, Promise<void>>()
   /** Editors that acknowledged a stop but still answered when the settle time ran out, by project. */
   private readonly closingEditors = new Map<string, string>()
+  private quitting = false
 
   constructor(private readonly deps: CocosEditorServiceDeps) {}
 
   async open(projectPath: string, document?: string): Promise<CocosEditorOpenResult> {
+    if (this.quitting) {
+      return failure('stopping', 'cocos-agent is quitting.')
+    }
     // Why: GitNexus reads any argument starting with "-" as an option.
     if (document !== undefined && (!document.trim() || document.startsWith('-'))) {
       return failure('invalid-document', `Not a document path: ${document}`)
@@ -81,6 +85,21 @@ export class CocosEditorService {
 
   list(): CocosEditorRecord[] {
     return [...this.editors.values()]
+  }
+
+  /**
+   * App quit: asks every editor this session started to shut down right away, without queueing behind opens in
+   * flight; an open that finishes afterwards shuts down the editor it started. One that outlives the app anyway (the
+   * open was still starting at exit) exits on GitNexus's own idle timeout, since no page connects to it.
+   */
+  shutdownForQuit(): void {
+    this.quitting = true
+    for (const record of this.editors.values()) {
+      const shutdownUrl = record.startedByApp ? editorShutdownUrl(record.url) : null
+      if (shutdownUrl) {
+        void this.postShutdown(shutdownUrl)
+      }
+    }
   }
 
   // Why: an open racing a stop would reuse the editor that is shutting down and hand out a dead URL.
@@ -145,6 +164,13 @@ export class CocosEditorService {
         lastLine(result.stderr) || `a5-game-context exited with code ${String(result.code)}`
       )
     }
+    if (this.quitting) {
+      const shutdownUrl = output.reused ? null : editorShutdownUrl(output.url)
+      if (shutdownUrl) {
+        void this.postShutdown(shutdownUrl)
+      }
+      return failure('stopping', 'cocos-agent is quitting.')
+    }
     const previous = this.editors.get(projectRoot)
     const startedEarlierByApp =
       previous !== undefined && previous.startedByApp && isSameEditor(previous.url, output.url)
@@ -176,19 +202,25 @@ export class CocosEditorService {
     return outcome === 'closed'
   }
 
-  private async requestShutdown(shutdownUrl: string): Promise<ShutdownOutcome> {
+  /** POST /shutdown once: acknowledged (2xx), closed (nothing listening any more) or refused. */
+  private async postShutdown(shutdownUrl: string): Promise<'acknowledged' | 'closed' | 'refused'> {
     try {
       const response = await this.deps.fetch(shutdownUrl, {
         method: 'POST',
         signal: AbortSignal.timeout(SHUTDOWN_TIMEOUT_MS)
       })
       await response.body?.cancel().catch(() => undefined)
-      if (!response.ok) {
-        return 'refused'
-      }
+      return response.ok ? 'acknowledged' : 'refused'
     } catch (error) {
       // Why: nothing listening means the editor already exited (idle exit, or stopped elsewhere).
       return connectionErrorCode(error) === 'ECONNREFUSED' ? 'closed' : 'refused'
+    }
+  }
+
+  private async requestShutdown(shutdownUrl: string): Promise<ShutdownOutcome> {
+    const posted = await this.postShutdown(shutdownUrl)
+    if (posted !== 'acknowledged') {
+      return posted
     }
     return (await this.waitUntilClosed(new URL(shutdownUrl).origin)) ? 'closed' : 'closing'
   }

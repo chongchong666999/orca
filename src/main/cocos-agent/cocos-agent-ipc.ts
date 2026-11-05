@@ -6,6 +6,7 @@ import {
   type CocosEditorRecord,
   type CocosProjectDetection
 } from '../../shared/cocos-agent/cocos-editor-types'
+import { stopAppStartedEditorsOnQuit } from './cocos-editor-quit'
 import { cocosEditorService } from './cocos-editor-service'
 import { detectCocosProject } from './cocos-project-detection'
 
@@ -14,6 +15,7 @@ function isAbsolutePath(value: unknown): value is string {
 }
 
 export function registerCocosAgentIpc(): void {
+  stopAppStartedEditorsOnQuit()
   for (const channel of Object.values(COCOS_AGENT_IPC)) {
     ipcMain.removeHandler(channel)
   }

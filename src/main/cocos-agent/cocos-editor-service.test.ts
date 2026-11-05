@@ -9,14 +9,13 @@ function processResult(overrides: Partial<ProcessResult>): ProcessResult {
   return { code: 0, signal: null, stdout: '', stderr: '', timedOut: false, ...overrides }
 }
 
-function openOutput(projectRoot: string, running: boolean): ProcessResult {
+function openOutput(
+  projectRoot: string,
+  running: boolean,
+  url = 'http://127.0.0.1:40000/?token=t1'
+): ProcessResult {
   return processResult({
-    stdout: JSON.stringify({
-      event: 'open',
-      url: 'http://127.0.0.1:40000/?token=t1',
-      project: projectRoot,
-      running
-    })
+    stdout: JSON.stringify({ event: 'open', url, project: projectRoot, running })
   })
 }
 
@@ -122,6 +121,37 @@ describe('CocosEditorService', () => {
     expect(service.list()).toHaveLength(1)
     await expect(service.open(projectRoot)).resolves.toMatchObject({ ok: false, code: 'stopping' })
     expect(runProcess).toHaveBeenCalledTimes(1)
+  })
+
+  it('on quit asks started editors to stop at once and stops one whose open finishes later', async () => {
+    let finishSecondOpen: ((result: ProcessResult) => void) | null = null
+    const runProcess = vi
+      .fn<(spec: ProcessSpec) => Promise<ProcessResult>>()
+      .mockResolvedValueOnce(openOutput(projectRoot, false))
+      .mockImplementationOnce(() => new Promise((resolve) => (finishSecondOpen = resolve)))
+    const fetch = editorFetch(async () => new Response('{"stopping":true}'))
+    const service = new CocosEditorService({
+      resolveBinary: async () => '/opt/a5-game-context',
+      runProcess,
+      fetch
+    })
+    await service.open(projectRoot)
+    const secondOpen = service.open(projectRoot)
+    await vi.waitFor(() => expect(finishSecondOpen).not.toBeNull())
+
+    service.shutdownForQuit()
+    expect(fetch).toHaveBeenCalledWith(
+      'http://127.0.0.1:40000/shutdown?token=t1',
+      expect.objectContaining({ method: 'POST' })
+    )
+
+    finishSecondOpen!(openOutput(projectRoot, false, 'http://127.0.0.1:40001/?token=t2'))
+    await expect(secondOpen).resolves.toMatchObject({ ok: false, code: 'stopping' })
+    expect(fetch).toHaveBeenCalledWith(
+      'http://127.0.0.1:40001/shutdown?token=t2',
+      expect.objectContaining({ method: 'POST' })
+    )
+    await expect(service.open(projectRoot)).resolves.toMatchObject({ ok: false, code: 'stopping' })
   })
 
   it('reports the editor error without spawning for option-like documents', async () => {
