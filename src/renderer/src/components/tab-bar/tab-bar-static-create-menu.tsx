@@ -15,6 +15,7 @@ import {
 } from './use-tab-bar-runtime-model'
 import type { TabBarProps } from './tab-bar-props'
 import { resolveWindowsShellLaunchTarget } from './windows-shell-launch'
+import { CocosEditorMenuItems } from '@/cocos-agent/CocosEditorMenuItems'
 
 export function TabBarStaticCreateMenu({
   groupId,
@@ -210,6 +211,7 @@ export function TabBarStaticCreateMenu({
       {openMarkdownMenuItem}
       {defaultTerminalMenuItems}
       {newBrowserMenuItem}
+      <CocosEditorMenuItems worktreeId={props.worktreeId} terminalOnly={terminalOnly} />
       {newSimulatorMenuItem}
       {mobileEmulatorIntroMenuBlock}
     </>
@@ -217,6 +219,7 @@ export function TabBarStaticCreateMenu({
     <>
       {defaultTerminalMenuItems}
       {newBrowserMenuItem}
+      <CocosEditorMenuItems worktreeId={props.worktreeId} terminalOnly={terminalOnly} />
       {newMarkdownMenuItem}
       {pluginNewFileMenuItems}
       {openMarkdownMenuItem}

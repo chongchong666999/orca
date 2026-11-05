@@ -10,19 +10,19 @@ cocos-agent 基于 [Orca](https://github.com/stablyai/orca)（MIT 协议，保�
 
 ### 新增文件（不会冲突）
 
-| 文件                                            | 作用                                                                                              |
-| ----------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| `config/electron-builder.cocos-agent.cjs`       | 在 Orca 打包配置的基础上，改 appId、产品名、用户数据目录名和 URL scheme                           |
-| `config/scripts/build-cocos-agent-mac.mjs`      | 本机调试包：不签名，只打本机 CPU 架构，只生成 .app，不出 dmg                                      |
-| `src/main/updater/cocos-agent-updater-setup.ts` | 关闭自动更新（Orca 的更新源写死为 stablyai/orca）                                                 |
-| `src/shared/cocos-agent-brand.ts`               | i18next 后置处理器，把界面和菜单翻译里的 `Orca` 统一替换成 `cocos-agent`                          |
-| `resources/icon-source/cocos-agent-1024.png`    | 1024×1024 透明背景的图标原图                                                                      |
-| `COCOS-AGENT.md`                                | 本文件（上游 `.gitignore` 忽略了 `docs/`，所以放在根目录）                                        |
-| `COCOS-AGENT-PLAN.md`                           | v0.1.0 路线和 loop 执行规则                                                                       |
-| `src/main/cocos-agent/`                         | 主进程 Cocos 编辑器服务：检测项目、调用 `a5-game-context editor open`、停止编辑器，以及对应的 IPC |
-| `src/shared/cocos-agent/`                       | 主进程和渲染进程共用的类型、IPC 通道名                                                            |
-| `src/preload/cocos-agent-preload.ts`            | 单独暴露 `window.cocosAgent`，不改上游的 `PreloadApi`                                             |
-| `src/renderer/src/cocos-agent/`                 | 渲染进程：打开空的本地 Cocos 2.x 工作区时，把编辑器作为第一个标签；`window.cocosAgent` 的类型声明 |
+| 文件                                            | 作用                                                                                                                                                     |
+| ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `config/electron-builder.cocos-agent.cjs`       | 在 Orca 打包配置的基础上，改 appId、产品名、用户数据目录名和 URL scheme                                                                                  |
+| `config/scripts/build-cocos-agent-mac.mjs`      | 本机调试包：不签名，只打本机 CPU 架构，只生成 .app，不出 dmg                                                                                             |
+| `src/main/updater/cocos-agent-updater-setup.ts` | 关闭自动更新（Orca 的更新源写死为 stablyai/orca）                                                                                                        |
+| `src/shared/cocos-agent-brand.ts`               | i18next 后置处理器，把界面和菜单翻译里的 `Orca` 统一替换成 `cocos-agent`                                                                                 |
+| `resources/icon-source/cocos-agent-1024.png`    | 1024×1024 透明背景的图标原图                                                                                                                             |
+| `COCOS-AGENT.md`                                | 本文件（上游 `.gitignore` 忽略了 `docs/`，所以放在根目录）                                                                                               |
+| `COCOS-AGENT-PLAN.md`                           | v0.1.0 路线和 loop 执行规则                                                                                                                              |
+| `src/main/cocos-agent/`                         | 主进程 Cocos 编辑器服务：检测项目、调用 `a5-game-context editor open`、停止编辑器，以及对应的 IPC                                                        |
+| `src/shared/cocos-agent/`                       | 主进程和渲染进程共用的类型、IPC 通道名                                                                                                                   |
+| `src/preload/cocos-agent-preload.ts`            | 单独暴露 `window.cocosAgent`，不改上游的 `PreloadApi`                                                                                                    |
+| `src/renderer/src/cocos-agent/`                 | 渲染进程：Cocos 项目检测（按主机解析本地路径）、编辑器标签的打开/切换/停止、空工作区的首个界面、「+」菜单的 Cocos Creator 项、`window.cocosAgent` 的类型 |
 
 ### 改动的上游文件（可能冲突）
 
@@ -35,6 +35,7 @@ cocos-agent 基于 [Orca](https://github.com/stablyai/orca)（MIT 协议，保�
 | `src/main/startup/main-process-ready-runtime.ts`                                  | 引入并调用 `registerCocosAgentIpc()`（在 `state.starNag.registerIpcHandlers()` 之后），共 2 行 | 保留上游改动，重新加上这 2 行                                                                |
 | `src/preload/index.ts`                                                            | `import './cocos-agent-preload'`，1 行                                                         | 保留上游改动，重新加上这 1 行                                                                |
 | `src/renderer/src/lib/worktree-initial-terminal-seeding.ts`                       | 引入 `openCocosEditorInEmptyWorkspace`，并在默认 agent 聊天之前加 3 行判断，共 4 行            | 保留上游改动，重新加上这 4 行；位置要在 `applyDefaultTerminalTabs` 之后、默认 agent 聊天之前 |
+| `src/renderer/src/components/tab-bar/tab-bar-static-create-menu.tsx`              | 引入 `CocosEditorMenuItems`，在两种菜单顺序里各插 1 行（「New Browser Tab」之后），共 3 行     | 保留上游改动，重新加上这 3 行                                                                |
 | `resources/darwin/bin/orca`                                                       | `ELECTRON=` 一行：从 Info.plist 读取可执行文件名，不再写死 `MacOS/Orca`                        | 保留读取 Info.plist 的写法                                                                   |
 | `resources/build/icon.{icns,png}`、`resources/icon.png`、`resources/icon-dev.png` | 换成 cocos-agent 图标（源图 `resources/icon-source/cocos-agent-1024.png`）                     | 二进制冲突直接用我们的版本：`git checkout --ours <文件>`                                     |
 

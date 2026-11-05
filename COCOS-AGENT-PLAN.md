@@ -76,7 +76,7 @@ cocos-agent.app/Contents/Resources/
 | S2.3 | 把包打进 .app，app 内终端可用                        | cocos-agent | S2.2                   | 我+你 | 待做     |
 | S3.1 | 主进程编辑器服务（检测、打开、停止）                 | cocos-agent | —                      | 我+你 | 待你验证 |
 | S3.2 | 打开 Cocos 项目时自动开编辑器标签                    | cocos-agent | S3.1                   | 我+你 | 待你验证 |
-| S3.3 | 「+」菜单加「Cocos Creator」（新建或切换到已有标签） | cocos-agent | S3.2                   | 我+你 | 待做     |
+| S3.3 | 「+」菜单加「Cocos Creator」（新建或切换到已有标签） | cocos-agent | S3.2                   | 我+你 | 待你验证 |
 | S3.4 | 编辑器生命周期（关标签、切项目、退出 app）           | cocos-agent | S3.2                   | 我+你 | 待做     |
 | S4.1 | 全局安装器（链接、SDK、setup、MCP）                  | cocos-agent | S2.3、S1.4             | 我+你 | 待做     |
 | S4.2 | 检测旧的 npm 全局安装                                | cocos-agent | S4.1                   | 我    | 待做     |
@@ -104,6 +104,10 @@ loop 不会因为这些步骤停下，会先做其他能做的步骤。做完了
   1. 添加 `/Users/free/Documents/work-99/wptg-client`：第一个标签应该是「Cocos Creator」编辑器，打开的是这个项目。
   2. 添加一个普通仓库：第一个标签应该还是终端。
   3. 不设 `A5_GAME_CONTEXT_BIN` 启动，再添加 wptg-client：应该提示「Could not open the Cocos Creator editor」，然后退回终端，不会反复弹提示。
+- **S3.3 端到端**（S1.6 之后）：在 wptg-client 工作区打开「+」菜单。
+  1. 已有编辑器标签时显示「Go to Cocos Creator」，点了回到那个标签，不会新建。
+  2. 点「Stop Cocos Creator」：标签关闭，编辑器地址打不开；再点「Cocos Creator」会重新启动并打开新标签。
+  3. 普通仓库的「+」菜单里没有这两项。
 
 ## 步骤详情
 
@@ -207,7 +211,8 @@ loop 不会因为这些步骤停下，会先做其他能做的步骤。做完了
 
 **S3.3 「+」菜单项「Cocos Creator」**：参照移动模拟器，项目里已有编辑器标签时显示「切换到 Cocos Creator」。子菜单里提供「停止编辑器」。
 
-- 上游改动：`tab-create-menu-options.ts`、`use-tab-bar-create-menu-controller.ts`，各改几行。
+- 上游改动（实际）：`tab-bar-static-create-menu.tsx` 共 3 行。计划里的 `tab-create-menu-options.ts`、`use-tab-bar-create-menu-controller.ts` 只管菜单搜索结果，没有改，所以菜单里搜索时找不到这一项。
+- 实际做法：只在本地 Cocos 2.x 工作区显示。有本次会话打开的编辑器标签时显示「Go to Cocos Creator」和「Stop Cocos Creator」，否则显示「Cocos Creator」。自动打开和菜单点击共用同一个进行中的请求，不会出现重复标签。停止成功会关闭标签。重启 app 后恢复的旧编辑器标签不算「已有」（S3.4 处理）。
 - 完成标准：同一个项目第二次点，回到原来的标签；停止后再点，会重新启动。
 
 **S3.4 编辑器生命周期**：
@@ -319,8 +324,9 @@ loop 不会因为这些步骤停下，会先做其他能做的步骤。做完了
 
 ## 执行记录
 
-| 日期       | 步骤        | 结果                                                                                                                                                                                                                                                                            | Codex 审核                                                                                                                                                                                                                                                                                        | 提交           |
-| ---------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- |
-| 2026-11-05 | S3.1        | 待你验证。新增 `src/main/cocos-agent/`（检测、`editor open`、停止、IPC）、`src/preload/cocos-agent-preload.ts`、`src/shared/cocos-agent/`；上游改 3 行。node 侧 tsc、oxlint、oxfmt 通过，8 个测试通过。发现 `editor open` 必须带文档，新增 S1.6                                 | 先用 terra max 跑了两次都没出结果（本机 Codex 代理 127.0.0.1:17841 没开；第二次在 Paseo 被取消），改用 sol high full-access。第 1 轮 `8461f660`：2 条 medium（stop 先删记录；open 与 stop 不串行），已改。第 2 轮 `e520cb03`：1 条 medium（端口超时仍算停止成功），已改。第 3 轮 `2316470b`：pass | 见本行所在提交 |
-| 2026-11-05 | S3.2        | 待你验证。新增 `src/renderer/src/cocos-agent/`（首个界面挂点、本地路径按主机解析、检测缓存、失败冷却）；上游 `worktree-initial-terminal-seeding.ts` 4 行。web 侧 tsc、oxlint 三套配置、oxfmt 通过；相关 33 个现有测试通过（中途修了 node 测试环境没有 window 导致的 10 个失败） | sol high full-access。第 1 轮 `1edd3227`：1 high（添加项目入口不触发）+ 2 medium（异步完成不校验所有权；文件夹工作区漏了继承的主机），已改。第 2 轮 `bf94ceda`：1 medium（失败标记只跳过一次，回退链会重启编辑器），已改为 30 秒冷却。第 3 轮 `4ae3d591`：pass                                    | 见本行所在提交 |
-| 2026-11-05 | S3.2 补提交 | 上游 `.gitignore` 忽略 `src/**/*.d.ts`，`window.cocosAgent` 的类型声明没进上一个提交，干净 checkout 会类型检查失败。改为 `src/renderer/src/cocos-agent/cocos-agent-window-types.ts`，内容不变；web 侧 tsc、oxlint 通过                                                          | 纯文件改名，未单独审核                                                                                                                                                                                                                                                                            | 见本行所在提交 |
+| 日期       | 步骤        | 结果                                                                                                                                                                                                                                                                                                                | Codex 审核                                                                                                                                                                                                                                                                                        | 提交           |
+| ---------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- |
+| 2026-11-05 | S3.1        | 待你验证。新增 `src/main/cocos-agent/`（检测、`editor open`、停止、IPC）、`src/preload/cocos-agent-preload.ts`、`src/shared/cocos-agent/`；上游改 3 行。node 侧 tsc、oxlint、oxfmt 通过，8 个测试通过。发现 `editor open` 必须带文档，新增 S1.6                                                                     | 先用 terra max 跑了两次都没出结果（本机 Codex 代理 127.0.0.1:17841 没开；第二次在 Paseo 被取消），改用 sol high full-access。第 1 轮 `8461f660`：2 条 medium（stop 先删记录；open 与 stop 不串行），已改。第 2 轮 `e520cb03`：1 条 medium（端口超时仍算停止成功），已改。第 3 轮 `2316470b`：pass | 见本行所在提交 |
+| 2026-11-05 | S3.2        | 待你验证。新增 `src/renderer/src/cocos-agent/`（首个界面挂点、本地路径按主机解析、检测缓存、失败冷却）；上游 `worktree-initial-terminal-seeding.ts` 4 行。web 侧 tsc、oxlint 三套配置、oxfmt 通过；相关 33 个现有测试通过（中途修了 node 测试环境没有 window 导致的 10 个失败）                                     | sol high full-access。第 1 轮 `1edd3227`：1 high（添加项目入口不触发）+ 2 medium（异步完成不校验所有权；文件夹工作区漏了继承的主机），已改。第 2 轮 `bf94ceda`：1 medium（失败标记只跳过一次，回退链会重启编辑器），已改为 30 秒冷却。第 3 轮 `4ae3d591`：pass                                    | 见本行所在提交 |
+| 2026-11-05 | S3.2 补提交 | 上游 `.gitignore` 忽略 `src/**/*.d.ts`，`window.cocosAgent` 的类型声明没进上一个提交，干净 checkout 会类型检查失败。改为 `src/renderer/src/cocos-agent/cocos-agent-window-types.ts`，内容不变；web 侧 tsc、oxlint 通过                                                                                              | 纯文件改名，未单独审核                                                                                                                                                                                                                                                                            | 见本行所在提交 |
+| 2026-11-06 | S3.3        | 待你验证。新增 `CocosEditorMenuItems.tsx`、`cocos-editor-tabs.ts`、`cocos-workspace-project.ts`（S3.2 的渲染进程代码拆分后共用）；上游 `tab-bar-static-create-menu.tsx` 3 行（计划写的是另外两个文件，见 S3.3 详情）。web 侧 tsc、oxlint 三套配置、oxfmt 通过；tab-bar 与首个界面相关 87 个测试文件、809 个测试通过 | sol high full-access。第 1 轮 `f321c625`：1 medium（打开请求没合并，并发会建重复标签），已改。第 2 轮 `d91a2cc7`：pass                                                                                                                                                                            | 见本行所在提交 |
