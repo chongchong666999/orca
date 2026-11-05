@@ -28,6 +28,7 @@ import { applyDefaultTerminalTabs } from '@/lib/worktree-default-terminal-tabs'
 import { openDefaultAgentChatInEmptyWorkspace } from '@/lib/empty-workspace-default-agent-chat'
 import { isEmptyWorkspaceDefaultSurfacePending } from '@/lib/empty-workspace-default-surface-claims'
 import { findPendingWorktreeCreationId } from './pending-worktree-creation'
+import { openCocosEditorInEmptyWorkspace } from '@/cocos-agent/cocos-editor-workspace-surface'
 
 function getSetupRunnerCommandPlatformForLaunch(setup: WorktreeSetupLaunch): 'windows' | 'posix' {
   return getSetupRunnerCommandPlatformForPath(
@@ -250,6 +251,9 @@ export function ensureWorktreeHasInitialTerminal(
   )
   if (templatedTabId) {
     return templatedTabId
+  }
+  if (openCocosEditorInEmptyWorkspace(worktreeId, opts, hasExplicitLaunchWork)) {
+    return null
   }
   if (
     opts?.seedUserDefaultSurface === true &&
