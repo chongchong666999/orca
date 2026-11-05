@@ -62,13 +62,14 @@ node config/scripts/build-cocos-agent-mac.mjs --skip-typecheck   # 更快
 
 ## 同步上游
 
-`origin` 指向 stablyai/orca，只用来拉上游代码。cocos-agent 自己的代码推到另一个 remote（公司仓库，由团队自己添加）。
+- `origin`：`chongchong666999/orca`，cocos-agent 自己的代码推到这里。
+- `upstream`：`stablyai/orca`，只用来拉上游代码。
 
 ```sh
 git config rerere.enabled true   # 只需一次：记住冲突的解法，下次自动套用
-git fetch origin
+git fetch upstream
 git switch dev/0.1.0
-git merge origin/main
+git merge upstream/main
 ```
 
 用 merge，不用 rebase：分支推到公司仓库后还有其他人在用，rebase 会改写历史。合并之后，对照上表检查每处改动是否还在。
