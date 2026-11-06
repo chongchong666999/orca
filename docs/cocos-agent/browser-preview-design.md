@@ -2,6 +2,8 @@
 
 状态：设计稿，2026-11-06；本轮不改变 a5-game-context 的 Play 行为。
 
+实施顺序后置于 [产品总方案](ai-cocos-product-plan.md)的同页观察和 UI 修改闭环。第一批可沿用当前 Prefab Scene 的截图通道，不等待独立浏览器 Play 改版；本文是后续专项设计。
+
 ## 当前事实
 
 GitNexus `5d7911f017`，`context-engine/editor-web/src/play.ts` 的 `mountPlay`：点击 Play 后 POST `/project/play`，拿到运行地址，在 Game Preview 面板创建 iframe；通过 `a5-play` 消息接收 ready/log/error。服务端 `editor/play.rs` 用 session/runId 管理游戏运行；`status` 返回 booting 并不意味着画面已就绪。

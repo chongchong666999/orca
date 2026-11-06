@@ -31,9 +31,10 @@ export function findCocosEditorTabId(state: AppState, worktreeId: string): strin
 // Why: only tabs cocos-agent opened carry this; the editor page keeps unknown query params as it switches documents.
 const EDITOR_TAB_MARKER = ['cocos-agent', 'editor'] as const
 
-function markedEditorUrl(url: string): string {
+function markedEditorUrl(url: string, worktreeId: string): string {
   const parsed = new URL(url)
   parsed.searchParams.set(...EDITOR_TAB_MARKER)
+  parsed.searchParams.set('cocos-workspace', worktreeId)
   return parsed.toString()
 }
 
@@ -159,7 +160,7 @@ async function startEditorTab(
   const activate =
     focus === 'editor' || replacesFocusedTab || (focus === 'user-surface' && !userOpenedSurface)
   // Why: open the fresh tab first; closing a workspace's last tab would otherwise drop it back to the welcome page.
-  const tab = state.createBrowserTab(worktreeId, markedEditorUrl(result.url), {
+  const tab = state.createBrowserTab(worktreeId, markedEditorUrl(result.url, worktreeId), {
     title: EDITOR_TAB_TITLE,
     activate
   })

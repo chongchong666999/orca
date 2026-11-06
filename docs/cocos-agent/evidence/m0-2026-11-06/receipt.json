@@ -1,0 +1,46 @@
+{
+  "date": "2026-11-07",
+  "scope": "packaged MCP launcher against same-source Rust editor fixture and real headless Chrome; no cloud model or visible Orca desktop test",
+  "appVersion": "1.4.214-local.1793977277057.6abc0603e495",
+  "mcpVersion": "3.8.272",
+  "platform": "darwin-arm64",
+  "viewport": {
+    "width": 1440,
+    "height": 900,
+    "deviceScaleFactor": 2
+  },
+  "test": "editor_bound_context::bound_page_edit_capture_save_and_conflicts",
+  "result": "PASS",
+  "checks": [
+    "same-instance/current-page/selection",
+    "world bounds",
+    "setProp text and position",
+    "bindRef Button target",
+    "changed PNG",
+    "save and disk readback",
+    "missing/stale version refusal",
+    "same-view prefab navigation",
+    "departed-document write refusal",
+    "external disk conflict preserves file",
+    "wrong instance refusal",
+    "closed view refusal"
+  ],
+  "packagedEditorFilesCompared": 212,
+  "packagedEditorMismatches": 0,
+  "images": {
+    "before": {
+      "file": "before.png",
+      "sha256": "e10f35d5453b34c7c6c14ab8a0d3d322c543cc3ab676a6f4249cd9dab5a6d7b5"
+    },
+    "after": {
+      "file": "after.png",
+      "sha256": "74335d752324451b8f1aeb73f4364fb26591163ce6d07ae72041540b8db43993"
+    }
+  },
+  "nativeRegression": {
+    "passed": 1674,
+    "failedHistoricalEvidenceGates": 2,
+    "ignored": 12
+  },
+  "dmgSha256": "fa6e3e47d7b93af4fab2d68b1cb1df3264e06becde844d0ada6bea7f45024d09"
+}

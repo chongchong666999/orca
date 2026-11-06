@@ -2,7 +2,9 @@
 
 状态：待开发设计。所有 v1 方法均为拟定契约，不是已发布端点。通用 envelope、并发、权限、错误、分页和任务规则见 [API 标准](cocos-web-api-standard.md)。
 
-表中 `?` 为可选字段；ID 都是 string，revision/epoch/generation 为非负整数。`D` 表示 documentId，`V` 表示 viewId，`R` 表示 runId。每个请求均带 context；system/project.open/instance.ensure 等引导方法使用标准第 3 节的主机级 context。读写目标不能默认为人类当前文件。每个文档写方法均额外带 expectedEpoch、expectedRevision、idempotencyKey；资源写方法带 expectedDiskHash。`read` 不写项目，`edit` 修改草稿，`save` 落盘，`view` 改页面，`run` 改运行状态。
+本目录是长期能力参考，不是首版待办清单。第一批按 [产品总方案](ai-cocos-product-plan.md)收敛为五项；拟新增的 `editor_context` 先组合当前页面、选择、包围盒、PNG 和少量错误，不必先拆成所有独立 v1 端点。
+
+表中 `?` 为可选字段；ID 都是 string，revision/epoch/generation 为非负整数。`D` 表示 documentId，`V` 表示 viewId，`R` 表示 runId。每个请求均带 context；system/project.open/instance.ensure 等引导方法使用标准第 3 节的主机级 context。读写目标不能默认为人类当前文件。每个文档写方法均额外带 expectedEpoch、expectedRevision；落盘还需 expectedDiskHash。原型文档写入不强制持久 idempotencyKey，后续长任务按方法声明采用。`read` 不写项目，`edit` 修改草稿，`save` 落盘，`view` 改页面，`run` 改运行状态。
 
 输出除表中字段外，都带 status 和 warnings；实例作用域的输出还带 instanceGeneration。长任务返回 operationId，完成后再取得表中结果。目录覆盖编辑器产品操作面；未列出的任意宿主命令/任意 JS eval 不属于公共 API。
 

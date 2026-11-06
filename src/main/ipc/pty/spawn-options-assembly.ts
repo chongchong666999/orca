@@ -1,4 +1,5 @@
 import { withClaudeAgentViewPlugin } from '../../../shared/claude-agent-view-launch'
+import { prepareCocosEditorMcpLaunch } from '../../cocos-agent/cocos-editor-mcp-launch'
 import { resolveStartupShell } from '../../../shared/agent-launch/startup/tui-agent-startup-shell'
 import { resolveLocalWindowsAgentStartupShell } from '../../../shared/windows-terminal-shell'
 import { getAppEnvironment } from '../../../shared/app-environment'
@@ -139,11 +140,19 @@ export async function assemblePtySpawnLaunchOptions(input: PtySpawnLaunchOptions
       : {})
   })
   const env = openCodeLaunch.env
+  const editorCommand = await prepareCocosEditorMcpLaunch({
+    command: openCodeLaunch.command,
+    agent: launchAgent,
+    cwd: input.cwd,
+    worktreeId: args.worktreeId,
+    local: !connectionId && input.codexRuntime !== 'wsl' && !input.preAdoptedStablePane,
+    shell
+  })
   const pluginDir = !connectionId ? env?.ORCA_CLAUDE_AGENT_VIEW_PLUGIN_DIR : undefined
   const launchCommand =
-    pluginDir && openCodeLaunch.command
-      ? withClaudeAgentViewPlugin(openCodeLaunch.command, pluginDir, shell)
-      : openCodeLaunch.command
+    pluginDir && editorCommand
+      ? withClaudeAgentViewPlugin(editorCommand, pluginDir, shell)
+      : editorCommand
   promoteAgentTeamsShimPath(env, input.requestedAgentTeamsPath)
   const spawnOptions: PtySpawnOptions = {
     cols: args.cols,

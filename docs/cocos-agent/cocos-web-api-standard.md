@@ -2,6 +2,8 @@
 
 状态：**待开发的规范提案**，2026-11-06。本文的新名称、envelope、租约、任务、UI 控制和浏览器接口都不代表当前版本已经支持。与现有接口的区别见第 1 节。操作全表见 [API 方法目录](cocos-web-api-methods.md)。
 
+本文是长期契约参考。原型范围和交付顺序以 [产品总方案](ai-cocos-product-plan.md)为准：先复用现有 MCP/WS 实现“AI 看到用户正在看的画面”，不以完整 HTTP 层、权限中心、租约或全部方法为前置条件。
+
 目标：AI 与人类操作同一份 Cocos Web 项目状态，可打开/切换 Prefab、修改节点、保存、Play、读取日志和截图验证。CLI、MCP、Web、Orca 都调用同一契约；不再为新功能依赖原生 Creator 的 Editor IPC。
 
 ## 1. 现有实现和复用边界
@@ -82,7 +84,6 @@ Orca 仅负责窗口/标签、PTY、宿主浏览器入口与执行主机路由�
     "documentId": "doc-avatar",
     "expectedEpoch": 2,
     "expectedRevision": 12,
-    "idempotencyKey": "task-7-avatar-size-1",
     "timeoutMs": 10000,
     "label": "Resize avatar",
     "ops": [
@@ -138,16 +139,18 @@ Orca 仅负责窗口/标签、PTY、宿主浏览器入口与执行主机路由�
 }
 ```
 
-业务错误目录：`UNAUTHORIZED`、`FORBIDDEN`、`CAPABILITY_UNAVAILABLE`、`PROJECT_NOT_FOUND`、`PATH_OUTSIDE_PROJECT`、`INSTANCE_CAPACITY_BLOCKED`、`INSTANCE_SUSPENDED`、`INSTANCE_GENERATION_MISMATCH`、`LEASE_EXPIRED`、`DOCUMENT_NOT_FOUND`、`DOCUMENT_DIRTY`、`EXTERNAL_CONFLICT`、`REVISION_CONFLICT`、`AMBIGUOUS_TARGET`、`REFERENCE_INVALID`、`COMPONENT_UNSUPPORTED`、`VIEW_REQUIRED`、`RENDERER_UNAVAILABLE`、`RENDER_NOT_READY`、`STALE_FRAME`、`PREVIEW_SCENE_REQUIRED`、`RUN_STOPPED`、`OPERATION_CANCELLED`、`TIMEOUT`、`RESULT_TOO_LARGE`、`IDEMPOTENCY_CONFLICT`、`EVENT_CURSOR_EXPIRED`。
+业务错误目录：`UNAUTHORIZED`、`FORBIDDEN`、`CAPABILITY_UNAVAILABLE`、`PROJECT_NOT_FOUND`、`PATH_OUTSIDE_PROJECT`、`INSTANCE_CAPACITY_BLOCKED`、`INSTANCE_SUSPENDED`、`INSTANCE_GENERATION_MISMATCH`、`LEASE_EXPIRED`、`DOCUMENT_NOT_FOUND`、`DOCUMENT_DIRTY`、`EXTERNAL_CONFLICT`、`REVISION_CONFLICT`、`AMBIGUOUS_TARGET`、`REFERENCE_INVALID`、`SYNCED_PREFAB`、`COMPONENT_UNSUPPORTED`、`VIEW_REQUIRED`、`RENDERER_UNAVAILABLE`、`RENDER_NOT_READY`、`STALE_FRAME`、`PREVIEW_SCENE_REQUIRED`、`RUN_STOPPED`、`OPERATION_CANCELLED`、`TIMEOUT`、`RESULT_TOO_LARGE`、`IDEMPOTENCY_CONFLICT`、`EVENT_CURSOR_EXPIRED`。
+
+`SYNCED_PREFAB` 保留现有 agent 保护：修改自动同步实例中无法持久保存的内容，或建立不允许的内部引用时拒绝。返回来源资产及原因；不能自动取消同步来绕过保护。
 
 ## 6. 并发、保存和重试
 
 - 所有 document 写入必须携带 expectedEpoch/revision，文件写入还需 expectedDiskHash；缺失参数即拒绝。首读可以无 expected 值，查询结果应附版本。
-- `document.apply` 是**单文档**原子事务，先验证全部 ops，再执行/生成一次 undo。任一失败不改变内容、revision 或历史。返回 ID 映射供后续操作引用。
+- `document.apply` 是**单文档**原子事务，先验证全部 ops，再执行/生成一次 undo。现有 Document batch 与 agent 副本预检已经提供基础；原型补服务端版本前提和适配，不重做事务引擎。任一失败不改变内容、revision 或历史。完整 v1 返回 ID 映射；原型可使用版本范围内的对象句柄，结构修改后重读。
 - Prefab apply 到源文件会涉及多个文档与磁盘：先 `prefab.planApply` 返回影响范围和所有 revision/hash，再 `prefab.apply` 提交；实现持久提交日志前该能力必须标记不可用，不能假装普通 batch 就是跨文件事务。
 - 新 API 不隐式保存。save 原子替换、保留 UUID/meta，先核对磁盘哈希；外部变更先返回 diff/conflict。overwrite 必须是显式用户决策，AI 默认拒绝覆盖。
 - undo/redo 必须针对明确 transactionId 且满足 historyHead；不能撤销别的用户后来完成的操作。提供文档 history 供确认。
-- idempotencyKey 作用域为 project + actor + method，服务保留请求哈希及结果（至少 24 小时或明确公布的保留窗口）；同 key 同内容重放结果，不同内容报错。进程换代后必须查询日志/当前状态，不重放未知结果的写请求。
+- 文档写入依靠版本前提防止过期重放，保留已有请求 ID 去重，不要求原型新增 24 小时持久幂等日志。超时后回读状态/可用历史；版本冲突不能证明先前请求成功，不能换成新版本号直接重放。导入、构建等后续长任务按需引入 idempotencyKey：作用域为 project + actor + method，同 key 同内容重放结果，不同内容报错，保留窗口由能力声明。进程换代后先核对结果。
 - deadline 到期不证明写入失败。返回 `outcomeUnknown` 和 operationId，先查结果再决定重试；取消只在尚未提交时成立，提交后返回 completed，不宣称回滚。
 - 切分支由宿主进行，API 提供 `project.reconcile`：暂停新写入、合并文件事件、更新索引、重载干净文档/标记脏文档冲突、增加相关 epoch、废弃旧渲染任务。绝不自动 stash/checkout/reset 用户文件。
 
@@ -167,7 +170,7 @@ Play 的浏览器入口、stash、关闭规则见 [浏览器预览设计](browse
 
 建议初值（不是现有性能承诺）：普通 RPC deadline 10 秒，长任务立即返回 accepted，由 operation.wait 等待（默认上限 120 秒，可取消）；单请求 1 MiB；单事务 1000 ops；分页 100 默认/1000 最大；图片通过 artifacts 下载而非把 Base64 塞进日志；单截图最大 4096×4096，单产物 20 MiB。实际限制必须由 capabilities 返回。
 
-生命周期实例最多 3 个的计数、租约和安全暂停见 [实例预算](instance-budget-design.md)。缓存对象、视图和 Play 需要独立内存统计，不能只数 Rust 进程。
+后续生命周期实例预算、租约和安全暂停见 [实例预算](instance-budget-design.md)。3 个是待测的试行设想，不是现有保证；单进程预览缓存的 4 项目预算另计。缓存对象、视图和 Play 需要独立内存统计，不能只数 Rust 进程。
 
 ## 9. 端点安全与宿主边界
 
@@ -194,10 +197,8 @@ Play 的浏览器入口、stash、关闭规则见 [浏览器预览设计](browse
 
 ## 11. 后续开发切片和验收
 
-第一批：capabilities + envelope + document open/snapshot/query/apply/save/diff + view attach/show/waitReady + capture + logs。复用现有 Hub 与六个 MCP 工具，先完成“改 Prefab → 同一页面看到 → 保存”的闭环。
+原型 M0 只实现 [产品总方案](ai-cocos-product-plan.md)第 1 节五项：固定内置 MCP 二进制与当前实例、页面 WS 上报、紧凑 `editor_context`、同版本截图/测量、原子批量的版本前提与保存哈希。`editor_context` 是拟新增工具，组合 `ui.selection.inspect`、`scene.measure`、`capture.take`、`logs.read` 的必要语义；不要求先发布本文全套端点。
 
-第二批：独立浏览器 Play、运行输入/树/日志、任务取消、租约和 3 实例预算。第三批：资产批量导入、Prefab 多文件 apply、动画/材质/粒子、构建与扩展高级接口。
+M1 完成参考图到 Prefab 的编辑、自看、引用与事件绑定、交付；页面切换对应目录中的 `ui.document.show`。独立浏览器 Play 与测量后的 Orca 实例回收后置。跨进程租约、资产批量导入、多文件 Prefab apply、构建等按实际任务再选取。
 
-每个注册方法必须有 JSON Schema、正负例、语义检查、执行与取消说明；契约测试覆盖 CLI/MCP/HTTP 同输入同输出。核心 E2E 用同一份项目副本验证 Web 人工修改与 AI 修改一致、幂等重试、双客户端冲突、分支外部变更、错误不写盘、过期截图拒绝、无 UI 编辑和真实浏览器视觉验证。未实现的方法必须在 capabilities 标注 unavailable，不返回空成功。
-
-本文是接口设计基线，不是“所有 Creator 原生功能已 headless 化”的承诺。方法目录覆盖产品操作面；各方法的 schema 和适配器按上述批次实现后才成为运行时 API。
+已交付的方法必须有明确输入输出、版本前提、错误和正负例。先验证 Claude/Codex 连到同一实例、图加数值一致、写入冲突、保存冲突、同步 Prefab 保护及重连；有了其他传输适配再验证跨传输一致性。未实现能力明确 unavailable，不返回空成功。本文不是“所有 Creator 原生功能已 headless 化”的承诺。

@@ -1,7 +1,7 @@
 {
-  "version": "3.8.271",
+  "version": "3.8.272",
   "target": "darwin-arm64",
-  "file": "a5-game-context-3.8.271-darwin-arm64.tgz",
-  "sha256": "e58df66838af4cdf631a96ac17c817bc8d043a8b98c9afa311fbe31449732513",
-  "source": "GitNexus feature/node-editor-view @ 5d7911f01 (3.8.271), npm run pack:platform"
+  "file": "a5-game-context-3.8.272-darwin-arm64.tgz",
+  "sha256": "894fa8f989eb448070bf4eee367a3ee0f6250762f76d48055c80049310143e29",
+  "source": "GitNexus feature/node-editor-view @ 5d7911f01 + M0 working tree (3.8.272), local macOS release, npm run pack:platform"
 }
