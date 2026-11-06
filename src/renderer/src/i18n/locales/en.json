@@ -23712,5 +23712,18 @@
     "tab": {
       "title": "Cocos Creator"
     }
+  },
+  "cocosSidebar": {
+    "terminal": {
+      "createFailed": "Could not open the terminal. Check the workspace connection and agent settings.",
+      "newSession": "New session",
+      "title": "Terminal",
+      "history": "Session history",
+      "sessions": "Terminal sessions",
+      "closeSession": "Close {{name}}",
+      "connecting": "Connecting to terminal…",
+      "empty": "Open a terminal or choose an AI agent with +.",
+      "moveExisting": "Move existing terminal here"
+    }
   }
 }

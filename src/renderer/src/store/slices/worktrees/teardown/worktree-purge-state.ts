@@ -175,6 +175,7 @@ export function buildFullWorktreePurgeState(
     recentlyClosedBrowserTabsByWorktree: omitByWorktree(s.recentlyClosedBrowserTabsByWorktree),
     pendingReconnectTabByWorktree: omitByWorktree(s.pendingReconnectTabByWorktree),
     rightSidebarTabByWorktree: pruneRightSidebarTabByWorktree(),
+    sidebarTerminalSessionsByWorktree: omitByWorktree(s.sidebarTerminalSessionsByWorktree ?? {}),
     rightSidebarExplorerViewByWorktree: omitByWorktree(s.rightSidebarExplorerViewByWorktree ?? {}),
     gitStatusByWorktree: omitByWorktree(s.gitStatusByWorktree),
     remoteStatusesByWorktree: omitByWorktree(s.remoteStatusesByWorktree),

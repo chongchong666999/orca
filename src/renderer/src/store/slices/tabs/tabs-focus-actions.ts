@@ -1,3 +1,4 @@
+import { isSidebarTerminal } from '../../../../../shared/sidebar-terminal-sessions'
 import type { TabsSlice, TabsSliceGet, TabsSliceSet } from './tabs-slice-contract'
 import {
   findTabAndWorktree,
@@ -120,6 +121,21 @@ export function createTabsFocusActions(
           return state
         }
         const { tab, worktreeId } = found
+        if (
+          tab.contentType === 'terminal' &&
+          isSidebarTerminal(state.sidebarTerminalSessionsByWorktree, worktreeId, tab.entityId)
+        ) {
+          const sessions = state.sidebarTerminalSessionsByWorktree[worktreeId]
+          return {
+            rightSidebarOpen: true,
+            rightSidebarTab: 'terminal' as const,
+            rightSidebarRouteRequestId: state.rightSidebarRouteRequestId + 1,
+            sidebarTerminalSessionsByWorktree: {
+              ...state.sidebarTerminalSessionsByWorktree,
+              [worktreeId]: { ...sessions, activeTabId: tab.entityId }
+            }
+          }
+        }
         if (ORCA_LAYOUT_OWNER_IS_MAIN && tab.isPreview && !opts?.preservePreview) {
           promoted.push(tab)
         }

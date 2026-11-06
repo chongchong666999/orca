@@ -12,6 +12,7 @@ import {
 } from './tab-bar-item-model'
 import type { DropIndicator } from './drop-indicator'
 import { sameStringArray } from '@/runtime/web-session-tabs-sync/state-equality-core'
+import { useAppStore } from '@/store'
 
 export type TabBarItemProjection = {
   orderedItems: TabBarItem[]
@@ -50,7 +51,14 @@ export function useTabBarItemProjection({
     activeTabType,
     expandedPaneByTabId
   } = props
-  const terminalMap = useMemo(() => new Map(tabs.map((tab) => [tab.id, tab])), [tabs])
+  const sidebarSessions = useAppStore((s) =>
+    props.worktreeId ? s.sidebarTerminalSessionsByWorktree?.[props.worktreeId] : undefined
+  )
+  const centralTabs = useMemo(
+    () => tabs.filter((tab) => !sidebarSessions?.tabIds.includes(tab.id)),
+    [tabs, sidebarSessions]
+  )
+  const terminalMap = useMemo(() => new Map(centralTabs.map((tab) => [tab.id, tab])), [centralTabs])
   const editorMap = useMemo(
     () => new Map((editorFiles ?? []).map((file) => [file.tabId ?? file.id, file])),
     [editorFiles]
@@ -63,7 +71,7 @@ export function useTabBarItemProjection({
     () => new Map((agentSessionTabs ?? []).map((tab) => [tab.id, tab])),
     [agentSessionTabs]
   )
-  const terminalIds = useMemo(() => tabs.map((tab) => tab.id), [tabs])
+  const terminalIds = useMemo(() => centralTabs.map((tab) => tab.id), [centralTabs])
   const editorFileIds = useMemo(
     () => editorFiles?.map((file) => file.tabId ?? file.id) ?? [],
     [editorFiles]

@@ -8,6 +8,7 @@ import { useAppStore } from '@/store'
 import { reconcileTabOrder } from '../tab-bar/reconcile-order'
 import { closeLocalTerminalTabState } from './close-local-terminal-tab-state'
 import { isEditorTabContentType } from '@/store/slices/editor/tabs/editor-tab-content-type'
+import { isSidebarTerminal } from '../../../../shared/sidebar-terminal-sessions'
 
 type TerminalTabBulkActionState = ReturnType<typeof useAppStore.getState>
 
@@ -31,7 +32,9 @@ export function closeOtherTerminalTabs(tabId: string, activeWorktreeId: string |
   if (hasUnroutableTerminalWorktreeOwner(state, activeWorktreeId)) {
     return
   }
-  const currentTabs = state.tabsByWorktree[activeWorktreeId] ?? []
+  const currentTabs = (state.tabsByWorktree[activeWorktreeId] ?? []).filter(
+    (tab) => !isSidebarTerminal(state.sidebarTerminalSessionsByWorktree, activeWorktreeId, tab.id)
+  )
   state.setActiveTab(tabId)
   const runtimeEnvironmentId = resolveTerminalWorktreeRoute(
     state,
@@ -66,7 +69,9 @@ export function closeTerminalTabsToRight(tabId: string, activeWorktreeId: string
   if (hasUnroutableTerminalWorktreeOwner(state, activeWorktreeId)) {
     return
   }
-  const currentTerminalTabs = state.tabsByWorktree[activeWorktreeId] ?? []
+  const currentTerminalTabs = (state.tabsByWorktree[activeWorktreeId] ?? []).filter(
+    (tab) => !isSidebarTerminal(state.sidebarTerminalSessionsByWorktree, activeWorktreeId, tab.id)
+  )
   const currentEditorFiles = state.openFiles.filter((file) => file.worktreeId === activeWorktreeId)
   const runtimeEnvironmentId = resolveTerminalWorktreeRoute(
     state,

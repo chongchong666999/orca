@@ -26,6 +26,7 @@ import { dropNativeChatPendingAttachmentsForTab } from '@/components/native-chat
 import { noteAgentLaunchPaneClosedByUser } from '@/lib/agent-launch-pane-closes'
 import { settleAgentLaunchPaneStart } from '@/lib/agent-launch-pane-start'
 import { settleAttentionRemovedBy } from '../slices/workspace-attention/attention-removal-follow-up'
+import { removeSidebarTerminalSession } from '../../../../shared/sidebar-terminal-sessions'
 import { runAsAutomaticDeselection } from '../active-worktree-deselection-intent'
 
 export function createTerminalTabCloseActions(
@@ -197,6 +198,15 @@ export function createTerminalTabCloseActions(
           }
           return {
             tabsByWorktree: next,
+            ...(closedWorktreeId && s.sidebarTerminalSessionsByWorktree
+              ? {
+                  sidebarTerminalSessionsByWorktree: removeSidebarTerminalSession(
+                    s.sidebarTerminalSessionsByWorktree,
+                    closedWorktreeId,
+                    tabId
+                  )
+                }
+              : {}),
             activeTabId: s.activeTabId === tabId ? null : s.activeTabId,
             activeTabIdByWorktree: nextActiveTabIdByWorktree,
             ptyIdsByTabId: nextPtyIdsByTabId,

@@ -2,6 +2,7 @@ import { resolveActiveTabOwnerWorktreeId } from '../slices/active-tab-owner-work
 import { getTerminalTabOwnerWorktreeId } from '../slices/terminal-tab-owner-index'
 import type { TerminalSlice, TerminalStoreGet, TerminalStoreSet } from './terminal-state'
 import { ownsGlobalSelection } from '../global-selection-owner'
+import { isSidebarTerminal } from '../../../../shared/sidebar-terminal-sessions'
 
 export function createTerminalTabNavigationActions(
   set: TerminalStoreSet,
@@ -53,6 +54,22 @@ export function createTerminalTabNavigationActions(
       })
     },
     setActiveTab: (tabId) => {
+      const current = get()
+      const owner = resolveActiveTabOwnerWorktreeId(
+        current.tabsByWorktree,
+        current.activeWorktreeId,
+        tabId
+      )
+      if (
+        owner &&
+        tabId &&
+        isSidebarTerminal(current.sidebarTerminalSessionsByWorktree, owner, tabId)
+      ) {
+        current.selectSidebarTerminal(owner, tabId)
+        current.setRightSidebarOpen(true)
+        current.setRightSidebarTab('terminal')
+        return
+      }
       let tabOwnerWorktreeId: string | null = null
       set((s) => {
         tabOwnerWorktreeId = resolveActiveTabOwnerWorktreeId(

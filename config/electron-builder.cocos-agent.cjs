@@ -1,5 +1,6 @@
 // Why: overlay keeps the fork's identity out of upstream's builder config so syncing Orca never conflicts here.
 const base = require('./electron-builder.config.cjs')
+const { randomUUID } = require('node:crypto')
 const { existsSync } = require('node:fs')
 const path = require('node:path')
 const lock = require('./cocos-agent/a5-game-context.lock.json')
@@ -17,6 +18,8 @@ module.exports = {
   forceCodeSigning: false,
   mac: {
     ...base.mac,
+    // Ad-hoc builds cannot share a TCC client while an older build still owns live terminals.
+    appId: `com.a5labs.cocos-agent.adhoc.b${randomUUID().replaceAll('-', '')}`,
     identity: '-',
     hardenedRuntime: false,
     notarize: false,

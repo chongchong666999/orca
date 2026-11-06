@@ -24,6 +24,7 @@ const WORKTREE_ID_KEYED_MAP_KEYS = [
   'recentlyClosedBrowserTabsByWorktree',
   'pendingReconnectTabByWorktree',
   'rightSidebarTabByWorktree',
+  'sidebarTerminalSessionsByWorktree',
   'rightSidebarExplorerViewByWorktree',
   'gitStatusByWorktree',
   'gitStatusHeadByWorktree',

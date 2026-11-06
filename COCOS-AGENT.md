@@ -62,6 +62,20 @@ cocos-agent 基于 [Orca](https://github.com/stablyai/orca)（MIT 协议，保�
 
 本轮验收与已知限制见 [2026-11-06 内置编辑器验收](docs/cocos-agent/acceptance-2026-11-06.md)。内置 GitNexus 版本为 3.8.271，来源提交 `5d7911f01`。
 
+### 右侧终端阶段（2026-11-06）
+
+设计与交付入口见 [工作台目录](docs/cocos-agent/README.md)。新增 `SidebarTerminalPanel.tsx`、`SidebarTerminalCreateMenu.tsx`、`sidebar-terminal-launch.ts`，都位于 `src/renderer/src/components/right-sidebar/`。
+
+同步上游时保留以下挂点：
+
+- `right-sidebar-panel-content.tsx` 与 `use-right-sidebar-activity-items.ts`：独立 terminal 入口，vault 恢复原有智能体历史。
+- `TerminalOverlaySlot.tsx`：增加 inline 展示方式，侧栏复用完整 TerminalPane 的启动、重连、输入、退出与关闭保护。中央的 Overlay/Legacy 路径跳过已放入侧栏的会话。
+- `sidebar-terminal-sessions.ts` 与 UI 持久化：按工作区记录侧栏归属和当前会话；标签栏过滤、会话定位、退出清理、工作区改名/移除同步处理，原进程及主机路由保持不变。
+- `src/shared/constants.ts::getDefaultUIState`：本分支的新配置默认为 terminal、宽度 420；已有显式侧栏选择不覆盖。
+- `i18n/locales/{en,zh,zh-Hant}.json`：新增 `cocosSidebar.terminal` 文案。
+
+本轮 a5-game-context 的实例预算、浏览器 Play 和公共 API 均只做文档；GitNexus 源码及内置版本未改变。
+
 本地 0.1.0 包已生成：`dist/cocos-agent-1.4.214-local.1793950875656.7b9f96fd126c-arm64.dmg`，另有同名 zip 和各自的 `.sha256`。代码来自 `7b9f96fd126c`；已完成本机后台首开、编辑保存、预览、退出重开和内置终端命令验证。只做 ad-hoc 签名，未公证；另一台 Mac 的实际安装仍未验收。
 
 文档保留挂点：`.gitignore` 为 `docs/cocos-agent/` 加入持久文档白名单，避免验收记录被默认的 `docs/**` 忽略规则阻止暂存。
@@ -76,9 +90,9 @@ node config/scripts/build-cocos-agent-mac.mjs --skip-typecheck   # 更快
 node config/scripts/build-cocos-agent-mac.mjs --release          # arm64 dmg、zip、sha256
 ```
 
-产物在 `dist/mac-arm64/cocos-agent.app`；release 产物在 `dist/cocos-agent-<内部构建版本>-arm64.{dmg,zip}`，各带 `.sha256`。应用和内置原生程序使用 ad-hoc 签名，构建结束执行 `codesign --verify --deep --strict`。用户数据在 `~/Library/Application Support/cocos-agent`，终端 daemon、socket 和 launchd 任务都根据这个目录区分。
+产物在 `dist/mac-arm64/cocos-agent.app`；release 产物在 `dist/cocos-agent-<内部构建版本>-arm64.{dmg,zip}`，各带 `.sha256`。应用和内置原生程序使用 ad-hoc 签名，不需要开发者账号或证书，构建结束执行 `codesign --verify --deep --strict`。macOS 每次打包生成独立的 `com.a5labs.cocos-agent.adhoc.b<随机构建标识>`，避免新版应用和旧版保留终端共用同一个 TCC 权限记录、因不同代码哈希反复要求授权。同一安装包保留该标识；新构建需要分别授权，系统隐私设置可能出现多个同名条目。这不是跨版本免授权方案。用户数据仍在 `~/Library/Application Support/cocos-agent`，终端 daemon、socket 和 launchd 任务继续根据这个目录区分，项目、会话及设置不迁移。
 
-本地分发首次打开：把应用复制到 Applications 后右键选择“打开”；若下载隔离阻止启动，在系统设置的隐私与安全中允许打开。仅对确认来源的本地包，亦可运行 `xattr -dr com.apple.quarantine /Applications/cocos-agent.app` 后打开。
+本地分发首次打开：把应用复制到 Applications；若系统阻止启动，按 [Apple 的说明](https://support.apple.com/en-us/102445)在“系统设置 → 隐私与安全性 → 仍要打开”中确认。文件夹访问是另一项授权，首次访问时按需允许。旧版后台终端可能在关闭窗口后继续运行；处理旧包的授权冲突时，先结束对应终端中的任务，再从会话管理重启终端后台。不要只关闭窗口，也不要重置所有应用的系统权限。原因、验证与边界见 [macOS 内部分发权限记录](docs/cocos-agent/macos-internal-distribution-2026-11-06.md)。
 
 只改界面时不用打包，直接 `pnpm dev`。开发模式下 app 里没有内置的 a5-game-context，用环境变量指定一个能用的版本：`A5_GAME_CONTEXT_BIN=<GitNexus>/context-engine/native-engine/bin/darwin-arm64/a5-game-context pnpm dev`。
 

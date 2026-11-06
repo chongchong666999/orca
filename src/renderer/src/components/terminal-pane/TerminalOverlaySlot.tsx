@@ -28,6 +28,7 @@ type TerminalOverlaySlotProps = {
   consumeSuppressedPtyExit: (ptyId: string) => boolean
   /** Read when a close is requested; the returned reaction runs once it lands. */
   captureEmptiedReaction: () => () => void
+  inline?: boolean
 }
 
 export const TerminalOverlaySlot = memo(function TerminalOverlaySlot({
@@ -45,8 +46,13 @@ export const TerminalOverlaySlot = memo(function TerminalOverlaySlot({
   activityTerminalPortal,
   onFocusOwningGroup,
   consumeSuppressedPtyExit,
-  captureEmptiedReaction
+  captureEmptiedReaction,
+  inline = false
 }: TerminalOverlaySlotProps): React.JSX.Element {
+  const sidebarFocused = useAppStore((s) => s.sidebarTerminalFocused === true)
+  const active =
+    (isActive || activityTerminalPortal?.active === true) &&
+    (inline ? sidebarFocused : !sidebarFocused)
   const [shouldMeasureHiddenStartup, setShouldMeasureHiddenStartup] = useState(
     () => useAppStore.getState().pendingStartupByTabId[terminalTabId] !== undefined
   )
@@ -64,10 +70,11 @@ export const TerminalOverlaySlot = memo(function TerminalOverlaySlot({
       tabId={terminalTabId}
       worktreeId={worktreeId}
       cwd={startupCwd ?? worktreePath}
-      isActive={isActive || activityTerminalPortal?.active === true}
+      isActive={active}
       // Retain TerminalPane outside reparented group subtrees to preserve TUI state; visibility still throttles hidden rendering.
       isVisible={isVisible || activityTerminalPortal !== null}
       isWorktreeActive={isWorktreeActive || activityTerminalPortal !== null}
+      showSplitButton={!inline}
       isolatedPaneKey={activityTerminalPortal?.paneKey ?? null}
       measureWhileHidden={prewarm !== null}
       warmRendererWhileHidden={prewarm === 'warm'}
@@ -85,6 +92,7 @@ export const TerminalOverlaySlot = memo(function TerminalOverlaySlot({
           return
         }
         closeTerminalTab(terminalTabId, {
+          preserveWorktreeSelection: inline,
           reason: 'pty-exit',
           lifecyclePtyId: ptyId,
           onClosed: captureEmptiedReaction()
@@ -92,10 +100,17 @@ export const TerminalOverlaySlot = memo(function TerminalOverlaySlot({
       }}
       onCloseTab={() => {
         // Use the guarded close path so pinned terminals still require confirmation.
-        closeTerminalTab(terminalTabId, { onClosed: captureEmptiedReaction() })
+        closeTerminalTab(terminalTabId, {
+          preserveWorktreeSelection: inline,
+          onClosed: captureEmptiedReaction()
+        })
       }}
     />
   )
+
+  if (inline) {
+    return <div className={isVisible ? 'absolute inset-0' : 'hidden'}>{terminalPane}</div>
+  }
 
   if (activityTerminalPortal) {
     return createPortal(

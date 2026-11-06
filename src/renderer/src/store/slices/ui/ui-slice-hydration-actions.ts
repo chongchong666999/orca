@@ -1,3 +1,4 @@
+import { normalizeSidebarTerminalSessions } from '../../../../../shared/sidebar-terminal-sessions'
 import type { UISlice, UISliceGet, UISliceSet } from './ui-slice-contract'
 import type { AppState } from '../../types'
 import { normalizeRightSidebarRoute } from '../../right-sidebar-route'
@@ -123,6 +124,9 @@ export function createUiHydrationActions(set: UISliceSet, _get: UISliceGet): Par
           ),
           sidebarOpen: typeof ui.sidebarOpen === 'boolean' ? ui.sidebarOpen : true,
           rightSidebarOpen: typeof ui.rightSidebarOpen === 'boolean' ? ui.rightSidebarOpen : true,
+          sidebarTerminalSessionsByWorktree: normalizeSidebarTerminalSessions(
+            ui.sidebarTerminalSessionsByWorktree
+          ),
           ...normalizeRightSidebarRoute(ui.rightSidebarTab, ui.rightSidebarExplorerView),
           groupBy: (ui.groupBy as UISlice['groupBy'] | 'parent') === 'parent' ? 'repo' : ui.groupBy,
           sortBy,

@@ -7,6 +7,7 @@ import { getLocalBuildIdentity } from './build-mac-local.mjs'
 const skipTypecheck = process.argv.includes('--skip-typecheck')
 const release = process.argv.includes('--release')
 const pnpm = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm'
+const appPath = `dist/mac-${process.arch}/cocos-agent.app`
 
 function run(args, env = { ...process.env, ORCA_SKIP_DEV_CLI_INSTALL: '1' }) {
   execFileSync(pnpm, args, { env, stdio: 'inherit' })
@@ -39,10 +40,19 @@ run(
     ORCA_LOCAL_BUILD_VERSION: identity.version
   }
 )
-console.log(`[build:cocos-agent] done: dist/mac-${process.arch}/cocos-agent.app`)
-execFileSync('codesign', ['--verify', '--deep', '--strict', 'dist/mac-arm64/cocos-agent.app'], {
+console.log(`[build:cocos-agent] done: ${appPath}`)
+execFileSync('codesign', ['--verify', '--deep', '--strict', appPath], {
   stdio: 'inherit'
 })
+const bundleId = execFileSync(
+  '/usr/bin/plutil',
+  ['-extract', 'CFBundleIdentifier', 'raw', '-o', '-', path.join(appPath, 'Contents/Info.plist')],
+  { encoding: 'utf8' }
+).trim()
+if (!/^com\.a5labs\.cocos-agent\.adhoc\.b[0-9a-f]{32}$/.test(bundleId)) {
+  throw new Error('The internal macOS package must have its own ad-hoc privacy identity')
+}
+console.log(`[build:cocos-agent] privacy identity: ${bundleId}`)
 if (release) {
   for (const ext of ['dmg', 'zip']) {
     const file = `cocos-agent-${identity.version}-arm64.${ext}`

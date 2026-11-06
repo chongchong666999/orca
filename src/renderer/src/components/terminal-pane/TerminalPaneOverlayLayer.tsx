@@ -66,6 +66,11 @@ const TerminalPaneOverlayLayer = memo(function TerminalPaneOverlayLayer({
       activeGroupId: state.activeGroupIdByWorktree[worktreeId]
     }))
   )
+  const sidebarSessions = useAppStore((s) => s.sidebarTerminalSessionsByWorktree?.[worktreeId])
+  const centralTerminalTabs = useMemo(
+    () => terminalTabs.filter((tab) => !sidebarSessions?.tabIds.includes(tab.id)),
+    [terminalTabs, sidebarSessions]
+  )
   const focusGroup = useAppStore((state) => state.focusGroup)
   const consumeSuppressedPtyExit = useAppStore((state) => state.consumeSuppressedPtyExit)
 
@@ -119,7 +124,7 @@ const TerminalPaneOverlayLayer = memo(function TerminalPaneOverlayLayer({
 
   const parkedTerminalTabIds = useTerminalTabColdParking({
     worktreeId,
-    terminalTabs,
+    terminalTabs: centralTerminalTabs,
     assignments,
     isWorktreeActive,
     activeTerminalTabId,
@@ -136,7 +141,7 @@ const TerminalPaneOverlayLayer = memo(function TerminalPaneOverlayLayer({
 
   return (
     <>
-      {terminalTabs.map((terminalTab) => {
+      {centralTerminalTabs.map((terminalTab) => {
         const assignment = assignments.get(terminalTab.id)
         const isVisible = Boolean(isWorktreeActive && assignment?.isActiveInGroup)
         if (!shouldMountBackgroundWorktreeTab(backgroundMountTabIds, terminalTab.id)) {

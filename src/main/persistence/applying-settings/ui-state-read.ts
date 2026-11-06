@@ -32,6 +32,7 @@ import {
   normalizeSortBy
 } from './ui-selection-normalization'
 import { stripMainOwnedTelemetryMarkerFromUI } from './ui-interaction-merge'
+import { normalizeSidebarTerminalSessions } from '../../../shared/sidebar-terminal-sessions'
 
 export function getPersistedUI(
   state: PersistedState,
@@ -41,6 +42,13 @@ export function getPersistedUI(
   return {
     ...getDefaultUIState(),
     ...uiState,
+    ...(state.ui?.sidebarTerminalSessionsByWorktree !== undefined
+      ? {
+          sidebarTerminalSessionsByWorktree: normalizeSidebarTerminalSessions(
+            state.ui.sidebarTerminalSessionsByWorktree
+          )
+        }
+      : {}),
     groupBy: normalizeGroupBy(state.ui?.groupBy),
     sortBy: normalizeSortBy(state.ui?.sortBy),
     projectOrderBy: normalizeProjectOrderBy(state.ui?.projectOrderBy),

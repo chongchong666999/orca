@@ -8,6 +8,7 @@ export type PersistedUIWriteBaseline = {
   rightSidebarTab: PersistedUIState['rightSidebarTab']
   rightSidebarExplorerView: PersistedUIState['rightSidebarExplorerView']
   rightSidebarWidth: number
+  sidebarTerminalSessionsByWorktree?: PersistedUIState['sidebarTerminalSessionsByWorktree']
   markdownTocPanelWidth: number
   combinedDiffFileTreeWidth: number
   groupBy: PersistedUIState['groupBy']
@@ -38,6 +39,7 @@ const PERSISTED_UI_WRITE_BASELINE_FIELD_SET = {
   rightSidebarTab: true,
   rightSidebarExplorerView: true,
   rightSidebarWidth: true,
+  sidebarTerminalSessionsByWorktree: true,
   markdownTocPanelWidth: true,
   combinedDiffFileTreeWidth: true,
   groupBy: true,

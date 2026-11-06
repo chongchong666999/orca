@@ -4,12 +4,16 @@ import { TerminalRestoringPlaceholder } from './terminal-pane/TerminalRestoringP
 import { findActivityTerminalPortal } from './activity/activity-terminal-portal'
 import { shouldMountBackgroundWorktreeTab } from './terminal/background-terminal-worktree-mount'
 import type { TerminalController } from './use-terminal-controller'
+import { useAppStore } from '@/store'
+import { isSidebarTerminal } from '../../../shared/sidebar-terminal-sessions'
 
 export function TerminalLegacyTerminalPanes({
   controller
 }: {
   controller: TerminalController
 }): React.JSX.Element {
+  const sidebarSessions = useAppStore((s) => s.sidebarTerminalSessionsByWorktree)
+  const sidebarFocused = useAppStore((s) => s.sidebarTerminalFocused === true)
   const {
     activeTabId,
     activeTabType,
@@ -61,6 +65,9 @@ export function TerminalLegacyTerminalPanes({
               aria-hidden={!isVisible}
             >
               {(tabsByWorktree[workspace.id] ?? []).map((tab) => {
+                if (isSidebarTerminal(sidebarSessions, workspace.id, tab.id)) {
+                  return null
+                }
                 const isActiveTerminalTab =
                   isVisible && tab.id === activeTabId && activeTabType === 'terminal'
                 if (
@@ -90,7 +97,10 @@ export function TerminalLegacyTerminalPanes({
                     tabId={tab.id}
                     worktreeId={workspace.id}
                     cwd={tab.startupCwd ?? workspace.path}
-                    isActive={isActiveTerminalTab || activityTerminalPortal?.active === true}
+                    isActive={
+                      !sidebarFocused &&
+                      (isActiveTerminalTab || activityTerminalPortal?.active === true)
+                    }
                     isVisible={isActiveTerminalTab || isActivityPortalTab}
                     isWorktreeActive={isVisible || isActivityPortalTab}
                     isolatedPaneKey={activityTerminalPortal?.paneKey ?? null}

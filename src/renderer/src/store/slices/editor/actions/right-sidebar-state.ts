@@ -5,10 +5,21 @@ import type {
   RightSidebarExplorerView
 } from '../../../../../../shared/ui-chrome-types'
 import { defaultFileSearchState } from '../search/file-search-state'
+import { getDefaultUIState } from '../../../../../../shared/constants'
+import { normalizeRightSidebarRoute } from '@/store/right-sidebar-route'
+import {
+  removeSidebarTerminalSession,
+  type SidebarTerminalSessions
+} from '../../../../../../shared/sidebar-terminal-sessions'
 
 export type RightSidebarState = {
   rightSidebarOpen: boolean
   rightSidebarWidth: number
+  sidebarTerminalSessionsByWorktree: SidebarTerminalSessions
+  sidebarTerminalFocused: boolean
+  setSidebarTerminalFocused: (focused: boolean) => void
+  selectSidebarTerminal: (worktreeId: string, tabId: string) => void
+  removeSidebarTerminal: (worktreeId: string, tabId: string) => void
   rightSidebarTab: ActiveRightSidebarTab
   rightSidebarExplorerView: RightSidebarExplorerView
   rightSidebarRouteRequestId: number
@@ -36,10 +47,44 @@ export type RightSidebarState = {
 }
 
 export function createRightSidebarState(set: EditorSet, _get: EditorGet): RightSidebarState {
+  const defaults = getDefaultUIState()
   return {
-    rightSidebarOpen: false,
-    rightSidebarWidth: 280,
-    rightSidebarTab: 'explorer',
+    rightSidebarOpen: defaults.rightSidebarOpen,
+    rightSidebarWidth: defaults.rightSidebarWidth,
+    sidebarTerminalSessionsByWorktree: {},
+    sidebarTerminalFocused: false,
+    setSidebarTerminalFocused: (focused) => set({ sidebarTerminalFocused: focused }),
+    selectSidebarTerminal: (worktreeId, tabId) =>
+      set((s) => {
+        const current = s.sidebarTerminalSessionsByWorktree[worktreeId]
+        if (current?.activeTabId === tabId && current.tabIds.includes(tabId)) {
+          return s
+        }
+        return {
+          sidebarTerminalSessionsByWorktree: {
+            ...s.sidebarTerminalSessionsByWorktree,
+            [worktreeId]: {
+              tabIds: current?.tabIds.includes(tabId)
+                ? current.tabIds
+                : [...(current?.tabIds ?? []), tabId],
+              activeTabId: tabId
+            }
+          }
+        }
+      }),
+    removeSidebarTerminal: (worktreeId, tabId) =>
+      set((s) => {
+        const sessions = removeSidebarTerminalSession(
+          s.sidebarTerminalSessionsByWorktree,
+          worktreeId,
+          tabId
+        )
+        if (sessions === s.sidebarTerminalSessionsByWorktree) {
+          return s
+        }
+        return { sidebarTerminalSessionsByWorktree: sessions }
+      }),
+    rightSidebarTab: normalizeRightSidebarRoute(defaults.rightSidebarTab).rightSidebarTab,
     rightSidebarExplorerView: 'files',
     rightSidebarRouteRequestId: 0,
     aiVaultSearchFocusRequested: false,

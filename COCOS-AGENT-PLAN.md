@@ -5,6 +5,19 @@
 - **cocos-agent**：`/Users/free/Documents/work/orca`，分支 `dev/0.1.0`
 - **GitNexus**：`/Users/free/Documents/work/GitNexus`，分支 `feature/node-editor-view`。a5-game-context、Web 编辑器、cocos-cli 都在这个仓库
 
+## 后续工作台阶段（2026-11-06 新增）
+
+用户已确认内置编辑器体验，当前优先交付右侧终端。第一版侧栏预览方案经用户实测退回；修订为独立终端入口、完整 TerminalPane 与持久化侧栏归属，恢复原智能体入口。新方案入口见 [工作台设计与交付目录](docs/cocos-agent/README.md)。
+
+| 范围                | 本轮交付                                                                                   | 状态                         |
+| ------------------- | ------------------------------------------------------------------------------------------ | ---------------------------- |
+| 右侧终端            | 默认右侧，+ 选择普通终端或已配置 AI Agent；会话切换、输入、关闭，中央 Cocos 编辑器持续可见 | 修复完成，专项与实包验证通过 |
+| 最多 3 个编辑器实例 | 每主机预算、LRU、脏文档/预览/任务保护、暂停恢复与内存验收方案                              | 仅文档，后续开发             |
+| Play 浏览器预览     | Orca 独立浏览器标签；独立 Web 编辑器默认系统浏览器；就绪回执及停止规则                     | 仅文档，后续开发             |
+| Cocos Web API v1    | 对照 cocos-cli headless 和 Rust Hub，设计统一 CLI/MCP/Web 契约、完整方法目录与视觉验证流程 | 仅文档，后续开发             |
+
+本轮不修改 a5-game-context 的实例回收、Play 或自动化实现，也不恢复原生 Creator IPC 依赖。全局安装和外部 MCP 配置继续后置。Rust 不是零卡顿保证；切分支体验需要合并文件事件、增量更新与渲染任务隔离，后续以真实项目测量验收。
+
 ## v0.1.0 目标（仅 mac arm64，本地测试）
 
 1. 在 cocos-agent 里打开 Cocos 2.4.13 项目时，自动打开这个项目的 Web 编辑器标签，编辑器路径就是项目路径。打开其他项目时，保持默认的终端。
@@ -65,6 +78,8 @@ cocos-agent.app/Contents/Resources/
 | D4  | 版本号                   | app 内部版本继续用 Orca 的版本号（守护进程、CLI 的兼容检查都依赖它），「关于」里另外显示 cocos-agent 0.1.0                            |
 | D5  | 编辑器用什么跑 Node      | Electron 充当 Node；S1.2 已验证通过（2026-11-06）                                                                                     |
 | D6  | cocos-agent 的代码放在哪 | `origin` = `git@github.com-chongchong666999:chongchong666999/orca.git`。loop 只在本地 commit，**push 要你明确说**。release 包本地分发 |
+
+2026-11-06 D2 补充：公司内部继续使用无证书 ad-hoc 包；每次打包独立系统权限标识，避免新旧包争用同一文件夹授权。首次打开按系统“仍要打开”确认，新构建需分别授权。安装说明以 [权限记录](docs/cocos-agent/macos-internal-distribution-2026-11-06.md) 为准。
 
 ## 步骤总表
 

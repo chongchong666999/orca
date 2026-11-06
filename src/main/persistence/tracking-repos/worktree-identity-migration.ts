@@ -281,6 +281,9 @@ export function migrateWorktreeIdentity(
     changed = moveKey(state.ui.explorerDisplayRootByWorktree) || changed
   }
   const showDotfiles = state.ui?.showDotfilesByWorktree
+  if (state.ui?.sidebarTerminalSessionsByWorktree) {
+    changed = moveKey(state.ui.sidebarTerminalSessionsByWorktree) || changed
+  }
   if (showDotfiles) {
     changed = moveKey(showDotfiles) || changed
   }
