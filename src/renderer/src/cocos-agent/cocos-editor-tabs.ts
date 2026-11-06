@@ -53,6 +53,10 @@ function editorIdentity(url: string, requireMarker: boolean): string | null {
   }
 }
 
+export function isCocosEditorPageUrl(url: string): boolean {
+  return editorIdentity(url, true) !== null
+}
+
 /** Browser tabs in the workspace showing an editor page cocos-agent opened, including ones restored from an earlier app session. */
 export function findEditorPageTabs(
   state: AppState,

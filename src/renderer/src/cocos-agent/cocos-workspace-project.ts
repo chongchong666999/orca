@@ -1,3 +1,4 @@
+import './cocos-agent-window-types'
 import type {
   CocosAgentPreloadApi,
   CocosProjectDetection

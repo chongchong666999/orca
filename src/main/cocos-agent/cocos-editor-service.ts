@@ -10,6 +10,7 @@ import type {
 import { resolveA5GameContextBinary } from './a5-game-context-binary'
 import { editorShutdownUrl, parseEditorOpenOutput } from './cocos-editor-open-output'
 import { detectCocosProject } from './cocos-project-detection'
+import { prepareBundledCocosSdk } from './cocos-editor-sdk'
 
 // Why: GitNexus waits up to 100 s for another starter's project lock, then up to 60 s for the editor to come up.
 const OPEN_TIMEOUT_MS = 180_000
@@ -145,6 +146,10 @@ export class CocosEditorService {
     }
     let result: ProcessResult
     try {
+      await prepareBundledCocosSdk(binary)
+      if (this.quitting) {
+        return failure('stopping', 'cocos-agent is quitting.')
+      }
       result = await this.deps.runProcess({
         program: binary,
         args,

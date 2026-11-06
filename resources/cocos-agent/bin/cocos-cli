@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+function script_dir() {
+	SOURCE=$1
+	while [ -h "$SOURCE" ]; do
+		DIR=$(dirname "$SOURCE")
+		SOURCE=$(readlink "$SOURCE")
+		[[ $SOURCE != /* ]] && SOURCE=$DIR/$SOURCE
+	done
+	cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd
+}
+
+# Why: this script sits in <app>/Contents/Resources/bin, so the app is three levels up; a ".app" higher in the path is not it.
+APP_PATH="$( cd -P "$(script_dir "${BASH_SOURCE[0]}")/../../.." >/dev/null 2>&1 && pwd || true )"
+if [[ $APP_PATH != *.app || ! -f $APP_PATH/Contents/Info.plist ]]; then
+	echo "Unable to find cocos-agent.app from ${BASH_SOURCE[0]} (expected <app>/Contents/Resources/bin)" >&2
+	exit 1
+fi
+
+CONTENTS="$APP_PATH/Contents"
+ELECTRON="$CONTENTS/MacOS/$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$CONTENTS/Info.plist")"
+PACKAGE_ROOT="$CONTENTS/Resources/a5-game-context"
+
+# The bundled Electron is the Node for the CLI and for the compile and plugin workers the native engine starts.
+export ELECTRON_RUN_AS_NODE=1
+export A5_NODE_EXE="$ELECTRON"
+export A5_NODE_BINARY="$ELECTRON"
+export A5_GAME_CONTEXT_PACKAGE_ROOT="$PACKAGE_ROOT"
+# Why: options set for the user's own Node may not be valid for Electron's.
+unset NODE_OPTIONS
+
+exec "$ELECTRON" "$PACKAGE_ROOT/dist/cli/cocos-cli.js" "$@"

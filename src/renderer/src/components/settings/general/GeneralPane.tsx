@@ -248,7 +248,7 @@ export function GeneralPane({
         onRequestFontSuggestions={onRequestFontSuggestions}
       />
     ) : null,
-    matchesSettingsSearch(searchQuery, getGeneralCliSearchEntries()) ? (
+    !window.cocosAgent && matchesSettingsSearch(searchQuery, getGeneralCliSearchEntries()) ? (
       <CliSection
         key="cli"
         currentPlatform={getDesktopPlatformFromUserAgent(navigator.userAgent)}

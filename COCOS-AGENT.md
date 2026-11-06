@@ -13,10 +13,11 @@ cocos-agent 基于 [Orca](https://github.com/stablyai/orca)（MIT 协议，保�
 | 文件                                                          | 作用                                                                                                                                                                                       |
 | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `config/electron-builder.cocos-agent.cjs`                     | 在 Orca 打包配置的基础上，改 appId、产品名、用户数据目录名和 URL scheme                                                                                                                    |
-| `config/scripts/build-cocos-agent-mac.mjs`                    | 本机调试包：不签名，只打本机 CPU 架构，只生成 .app，不出 dmg                                                                                                                               |
+| `config/scripts/build-cocos-agent-mac.mjs`                    | 校验并导入内置包，构建 arm64 的 ad-hoc 签名应用；`--release` 另产出 dmg、zip 和 sha256，跳过全局开发命令安装                                                                               |
 | `config/cocos-agent/a5-game-context.lock.json`                | 内置的 a5-game-context 包：版本、文件名、sha256、来源提交                                                                                                                                  |
 | `config/scripts/import-a5-game-context.mjs`（及 `.test.mjs`） | 校验 sha256 和版本后，把包解到 `resources/cocos-agent/a5-game-context/`；默认从 `../GitNexus/context-engine/release/` 找，`A5_GAME_CONTEXT_TARBALL` 可指定                                 |
 | `resources/cocos-agent/.gitignore`                            | 忽略解出来的包，不改上游的 `.gitignore`                                                                                                                                                    |
+| `resources/cocos-agent/bin/a5-game-context`、`cocos-cli`      | 启动脚本：从 symlink 找到 app，用 app 自带的 Electron 当 Node 运行内置包的 CLI，并设 `ELECTRON_RUN_AS_NODE`、`A5_NODE_EXE`、`A5_NODE_BINARY`、`A5_GAME_CONTEXT_PACKAGE_ROOT`               |
 | `src/main/updater/cocos-agent-updater-setup.ts`               | 关闭自动更新（Orca 的更新源写死为 stablyai/orca）                                                                                                                                          |
 | `src/shared/cocos-agent-brand.ts`                             | i18next 后置处理器，把界面和菜单翻译里的 `Orca` 统一替换成 `cocos-agent`                                                                                                                   |
 | `resources/icon-source/cocos-agent-1024.png`                  | 1024×1024 透明背景的图标原图                                                                                                                                                               |
@@ -47,6 +48,20 @@ cocos-agent 基于 [Orca](https://github.com/stablyai/orca)（MIT 协议，保�
 
 ## 打调试包
 
+2026-11-06 调整：v0.1 先交付内置 GitNexus Cocos Web 编辑器，安装后打开本地 Cocos 2.4.13 项目即可编辑、保存和预览。全局命令安装及外部 MCP 配置后置。构建会先校验并导入锁定的离线包，SDK 在首次打开编辑器前自动从包内注册。
+
+本轮新增 `resources/cocos-agent/prepare-editor.cjs`（复用 GitNexus SDK 注册器，仅初始化 SDK）和 `src/main/cocos-agent/cocos-editor-sdk.ts`（并发首开共用初始化、失败可重试）。
+
+本轮上游挂点登记：`components/settings/general/GeneralPane.tsx` 在有 cocos-agent preload 时隐藏原版 CLI 安装入口；`components/browser-pane/assemble-chrome/browser-page-chrome-header.tsx` 对带 cocos-agent 标记的本地编辑器隐藏浏览器工具栏，保留错误和下载提示。路径均位于 `src/renderer/src/`。同步上游时保留这两个条件及新增 import。
+
+构建兼容挂点：`config/scripts/install-dev-cli.mjs` 支持 `ORCA_SKIP_DEV_CLI_INSTALL=1`，cocos-agent 构建不创建 `/usr/local/bin/orca-dev`；`config/packaged-runtime-node-modules.cjs` 用 Node 的 `isBuiltin` 识别包括 `node:sqlite` 在内的内置模块，避免误报缺少依赖，对应现有打包验证测试已覆盖。
+
+后台验证挂点：`src/main/startup/main-window-actions.ts` 在 `isBackgroundLaunch()` 时把恢复失败写入日志，避免弹出原生崩溃对话框打断桌面。正常用户启动仍保留恢复对话框。
+
+首次启动挂点：`src/renderer/src/app-shell/use-onboarding-and-feature-tips.ts` 在 cocos-agent 中跳过全局 CLI 安装状态探测和自动安装引导；普通 Orca 与网页端保持原逻辑，不写入真实 CLI 安装状态。
+
+本轮验收与已知限制见 [2026-11-06 内置编辑器验收](docs/cocos-agent/acceptance-2026-11-06.md)。内置 GitNexus 版本为 3.8.271，来源提交 `5d7911f01`。
+
 需要 Node 24、pnpm（用 corepack 启用 `package.json` 中 `packageManager` 指定的版本）、Xcode。
 
 ```sh
@@ -54,9 +69,12 @@ pnpm install
 pnpm -C mobile install --frozen-lockfile                         # 构建会打包手机 web 端，缺依赖会失败
 node config/scripts/build-cocos-agent-mac.mjs                    # 含类型检查
 node config/scripts/build-cocos-agent-mac.mjs --skip-typecheck   # 更快
+node config/scripts/build-cocos-agent-mac.mjs --release          # arm64 dmg、zip、sha256
 ```
 
-产物在 `dist/mac-<arch>/cocos-agent.app`。用户数据在 `~/Library/Application Support/cocos-agent`，终端 daemon、socket 和 launchd 任务都根据这个目录区分，和 Orca 正式版互不影响。
+产物在 `dist/mac-arm64/cocos-agent.app`；release 产物在 `dist/cocos-agent-<内部构建版本>-arm64.{dmg,zip}`，各带 `.sha256`。应用和内置原生程序使用 ad-hoc 签名，构建结束执行 `codesign --verify --deep --strict`。用户数据在 `~/Library/Application Support/cocos-agent`，终端 daemon、socket 和 launchd 任务都根据这个目录区分。
+
+本地分发首次打开：把应用复制到 Applications 后右键选择“打开”；若下载隔离阻止启动，在系统设置的隐私与安全中允许打开。仅对确认来源的本地包，亦可运行 `xattr -dr com.apple.quarantine /Applications/cocos-agent.app` 后打开。
 
 只改界面时不用打包，直接 `pnpm dev`。开发模式下 app 里没有内置的 a5-game-context，用环境变量指定一个能用的版本：`A5_GAME_CONTEXT_BIN=<GitNexus>/context-engine/native-engine/bin/darwin-arm64/a5-game-context pnpm dev`。
 
@@ -66,7 +84,7 @@ node config/scripts/build-cocos-agent-mac.mjs --skip-typecheck   # 更快
 
 以下问题暂未处理，0.1.0 调试阶段先规避：
 
-- **不要在 cocos-agent 里点「安装命令行工具」**：它会把 `/usr/local/bin/orca` 改成指向 cocos-agent。
+- **全局命令安装后置**：cocos-agent 中已隐藏原版「安装命令行工具」入口；内置命令直接供 app 内使用。
 - **不要在 cocos-agent 里重置「电脑操控（Computer Use）」权限**：辅助程序的 bundle id 仍是 `com.stablyai.orca.computer-use`，重置会同时清掉正式版的辅助功能和录屏授权。
 - **`~/.orca` 两边共用**：快捷键、agent hook 脚本、部分 API key 都在这里。加密的 key 两边互相解不开，在 cocos-agent 里保存会覆盖正式版那份。
 - **手机配对端口 6768**：谁先启动谁占用。cocos-agent 开着时重启正式版，正式版会换端口，已配对的手机要重新连接。

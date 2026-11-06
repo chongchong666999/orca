@@ -1,6 +1,6 @@
-# cocos-agent v0.1.0 路线（按 loop 逐步执行）
+# cocos-agent v0.1.0：内置 GitNexus Cocos Web 编辑器
 
-2026-11-05 制定，同日确认 D1–D6。涉及两个仓库：
+2026-11-05 制定，同日确认 D1–D6；2026-11-06 用户调整优先级并授权继续实现：先交付安装后打开项目即可使用的内置编辑器，全局安装和外部 MCP 配置后置。涉及两个仓库：
 
 - **cocos-agent**：`/Users/free/Documents/work/orca`，分支 `dev/0.1.0`
 - **GitNexus**：`/Users/free/Documents/work/GitNexus`，分支 `feature/node-editor-view`。a5-game-context、Web 编辑器、cocos-cli 都在这个仓库
@@ -8,10 +8,19 @@
 ## v0.1.0 目标（仅 mac arm64，本地测试）
 
 1. 在 cocos-agent 里打开 Cocos 2.4.13 项目时，自动打开这个项目的 Web 编辑器标签，编辑器路径就是项目路径。打开其他项目时，保持默认的终端。
-2. a5-game-context 内置在 app 里。app 内的终端直接就能用；设置里有一个「全局安装」按钮，效果等同以前的 `npm i -g` 再执行 `setup`。
-3. 本地出 mac release 包（dmg 和 zip），ad-hoc 签名。
+2. GitNexus 的编辑器页面、原生服务、编译依赖和 Cocos SDK 全部随 app 安装；首次打开自动离线准备 SDK，不依赖开发目录、全局 npm 安装或系统 Node。app 内终端使用内置命令。
+3. 在打包后的 app 中完成项目打开、场景/Prefab 编辑、保存、预览及重启恢复验收，再本地产出 ad-hoc 签名的 mac arm64 dmg、zip 和 sha256。
+4. 全局命令安装、旧 npm 安装检测、外部 Claude hooks/skills/MCP 配置移到后续里程碑，不作为本轮验收前提。
 
-## 现状（2026-11-05 核实）
+### 本轮执行顺序与验收边界（2026-11-06）
+
+- 先收尾 S1.7、S2.2，再完成 S2.3 内置打包和 S2.4 首开初始化；复用 GitNexus 已有 Web 编辑器及 Orca 浏览器标签。
+- S3 验收以打包 app 为准：在独立用户配置、空 SDK 缓存和无系统 Node 的环境中，打开本地 Cocos 2.4.13 项目，编辑并保存临时项目副本，预览，关闭与重开；普通项目和 Folder Workspace 也要验证。
+- 原生窗口保持隐藏，以 `ORCA_BACKGROUND_LAUNCH=1` 和 Playwright CDP 验证，固定 viewport/state；不操作用户正在使用的 Orca、Paseo 或 Creator。
+- 当前会话可在本机编译和执行验证；旧记录中的“沙箱编不了”是当时的环境限制。实施、构建和验收持续推进，独立审核仍按下文执行。
+- 只在本地提交和出包；D1、D6 的不发布 npm、不 push 边界继续有效。
+
+## 初始基线（2026-11-05 历史快照；当前进度见步骤总表和执行记录）
 
 | 项目                         | 状态                                                                                                                                                                                                         |
 | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -34,8 +43,9 @@ cocos-agent.app/Contents/Resources/
   │       → 拿到 {"url": ...?token=…} → 在浏览器标签里打开（每个项目只开一个）
   └─ 否 → 和原来一样，打开终端
 
-设置 → 全局安装 → /usr/local/bin/{a5-game-context,cocos-cli} 链接到 app 内的启动脚本
-               + 注册 SDK + setup（hooks、skills、MCP）+ claude mcp add
+首次打开编辑器 → 自动注册包内 Cocos SDK → editor open → 应用内编辑、保存、预览
+
+后续里程碑：设置 → 全局安装命令 + setup（hooks、skills、MCP）+ claude mcp add
 ```
 
 **关键取舍**
@@ -60,61 +70,47 @@ cocos-agent.app/Contents/Resources/
 
 状态：`待做` / `进行中` / `待你验证` / `完成` / `阻塞` / `v0.1 不做`。
 
-「执行」一列：**我**＝在会话里写代码并验证；**你**＝需要在沙箱外操作（启动 GUI app、编译 Rust、需要管理员权限的命令）；**我+你**＝我写代码并做沙箱里能做的验证，剩下的验证在沙箱外跑。
+「执行」一列保留历史分工。2026-11-06 你授权继续完成剩余工作后，本机编译、后台应用验证、独立审核和本地出包都由我完成；另一台 Mac 的真实安装和原生可见窗口验收仍单独标明，不能用后台测试冒充。
 
-**沙箱外的操作交给 Paseo 上的 agent 执行**（2026-11-06 你定）：原来是 `antigravity/gemini-4-argon-high`；它的配额用完后（约 4 天后重置），改用 `codex/gpt-6.1-sol`（high，`full-access`），和做审核的 Codex 是不同的 agent 实例。我写好任务和约束（不改源码、不碰 git、不动正在用的 Orca、Paseo 和 Creator，后台启动 app，失败就停），执行者回报 JSON 结果，我核对证据后更新状态。需要人眼确认的项（例如原生「关于」面板）标成 `needs_human`，留给你。
+当前会话可以直接构建和运行后台应用。独立代码审核继续使用 Paseo 的 `codex/gpt-6.1-sol`（high，`full-access`）；本轮把相互依赖的 S2.2–S2.4 与 S5.2–S5.3 作为一个内置应用交付审核，记录各项验证证据。
 
-| ID   | 步骤                                                 | 仓库        | 依赖             | 执行  | 状态      |
-| ---- | ---------------------------------------------------- | ----------- | ---------------- | ----- | --------- |
-| S0.1 | 调试包冒烟测试                                       | cocos-agent | —                | 你    | 完成      |
-| S1.1 | 重新编译 mac 原生二进制                              | GitNexus    | —                | 你    | 完成      |
-| S1.2 | 验证 Electron 充当 Node 能跑编辑器                   | GitNexus    | S1.1             | 我+你 | 完成      |
-| S1.3 | 离线首开：内置 TypeScript 4.1.3                      | GitNexus    | S1.1             | 我+你 | 完成      |
-| S1.4 | `setup` 能指定 hook 用的 Node                        | GitNexus    | S1.1             | 我+你 | v0.1 不做 |
-| S1.6 | `editor open --project` 不带文档时打开项目           | GitNexus    | S1.1             | 我+你 | 完成      |
-| S1.5 | 本地出 mac 包（tarball + sha256）                    | GitNexus    | S1.2、S1.3、S1.6 | 我+你 | 完成      |
-| S2.1 | 导入并校验 a5-game-context 包的脚本                  | cocos-agent | S1.5             | 我    | 完成      |
-| S2.2 | 启动脚本 `a5-game-context`、`cocos-cli`              | cocos-agent | S2.1             | 我    | 待做      |
-| S2.3 | 把包打进 .app，app 内终端可用                        | cocos-agent | S2.2             | 我+你 | 待做      |
-| S2.4 | 首次打开编辑器前注册内置 Cocos SDK                   | cocos-agent | S2.3             | 我+你 | 待做      |
-| S3.1 | 主进程编辑器服务（检测、打开、停止）                 | cocos-agent | —                | 我+你 | 完成      |
-| S3.2 | 打开 Cocos 项目时自动开编辑器标签                    | cocos-agent | S3.1             | 我+你 | 待你验证  |
-| S3.3 | 「+」菜单加「Cocos Creator」（新建或切换到已有标签） | cocos-agent | S3.2             | 我+你 | 完成      |
-| S3.4 | 编辑器生命周期（关标签、切项目、退出 app）           | cocos-agent | S3.2             | 我+你 | 待你验证  |
-| S4.1 | 全局安装器（链接、SDK、setup、MCP）                  | cocos-agent | S2.3             | 我+你 | 待做      |
-| S4.2 | 检测旧的 npm 全局安装                                | cocos-agent | S4.1             | 我    | 待做      |
-| S4.3 | 设置页入口，并隐藏 Orca 原有的「安装 orca 命令」     | cocos-agent | S4.2             | 我+你 | 待做      |
-| S5.1 | 版本号和「关于」页                                   | cocos-agent | —                | 我+你 | 待你验证  |
-| S5.2 | ad-hoc 签名和首次打开说明                            | cocos-agent | S2.3             | 我    | 待做      |
-| S5.3 | release 构建脚本（dmg、zip、sha256）                 | cocos-agent | S5.1、S5.2       | 我+你 | 待做      |
-| S5.4 | 在干净环境验收                                       | —           | S5.3             | 你    | 待做      |
-| S5.5 | 本地出 v0.1.0 包，写发布说明                         | cocos-agent | S5.4             | 我+你 | 待做      |
+| ID   | 步骤                                                 | 仓库        | 依赖             | 执行  | 状态                      |
+| ---- | ---------------------------------------------------- | ----------- | ---------------- | ----- | ------------------------- |
+| S0.1 | 调试包冒烟测试                                       | cocos-agent | —                | 你    | 完成                      |
+| S1.1 | 重新编译 mac 原生二进制                              | GitNexus    | —                | 你    | 完成                      |
+| S1.2 | 验证 Electron 充当 Node 能跑编辑器                   | GitNexus    | S1.1             | 我+你 | 完成                      |
+| S1.3 | 离线首开：内置 TypeScript 4.1.3                      | GitNexus    | S1.1             | 我+你 | 完成                      |
+| S1.4 | `setup` 能指定 hook 用的 Node                        | GitNexus    | S1.1             | 我+你 | v0.1 不做                 |
+| S1.6 | `editor open --project` 不带文档时打开项目           | GitNexus    | S1.1             | 我+你 | 完成                      |
+| S1.5 | 本地出 mac 包（tarball + sha256）                    | GitNexus    | S1.2、S1.3、S1.6 | 我+你 | 完成                      |
+| S1.7 | Creator 等子进程不继承 `ELECTRON_RUN_AS_NODE`        | GitNexus    | S1.5             | 我    | 完成                      |
+| S2.1 | 导入并校验 a5-game-context 包的脚本                  | cocos-agent | S1.5             | 我    | 完成                      |
+| S2.2 | 启动脚本 `a5-game-context`、`cocos-cli`              | cocos-agent | S2.1             | 我    | 完成                      |
+| S2.3 | 把包打进 .app，app 内终端可用                        | cocos-agent | S2.2、S1.7       | 我    | 完成                      |
+| S2.4 | 首次打开编辑器前注册内置 Cocos SDK                   | cocos-agent | S2.3             | 我    | 完成                      |
+| S3.1 | 主进程编辑器服务（检测、打开、停止）                 | cocos-agent | —                | 我+你 | 完成                      |
+| S3.2 | 打开 Cocos 项目时自动开编辑器标签                    | cocos-agent | S3.1             | 我    | 完成                      |
+| S3.3 | 「+」菜单加「Cocos Creator」（新建或切换到已有标签） | cocos-agent | S3.2             | 我+你 | 完成                      |
+| S3.4 | 编辑器生命周期（关标签、切项目、退出 app）           | cocos-agent | S3.2             | 我    | 本机验收中                |
+| S4.1 | 全局安装器（链接、SDK、setup、MCP）                  | cocos-agent | S2.3             | 我+你 | v0.1 不做                 |
+| S4.2 | 检测旧的 npm 全局安装                                | cocos-agent | S4.1             | 我    | v0.1 不做                 |
+| S4.3 | 全局安装设置页入口                                   | cocos-agent | S4.2             | 我+你 | v0.1 不做                 |
+| S5.1 | 版本号和「关于」页                                   | cocos-agent | —                | 我+你 | 待你验证                  |
+| S5.2 | ad-hoc 签名和首次打开说明                            | cocos-agent | S2.3             | 我    | 完成                      |
+| S5.3 | release 构建脚本（dmg、zip、sha256）                 | cocos-agent | S5.1、S5.2       | 我    | 完成                      |
+| S5.4 | 在干净环境验收                                       | —           | S5.3             | 我    | 本机通过；另一台 Mac 未验 |
+| S5.5 | 本地出 v0.1.0 包，写发布说明                         | cocos-agent | S5.4             | 我    | 进行中                    |
 
 S3.1 用开发版的 a5-game-context 就能写，端到端验证等 S1.1 编完再做；所以 S3 可以和 P1 并行推进。
 
-## 等你操作
+## 自动验收与保留项
 
-这些步骤现在交给 Paseo 上的执行 agent（见上面「执行」一列的说明）。loop 不会因为它们停下，会先做其他能做的步骤。
+本轮由我完成本机后台验收，不再要求用户先安装全局命令或手工跑开发服务。结果与限制见 [验收记录](docs/cocos-agent/acceptance-2026-11-06.md)。
 
-- **S3.1 端到端**（S1.1 之后）：
-  1. `cd /Users/free/Documents/work/orca && A5_GAME_CONTEXT_BIN=/Users/free/Documents/work/GitNexus/context-engine/native-engine/bin/darwin-arm64/a5-game-context pnpm dev`
-  2. 在 dev 窗口打开开发者工具，控制台执行（S1.6 之前 `editor open` 必须带文档，所以先带一个 prefab）：
-     `await window.cocosAgent.openEditor({ projectPath: '/Users/free/Documents/work-99/wptg-client', document: 'assets/prefabs/SplashPage.prefab' })`
-  3. 期望返回 `{ ok: true, url: 'http://127.0.0.1:…/?token=…&doc=…', … }`，浏览器打开这个地址能看到编辑器；再执行 `await window.cocosAgent.stopEditor('/Users/free/Documents/work-99/wptg-client')`，返回 `true`，地址打不开了。
-- **S3.2 端到端**（S1.6 之后，因为自动打开时不带文档）：用上面同样的方式启动 dev 实例。
-  1. 添加 `/Users/free/Documents/work-99/wptg-client`：第一个标签应该是「Cocos Creator」编辑器，打开的是这个项目。
-  2. 添加一个普通仓库：第一个标签应该还是终端。
-  3. 不设 `A5_GAME_CONTEXT_BIN` 启动，再添加 wptg-client：应该提示「Could not open the Cocos Creator editor」，然后退回终端，不会反复弹提示。
-- **S3.3 端到端**（S1.6 之后）：在 wptg-client 工作区打开「+」菜单。
-  1. 已有编辑器标签时显示「Go to Cocos Creator」，点了回到那个标签，不会新建。
-  2. 点「Stop Cocos Creator」：标签关闭，编辑器地址打不开；再点「Cocos Creator」会重新启动并打开新标签。
-  3. 普通仓库的「+」菜单里没有这两项。
-- **S5.1（只剩人眼确认）**：`open /Users/free/Documents/work/orca/dist/mac-arm64/cocos-agent.app`，点菜单「cocos-agent → 关于 cocos-agent」，应显示「Version 0.1.0 (1.4.214-local…)」，顺便看一眼菜单栏和 Dock 名称是 cocos-agent。打包产物里传给「关于」面板的是 0.1.0，Gemini 已核实。
-- **S3.4 端到端**（S1.6 之后）：
-  1. 关掉编辑器标签，`ls ~/.context-engine/editor/running/` 里记录还在，编辑器进程还在；10 分钟后进程退出、记录消失。
-  2. 在两个 Cocos 项目之间来回切换，编辑器标签不重新加载、端口不变。
-  3. 开着编辑器退出 app：`ps aux | grep 'editor serve'` 里本次启动的编辑器几秒内消失。
-  4. 重新打开 app、切到 wptg-client：旧编辑器标签自动换成能用的新标签（只有原来在看它时才切过去）；在 Orca 正式版或终端里用 CLI 启动的编辑器不受影响。
+- 已验证：空 SDK 首开、项目自动进入编辑器、Prefab 编辑保存、场景渲染、游戏预览、插件、菜单复用/停止、关闭标签保留服务、普通 Folder Workspace 终端、切换项目、退出清理。
+- 最终包继续验证重启后的旧标签恢复，并保留可复用的本地安装包与校验值。
+- 原生可见窗口、Dock 和「关于」面板人眼检查，以及另一台 Mac 的 Gatekeeper/安装体验仍未执行；不为这些检查激活用户桌面上的窗口，也不把后台验收冒充另一台机器验证。
+- 10 分钟空闲退出和大型业务项目长时间稳定性不是本轮短时冒烟的覆盖范围。
 
 ## 步骤详情
 
@@ -133,7 +129,7 @@ S3.1 用开发版的 a5-game-context 就能写，端到端验证等 S1.1 编完�
 
 改 GitNexus 时，遵守它自己的 `AGENTS.md` / `CLAUDE.md`，包括每个提交都要升版本号。仓库里不属于本计划的未跟踪文件不要提交。
 
-沙箱里编不了 Rust，所以 Rust 改动的流程是：我写代码 → Codex 审核 → 你执行编译和测试命令 → 通过后我再提交。没编译过的 Rust 代码不提交。
+Rust 改动在本机编译和测试，独立 Codex 审核后本地提交；没编译过的 Rust 代码不提交。只有实际遇到执行环境限制时才安排执行 agent，不把历史沙箱限制当作当前阻塞。
 
 **S1.1 重新编译 mac 原生二进制**：`cd context-engine && npm run build:native`（需要 Rust 工具链和网络，会下载 crate）。
 
@@ -164,6 +160,11 @@ S3.1 用开发版的 a5-game-context 就能写，端到端验证等 S1.1 编完�
 - 实际做法（2026-11-06）：`pack:offline` 会把 `node_modules` 里旧的平台包原样打进去（本机是 10-16 的二进制），还要求全部三个平台，所以新增 `npm run pack:platform`（GitNexus `scripts/prepare-platform-bundle.mjs`）：用本次编译的二进制替换平台包、只校验目标平台、按 npm 的 os/cpu 规则删掉别的平台、检查必需条目和二进制版本。产物 `context-engine/release/a5-game-context-<版本>-darwin-arm64.tgz` + `.sha256`（git 忽略）。
 
 - 完成标准：解压到临时目录后，`--version` 输出期望版本，并按 S1.2 的方法验证编辑器能启动。
+
+**S1.7 Creator 等子进程不继承 `ELECTRON_RUN_AS_NODE`**（2026-11-06 S2.2 审核发现）：cocos-agent 的启动脚本设 `ELECTRON_RUN_AS_NODE=1`，让 app 自带的 Electron 充当 Node，GitNexus 会把它原样传给所有子进程。编辑器「构建」面板用继承的环境启动 Cocos Creator（`editor/builder.rs` 的 `spawn`），Creator 2.4 是 Electron 应用，会以 Node 模式启动，构建和编译都会失败；用外部程序打开文件（`editor/assets.rs`）也有同样的问题。
+
+- 做法：原生二进制启动时把 `ELECTRON_RUN_AS_NODE` 从自己的环境里去掉；只给它用 `A5_NODE_EXE` 或 `A5_NODE_BINARY` 启动的 Node 进程（编译进程池、插件宿主、`creator_node`、`effect_compiler`、`engine_compile`）显式设 `ELECTRON_RUN_AS_NODE=1`（真正的 Node 会忽略这个变量）。改完重新打 3.8.271 的包，更新 `config/cocos-agent/a5-game-context.lock.json`。
+- 完成标准：有对应测试；按 S1.2 的方法用 Electron 充当 Node 时，编辑器编译正常；在 cocos-agent 启动的编辑器里，构建面板能正常启动 Creator（由执行人验证）。
 
 ### P2 a5-game-context 内置到 cocos-agent
 
@@ -240,7 +241,9 @@ S3.1 用开发版的 a5-game-context 就能写，端到端验证等 S1.1 编完�
   - 重启后恢复的编辑器标签：cocos-agent 打开的编辑器标签地址带 `cocos-agent=editor` 标记。工作区变成当前工作区时，如果有带标记的旧标签，就启动或复用编辑器：地址相同就接管，否则先开新标签再关旧标签；只有旧标签原本是焦点才激活新标签；用户在这期间关掉了旧标签就不再新建。每个工作区每次会话只处理一次。「+」菜单对恢复的标签也显示「Go to Cocos Creator」。
 - 完成标准：按清单手动验证；`~/.context-engine/editor/running/` 里的记录和实际进程一致。
 
-### P4 全局安装（等同 npm -g）
+### P4 后续里程碑：全局安装与外部 MCP（本轮不执行）
+
+以下设计保留备查；SDK 首开初始化已归入 S2.4，不依赖全局安装。隐藏原有“安装 orca 命令”入口随本轮打包完成，避免覆盖正式版命令。
 
 **S4.1 全局安装器**：新增 `src/main/cocos-agent/a5-game-context-global-install.ts`。
 
@@ -267,9 +270,10 @@ S3.1 用开发版的 a5-game-context 就能写，端到端验证等 S1.1 编完�
 - **S5.1 版本号和「关于」页**：按 D4 实现。实际做法：`src/shared/cocos-agent/cocos-agent-version.ts` 定义 `COCOS_AGENT_VERSION = '0.1.0'`；`gpu-lifecycle.ts` 里「关于」面板的 `appVersion` 改用它（上游 1 行），mac 上显示「Version 0.1.0 (Orca 构建号)」。设置页「更新」里的 Current version 仍是 Orca 内部版本（上游测试断言了原文，D4 也只要求「关于」）。验证：你打开 cocos-agent → 菜单「关于 cocos-agent」，看到 0.1.0。
 - **S5.2 ad-hoc 签名和首次打开说明**：.app 和内置的 a5-game-context 原生二进制、dylib 都用 ad-hoc 签名，`codesign --verify --deep` 通过；在 `COCOS-AGENT.md` 写首次打开的方法（右键选「打开」，或 `xattr -dr com.apple.quarantine /Applications/cocos-agent.app`）。
 - **S5.3 release 构建脚本**：`build-cocos-agent-mac.mjs --release`，产出 arm64 的 dmg、zip 和 sha256。
-- **S5.4 在干净环境验收**：找另一台 Mac，或者新建一个系统用户：
-  - 走一遍：安装 → 打开 wptg-client → 编辑器出现 → 全局安装 → 在 Claude 里能用 MCP → 卸载；
-  - 记录首次打开耗时和内存占用。
+- **S5.4 在干净环境验收**：使用打包后的 app、隔离 HOME/用户配置、空 SDK 缓存和不含 Node 的 PATH；另一台 Mac 或新系统用户验证是进一步的真实安装证据：
+  - 走一遍：解包/安装 → 打开临时 Cocos 项目副本 → 自动准备 SDK → 编辑场景/Prefab → 保存落盘 → 预览 → 退出 → 重开恢复；不设置开发用二进制路径，不执行全局安装或外部 MCP 配置；
+  - 检查普通项目、Folder Workspace、重复打开、关标签、切项目、停止和退出；测试用项目副本保护原项目；
+  - 记录首次打开耗时、内存占用、viewport/state、截图和错误日志，区分自动验证与尚未执行的另一台机器安装。
 - **S5.5 本地出包**：写发布说明，更新 `COCOS-AGENT.md`。是否 push 到 `origin`、是否建 GitHub release，到时由你决定。
 
 ### v0.1 之后（不在这一轮 loop 里）
@@ -322,22 +326,12 @@ S3.1 用开发版的 a5-game-context 就能写，端到端验证等 S1.1 编完�
 
 启动命令：`/loop 按 COCOS-AGENT-PLAN.md 的「Loop 执行规则」做下一步`
 
-1. 读本文件。先处理你已经回报结果的步骤（「等你操作」里的，以及「待你验证」的）：通过就改成「完成」并补提交，不通过就修。
-2. 从步骤总表里取第一个可以做的步骤，把它改成「进行中」。可以做是指：
-   - 状态是「待做」；
-   - 「执行」一列里有「我」；
-   - 依赖都是「完成」或「待你验证」。只有「你」的步骤不会挡住 loop，写进「等你操作」就行。
-3. 按「步骤详情」去做。改到上游文件时，同步更新 `COCOS-AGENT.md` 的登记表。
-4. 按完成标准做我能做的验证，再做 Codex 审核，然后在对应仓库的分支上 commit（不 push），在执行记录里追加一行：
-   - 剩下的验证都由我做完 → 状态改成「完成」；
-   - 还有要你跑的验证 → 状态改成「待你验证」，把命令写进「等你操作」；
-   - Rust 改动没编译过之前不提交，状态改成「待你验证」，把编译和测试命令写进「等你操作」。
-   - 验证不通过就修了再验证；同一个步骤连续两次不通过，就改成「阻塞」，停下来。
-5. 遇到下面任何一种情况，停下来问你，并给出可以直接执行的命令：
-   - 没有可以做的步骤，只剩等你操作的；
-   - 要改登记表以外的上游文件；
-   - 结果和本计划的假设不一致。
-6. 每一轮只做一个步骤。结束时汇报：做了什么、验证和审核的结果、等你操作的事项、下一步是什么。
+1. 以 2026-11-06 的最新授权为准：先完成内置编辑器交付，相关实现、问题修复、后台验证、独立审核和本地提交连续推进。
+2. 相互依赖的打包与初始化步骤可以合并验收；遇到失败先定位、修复和复验，不因失败次数或新增必要的上游挂点自动停工。
+3. 改到上游文件时同步登记 `COCOS-AGENT.md`；保留已有本地修改，不夹带其他项目或索引文件。
+4. 使用真实打包应用和临时项目副本验证。所有测试窗口后台运行；不能安全完成的原生可见窗口/另一台机器检查如实列为未覆盖。
+5. 验证和独立审核后本地 commit、出包；不 push、不发布 npm、不创建 GitHub release。全局命令安装和外部 MCP 留给后续里程碑。
+6. 执行记录写观察到的结果、证据路径和未覆盖项；不以更新历史审查收据掩盖失败，也不把增量检查称作全分支门禁通过。
 7. 提交时按文件名暂存，不要提交 cocos-agent 仓库根目录的 `.context-engine/`，也不要提交 GitNexus 里不属于本计划的未跟踪文件。
 
 ## 执行记录
