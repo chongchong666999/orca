@@ -62,7 +62,7 @@ cocos-agent.app/Contents/Resources/
 
 「执行」一列：**我**＝在会话里写代码并验证；**你**＝需要在沙箱外操作（启动 GUI app、编译 Rust、需要管理员权限的命令）；**我+你**＝我写代码并做沙箱里能做的验证，剩下的验证在沙箱外跑。
 
-**沙箱外的操作交给 Paseo 上的 Gemini**（2026-11-06 你定）：`antigravity/gemini-4-argon-high`，`full-access` 模式，在 Paseo 里能看到。我写好任务和约束（不改源码、不碰 git、不动正在用的 Orca 和 Paseo、后台启动 app、失败就停），Gemini 执行并回报 JSON 结果，我核对证据后更新状态。需要人眼确认的项（例如原生「关于」面板）标成 `needs_human`，留给你。Gemini 不支持 `--output-schema`，结果格式写在提示词里。
+**沙箱外的操作交给 Paseo 上的 agent 执行**（2026-11-06 你定）：原来是 `antigravity/gemini-4-argon-high`；它的配额用完后（约 4 天后重置），改用 `codex/gpt-6.1-sol`（high，`full-access`），和做审核的 Codex 是不同的 agent 实例。我写好任务和约束（不改源码、不碰 git、不动正在用的 Orca、Paseo 和 Creator，后台启动 app，失败就停），执行者回报 JSON 结果，我核对证据后更新状态。需要人眼确认的项（例如原生「关于」面板）标成 `needs_human`，留给你。
 
 | ID   | 步骤                                                 | 仓库        | 依赖             | 执行  | 状态      |
 | ---- | ---------------------------------------------------- | ----------- | ---------------- | ----- | --------- |
@@ -72,7 +72,7 @@ cocos-agent.app/Contents/Resources/
 | S1.3 | 离线首开：内置 TypeScript 4.1.3                      | GitNexus    | S1.1             | 我+你 | 完成      |
 | S1.4 | `setup` 能指定 hook 用的 Node                        | GitNexus    | S1.1             | 我+你 | v0.1 不做 |
 | S1.6 | `editor open --project` 不带文档时打开项目           | GitNexus    | S1.1             | 我+你 | 完成      |
-| S1.5 | 本地出 mac 包（tarball + sha256）                    | GitNexus    | S1.2、S1.3、S1.6 | 我+你 | 进行中    |
+| S1.5 | 本地出 mac 包（tarball + sha256）                    | GitNexus    | S1.2、S1.3、S1.6 | 我+你 | 完成      |
 | S2.1 | 导入并校验 a5-game-context 包的脚本                  | cocos-agent | S1.5             | 我    | 待做      |
 | S2.2 | 启动脚本 `a5-game-context`、`cocos-cli`              | cocos-agent | S2.1             | 我    | 待做      |
 | S2.3 | 把包打进 .app，app 内终端可用                        | cocos-agent | S2.2             | 我+你 | 待做      |
@@ -94,7 +94,7 @@ S3.1 用开发版的 a5-game-context 就能写，端到端验证等 S1.1 编完�
 
 ## 等你操作
 
-这些步骤现在交给 Paseo 上的 Gemini 执行（见上面「执行」一列的说明）。loop 不会因为它们停下，会先做其他能做的步骤。
+这些步骤现在交给 Paseo 上的执行 agent（见上面「执行」一列的说明）。loop 不会因为它们停下，会先做其他能做的步骤。
 
 - **S3.1 端到端**（S1.1 之后）：
   1. `cd /Users/free/Documents/work/orca && A5_GAME_CONTEXT_BIN=/Users/free/Documents/work/GitNexus/context-engine/native-engine/bin/darwin-arm64/a5-game-context pnpm dev`
@@ -160,6 +160,8 @@ S3.1 用开发版的 a5-game-context 就能写，端到端验证等 S1.1 编完�
 - 完成标准：`editor open --project <wptg-client>` 输出带 token 的页面地址；带文档时行为不变；`EDITOR_USAGE` 同步更新；有对应测试。
 
 **S1.5 本地出 mac 包**：基于 `pack:offline`，产出 `a5-game-context-<版本>-darwin-arm64.tgz` 和 `.sha256`，只包含 arm64 二进制，放在 GitNexus 仓库里一个被 git 忽略的目录（例如 `context-engine/release/`）。
+
+- 实际做法（2026-11-06）：`pack:offline` 会把 `node_modules` 里旧的平台包原样打进去（本机是 10-16 的二进制），还要求全部三个平台，所以新增 `npm run pack:platform`（GitNexus `scripts/prepare-platform-bundle.mjs`）：用本次编译的二进制替换平台包、只校验目标平台、按 npm 的 os/cpu 规则删掉别的平台、检查必需条目和二进制版本。产物 `context-engine/release/a5-game-context-<版本>-darwin-arm64.tgz` + `.sha256`（git 忽略）。
 
 - 完成标准：解压到临时目录后，`--version` 输出期望版本，并按 S1.2 的方法验证编辑器能启动。
 
@@ -360,3 +362,4 @@ S3.1 用开发版的 a5-game-context 就能写，端到端验证等 S1.1 编完�
 | 2026-11-06 | S1.3 实测 1      | 未通过，但不是 S1.3 本身的问题：空 HOME 下没有注册 Cocos SDK（`~/.context-engine/sdk/registry.json`），全量编译在 `preview::bundled_engine` 读 registry 时报 `os error 2`，没走到 TypeScript。真实机器装包后由 postinstall 注册 SDK；cocos-agent 内置包不走 postinstall，新增 S2.4。S1.3 改为先在临时 HOME 里注册 SDK 再离线首开，重测中                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | —                                                                                                                                                                                                                                                                                                 | —                               |
 | 2026-11-06 | S1.3 实测 2      | 完成。Paseo Gemini（`a0356dd1`）：临时空 HOME + 断网代理，先用 Electron 跑 `install-cocos-cli-bin.cjs` 注册内置 SDK（886 ms，离线），再 `editor serve` 打开 SplashPage、强制全量编译 2380 个脚本，无错误；TypeScript 来源为本机 Creator 的 app.asar（`creator-asar:`），没有联网下载。包内 `vendor/typescript-4.1.3.tgz` 这条路径本机走不到（装了 Creator），由单元测试覆盖，S5.4 在干净环境再实测。也验证了 S2.4 的做法可行                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | —                                                                                                                                                                                                                                                                                                 | GitNexus `c255e77ea`            |
 | 2026-11-06 | S3.1–S3.4 端到端 | Paseo Gemini（`cc8838fd`）在 dev 实例里跑到 S3.4 第 d 步时配额用完（约 4 天后重置），没写出最终报告；证据来自它留下的截图和我用 CDP 补做的检查。S3.1 完成（打开、停止、列表在后面的界面流程里都用到，`listEditors` 我用 CDP 调过）；S3.2：wptg-client 首个标签是加载好的「Cocos Creator」编辑器、GitNexus 首个标签是终端（截图），没装 a5-game-context 时只提示一次这一条还没测；S3.3 完成：「+」菜单有 Go to / Stop、Stop 后标签关闭并恢复为「Cocos Creator」、GitNexus 的菜单没有这两项（截图）；S3.4：重启后切到 wptg-client，恢复的标签换成新编辑器（端口 59032，带 `cocos-agent=editor`，只有一个编辑器标签，截图 scratchpad `s34d-after-switch.png`），用 CDP 正常退出 dev 实例后编辑器端口关闭、running 记录清掉；关标签后编辑器继续运行、切项目不重载这两条的输出没能取回。另见：编辑器控制台提示预览端口 7456 被占用，是本机 Cocos Creator 和 11-04 遗留的 a5-game-context 进程（PID 66180）占着，与 cocos-agent 无关 | —                                                                                                                                                                                                                                                                                                 | 无代码改动                      |
+| 2026-11-06 | S1.5             | 完成。GitNexus 提交 `1ff5dec9d`（3.8.270）：`npm run pack:platform`。Paseo Codex 执行（`codex/gpt-6.1-sol`）：重编 3.8.270，打出 `release/a5-game-context-3.8.270-darwin-arm64.tgz`（70.9 MB，解开 176 MB，sha256 `5c06ea3b8e6a68879402c2365c6fc97f2a267a25276b475373c5d35888cf5f26`，我复核一致），只有 arm64 原生包；Electron 跑包内 CLI 正常；空 HOME + 断网：包内脚本注册 SDK 1.1 s、`editor open --project` 0.58 s、全量编译 2380 个脚本成功、清理干净；两个仓库 git status 前后一致                                                                                                                                                                                                                                                                                                                                                                                                                                      | sol high。第 1 轮 `b695d73c`：2 medium（prepack 校验全部平台；必需条目缺 cocos-cli、resvg）+ 1 low（os/cpu 规则）已改。第 2 轮 `c78a77e1`：pass                                                                                                                                                   | GitNexus `1ff5dec9d`（未 push） |
