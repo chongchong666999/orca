@@ -53,4 +53,24 @@
 
 本机证据目录：`/tmp/cocos-agent-validation.0KZmJT/`。主要文件：`offline-proof.py`、`offline-proof.log`、`offline-proof-2/result.json`、`game-preview.png`、`prefab-edit-save.png`、各构建与测试日志。截图来自隐藏 CDP 页面；Prefab 截图为 1762×1660 物理像素，设备缩放 2。日志可能包含本地服务会话地址，外发前应脱敏。
 
-最终 release 包及重启恢复结果在完成构建后追加。另一台 Mac 的安装/Gatekeeper、原生可见窗口/Dock/关于面板、10 分钟空闲退出、大型业务工程长期运行未执行。mac x64、Windows、Linux、远程 Cocos 服务不在本轮 v0.1 arm64 交付范围。
+另一台 Mac 的安装/Gatekeeper、原生可见窗口/Dock/关于面板、10 分钟空闲退出、大型业务工程长期运行未执行。mac x64、Windows、Linux、远程 Cocos 服务不在本轮 v0.1 arm64 交付范围。
+
+## 最终安装包与复验
+
+代码提交 `7b9f96fd126cae9e36e75b5e782b60d246777de8`；内部构建版本 `1.4.214-local.1793950875656.7b9f96fd126c`，产品版本 0.1.0。
+
+| 产物                                                                                | SHA-256                                                            |
+| ----------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| `dist/cocos-agent-1.4.214-local.1793950875656.7b9f96fd126c-arm64.dmg`（约 800 MiB） | `452f8838ac2b580a384b23c3cbcaaa84a681903615e5124933382ff034f73cb5` |
+| `dist/cocos-agent-1.4.214-local.1793950875656.7b9f96fd126c-arm64.zip`（约 816 MiB） | `fe96a4f004f5fbf4b14f813151c33233ff123a24bf0bf9b038bed51751866789` |
+
+`build-cocos-agent-mac.mjs --release --skip-typecheck` 成功（构建前完整 `pnpm tc` 已通过）。ad-hoc `codesign --verify --deep --strict`、两份 sha256、`hdiutil verify` 和 `unzip -tqq` 均通过；未公证、未上传。
+
+最终实包再次完成两轮：
+
+- **重启恢复**：使用上轮配置和已经失效的旧服务地址，恢复一个新服务/新标签并打开场景、Play。普通文件夹终端中 `command -v` 指向 `.app/Contents/Resources/bin/`，a5-game-context 回报 3.8.271，cocos-cli 帮助正常。
+- **全新配置**：新 HOME/用户数据目录自动准备 SDK，打开项目、场景、Play、脚本日志均正常；没有全局 CLI 安装提示。
+- 两轮窗口均保持隐藏。viewport 1440×900、DPR 2；Game canvas 742×656。真实 app.quit 后服务地址不可达；测试残留的终端 daemon/crashpad 已按所属临时配置清理。
+- 自动流程从启动到资源列表就绪分别为 9.104 秒与 7.562 秒，包含 CDP 建连、添加项目/重载等步骤，不是纯启动性能基准。Play 后 Electron `getAppMetrics()` 的 workingSetSize 合计约 782/831 MiB；是单次采样，不包含所有外部原生服务，也不代表大型工程稳定内存。
+
+复验脚本与结果为证据目录下的 `final-smoke.mjs`、`final-smoke.json`、`final-smoke.log`、`terminal-path.txt`；最终截图为 `final-fresh-workspace.png`、`final-fresh-preview.png`、`final-restore-workspace.png`、`final-restore-preview.png`。

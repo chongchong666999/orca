@@ -62,6 +62,8 @@ cocos-agent 基于 [Orca](https://github.com/stablyai/orca)（MIT 协议，保�
 
 本轮验收与已知限制见 [2026-11-06 内置编辑器验收](docs/cocos-agent/acceptance-2026-11-06.md)。内置 GitNexus 版本为 3.8.271，来源提交 `5d7911f01`。
 
+本地 0.1.0 包已生成：`dist/cocos-agent-1.4.214-local.1793950875656.7b9f96fd126c-arm64.dmg`，另有同名 zip 和各自的 `.sha256`。代码来自 `7b9f96fd126c`；已完成本机后台首开、编辑保存、预览、退出重开和内置终端命令验证。只做 ad-hoc 签名，未公证；另一台 Mac 的实际安装仍未验收。
+
 需要 Node 24、pnpm（用 corepack 启用 `package.json` 中 `packageManager` 指定的版本）、Xcode。
 
 ```sh
