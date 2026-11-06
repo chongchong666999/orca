@@ -1,4 +1,5 @@
 import { toast } from 'sonner'
+import { translate } from '@/i18n/i18n'
 import { useAppStore, type AppState } from '@/store'
 import {
   cocosAgentApi,
@@ -43,7 +44,12 @@ function refreshRestoredEditorTabs(state: AppState): void {
       replacing
     })
     if (outcome.kind === 'failed') {
-      toast.error('Could not reopen the Cocos Creator editor', { description: outcome.message })
+      toast.error(
+        translate('cocosEditor.errors.reopen', 'Could not reopen the Cocos Creator editor'),
+        {
+          description: outcome.message
+        }
+      )
     }
   })
 }

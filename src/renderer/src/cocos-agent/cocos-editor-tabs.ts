@@ -1,9 +1,10 @@
 import { toast } from 'sonner'
 import type { ExecutionHostId } from '../../../shared/execution-host'
+import { translate } from '@/i18n/i18n'
 import { useAppStore, type AppState } from '@/store'
 import { cocosAgentApi, localCocosWorkspacePath } from './cocos-workspace-project'
 
-const EDITOR_TAB_TITLE = 'Cocos Creator'
+const EDITOR_TAB_TITLE = translate('cocosEditor.tab.title', 'Cocos Creator')
 const LOOPBACK_HOSTS = new Set(['127.0.0.1', 'localhost', '[::1]'])
 
 /** The browser tab this app session opened for each workspace's editor. */
@@ -116,7 +117,13 @@ async function startEditorTab(
 ): Promise<CocosEditorTabOutcome> {
   const api = cocosAgentApi()
   if (!api) {
-    return { kind: 'failed', message: 'cocos-agent is not available in this window.' }
+    return {
+      kind: 'failed',
+      message: translate(
+        'cocosEditor.errors.unavailable',
+        'cocos-agent is not available in this window.'
+      )
+    }
   }
   const result = await api.openEditor({ projectPath }).catch((error: unknown) => ({
     ok: false as const,
@@ -191,7 +198,9 @@ export async function focusOrOpenCocosEditor(
     outcome = await openCocosEditorTab(worktreeId, projectPath)
   }
   if (outcome.kind === 'failed') {
-    toast.error('Could not open the Cocos Creator editor', { description: outcome.message })
+    toast.error(translate('cocosEditor.errors.open', 'Could not open the Cocos Creator editor'), {
+      description: outcome.message
+    })
     return
   }
   // Why: the click may have joined an automatic open that left the user's own surface focused.
@@ -209,8 +218,11 @@ export async function stopCocosEditor(worktreeId: string, projectPath: string): 
   }
   const stopped = await api.stopEditor(projectPath).catch(() => false)
   if (!stopped) {
-    toast.error('Could not stop the Cocos Creator editor', {
-      description: 'It did not confirm the shutdown or is still shutting down; try again shortly.'
+    toast.error(translate('cocosEditor.errors.stop', 'Could not stop the Cocos Creator editor'), {
+      description: translate(
+        'cocosEditor.errors.stopDescription',
+        'It did not confirm the shutdown or is still shutting down; try again shortly.'
+      )
     })
     return
   }

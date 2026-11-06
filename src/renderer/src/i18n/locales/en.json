@@ -23694,5 +23694,23 @@
   },
   "checks": {
     "rerunUnsuccessful": "Rerun unsuccessful"
+  },
+  "cocosEditor": {
+    "menu": {
+      "goTo": "Go to Cocos Creator",
+      "open": "Cocos Creator",
+      "stop": "Stop Cocos Creator"
+    },
+    "errors": {
+      "reopen": "Could not reopen the Cocos Creator editor",
+      "unavailable": "cocos-agent is not available in this window.",
+      "open": "Could not open the Cocos Creator editor",
+      "stop": "Could not stop the Cocos Creator editor",
+      "stopDescription": "It did not confirm the shutdown or is still shutting down; try again shortly.",
+      "unsupportedVersion": "cocos-agent opens its editor for Cocos Creator 2.4 projects; this project uses {{version}}."
+    },
+    "tab": {
+      "title": "Cocos Creator"
+    }
   }
 }

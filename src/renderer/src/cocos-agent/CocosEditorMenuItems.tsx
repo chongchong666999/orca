@@ -1,6 +1,7 @@
 import React, { useEffect, useSyncExternalStore } from 'react'
 import { Gamepad2, Square } from 'lucide-react'
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu'
+import { translate } from '@/i18n/i18n'
 import { useAppStore } from '@/store'
 import {
   cocosAgentApi,
@@ -61,7 +62,9 @@ function CocosEditorMenuItemsForWorkspace({ worktreeId }: { worktreeId: string }
         className={MENU_ITEM_CLASS}
       >
         <Gamepad2 className="size-4 text-muted-foreground" />
-        {hasEditorTab ? 'Go to Cocos Creator' : 'Cocos Creator'}
+        {hasEditorTab
+          ? translate('cocosEditor.menu.goTo', 'Go to Cocos Creator')
+          : translate('cocosEditor.menu.open', 'Cocos Creator')}
       </DropdownMenuItem>
       {hasLiveEditorTab ? (
         <DropdownMenuItem
@@ -69,7 +72,7 @@ function CocosEditorMenuItemsForWorkspace({ worktreeId }: { worktreeId: string }
           className={MENU_ITEM_CLASS}
         >
           <Square className="size-4 text-muted-foreground" />
-          Stop Cocos Creator
+          {translate('cocosEditor.menu.stop', 'Stop Cocos Creator')}
         </DropdownMenuItem>
       ) : null}
     </>
