@@ -1,0 +1,5 @@
+# Unpacked by config/scripts/import-a5-game-context.mjs from the package pinned in config/cocos-agent/a5-game-context.lock.json.
+a5-game-context/
+a5-game-context.previous-*/
+a5-game-context.lock/
+.a5-game-context-*/

@@ -1,0 +1,7 @@
+{
+  "version": "3.8.270",
+  "target": "darwin-arm64",
+  "file": "a5-game-context-3.8.270-darwin-arm64.tgz",
+  "sha256": "5c06ea3b8e6a68879402c2365c6fc97f2a267a25276b475373c5d35888cf5f26",
+  "source": "GitNexus feature/node-editor-view 1ff5dec9d: npm run pack:platform"
+}

@@ -10,19 +10,22 @@ cocos-agent 基于 [Orca](https://github.com/stablyai/orca)（MIT 协议，保�
 
 ### 新增文件（不会冲突）
 
-| 文件                                            | 作用                                                                                                                                                                                       |
-| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `config/electron-builder.cocos-agent.cjs`       | 在 Orca 打包配置的基础上，改 appId、产品名、用户数据目录名和 URL scheme                                                                                                                    |
-| `config/scripts/build-cocos-agent-mac.mjs`      | 本机调试包：不签名，只打本机 CPU 架构，只生成 .app，不出 dmg                                                                                                                               |
-| `src/main/updater/cocos-agent-updater-setup.ts` | 关闭自动更新（Orca 的更新源写死为 stablyai/orca）                                                                                                                                          |
-| `src/shared/cocos-agent-brand.ts`               | i18next 后置处理器，把界面和菜单翻译里的 `Orca` 统一替换成 `cocos-agent`                                                                                                                   |
-| `resources/icon-source/cocos-agent-1024.png`    | 1024×1024 透明背景的图标原图                                                                                                                                                               |
-| `COCOS-AGENT.md`                                | 本文件（上游 `.gitignore` 忽略了 `docs/`，所以放在根目录）                                                                                                                                 |
-| `COCOS-AGENT-PLAN.md`                           | v0.1.0 路线和 loop 执行规则                                                                                                                                                                |
-| `src/main/cocos-agent/`                         | 主进程 Cocos 编辑器服务：检测项目、调用 `a5-game-context editor open`、停止编辑器、退出 app 时停止本次启动的编辑器，以及对应的 IPC                                                         |
-| `src/shared/cocos-agent/`                       | 主进程和渲染进程共用的类型、IPC 通道名、cocos-agent 自己的版本号 `COCOS_AGENT_VERSION`                                                                                                     |
-| `src/preload/cocos-agent-preload.ts`            | 单独暴露 `window.cocosAgent`，不改上游的 `PreloadApi`                                                                                                                                      |
-| `src/renderer/src/cocos-agent/`                 | 渲染进程：Cocos 项目检测（按主机解析本地路径）、编辑器标签的打开/切换/停止、重启后恢复的编辑器标签换成可用的、空工作区的首个界面、「+」菜单的 Cocos Creator 项、`window.cocosAgent` 的类型 |
+| 文件                                                          | 作用                                                                                                                                                                                       |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `config/electron-builder.cocos-agent.cjs`                     | 在 Orca 打包配置的基础上，改 appId、产品名、用户数据目录名和 URL scheme                                                                                                                    |
+| `config/scripts/build-cocos-agent-mac.mjs`                    | 本机调试包：不签名，只打本机 CPU 架构，只生成 .app，不出 dmg                                                                                                                               |
+| `config/cocos-agent/a5-game-context.lock.json`                | 内置的 a5-game-context 包：版本、文件名、sha256、来源提交                                                                                                                                  |
+| `config/scripts/import-a5-game-context.mjs`（及 `.test.mjs`） | 校验 sha256 和版本后，把包解到 `resources/cocos-agent/a5-game-context/`；默认从 `../GitNexus/context-engine/release/` 找，`A5_GAME_CONTEXT_TARBALL` 可指定                                 |
+| `resources/cocos-agent/.gitignore`                            | 忽略解出来的包，不改上游的 `.gitignore`                                                                                                                                                    |
+| `src/main/updater/cocos-agent-updater-setup.ts`               | 关闭自动更新（Orca 的更新源写死为 stablyai/orca）                                                                                                                                          |
+| `src/shared/cocos-agent-brand.ts`                             | i18next 后置处理器，把界面和菜单翻译里的 `Orca` 统一替换成 `cocos-agent`                                                                                                                   |
+| `resources/icon-source/cocos-agent-1024.png`                  | 1024×1024 透明背景的图标原图                                                                                                                                                               |
+| `COCOS-AGENT.md`                                              | 本文件（上游 `.gitignore` 忽略了 `docs/`，所以放在根目录）                                                                                                                                 |
+| `COCOS-AGENT-PLAN.md`                                         | v0.1.0 路线和 loop 执行规则                                                                                                                                                                |
+| `src/main/cocos-agent/`                                       | 主进程 Cocos 编辑器服务：检测项目、调用 `a5-game-context editor open`、停止编辑器、退出 app 时停止本次启动的编辑器，以及对应的 IPC                                                         |
+| `src/shared/cocos-agent/`                                     | 主进程和渲染进程共用的类型、IPC 通道名、cocos-agent 自己的版本号 `COCOS_AGENT_VERSION`                                                                                                     |
+| `src/preload/cocos-agent-preload.ts`                          | 单独暴露 `window.cocosAgent`，不改上游的 `PreloadApi`                                                                                                                                      |
+| `src/renderer/src/cocos-agent/`                               | 渲染进程：Cocos 项目检测（按主机解析本地路径）、编辑器标签的打开/切换/停止、重启后恢复的编辑器标签换成可用的、空工作区的首个界面、「+」菜单的 Cocos Creator 项、`window.cocosAgent` 的类型 |
 
 ### 改动的上游文件（可能冲突）
 
