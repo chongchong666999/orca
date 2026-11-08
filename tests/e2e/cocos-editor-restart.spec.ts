@@ -13,6 +13,7 @@ const bundledNode = '/Applications/cocos-agent.app/Contents/MacOS/cocos-agent'
 test('restores the actual Cocos editor page after the application restarts', async ({
   testRepoPath
 }, testInfo) => {
+  // Two cold desktop launches and editor startup each have their own readiness deadline.
   test.setTimeout(300_000)
   test.skip(process.platform !== 'darwin', 'This local regression uses the installed macOS editor')
   test.skip(!existsSync(bundledEditor), 'The bundled editor is required for this regression')
@@ -79,14 +80,16 @@ test('restores the actual Cocos editor page after the application restarts', asy
     const shutdown = new URL(firstPage!.url)
     shutdown.pathname = '/shutdown'
     await fetch(shutdown, { method: 'POST' }).catch(() => undefined)
-    await expect.poll(async () => {
-      try {
-        await fetch(firstPage!.url, { signal: AbortSignal.timeout(1000) })
-        return true
-      } catch {
-        return false
-      }
-    }).toBe(false)
+    await expect
+      .poll(async () => {
+        try {
+          await fetch(firstPage!.url, { signal: AbortSignal.timeout(1000) })
+          return true
+        } catch {
+          return false
+        }
+      })
+      .toBe(false)
     const second = await session.launch()
     app = second.app
     await waitForSessionReady(second.page)

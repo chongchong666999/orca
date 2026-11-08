@@ -13,6 +13,6 @@ export type CocosEditorServiceDeps = {
     record: CocosEditorRecord,
     forQuit?: boolean
   ) => Promise<CocosEditorCloseChoice | false | undefined>
-  closeFailed?: (detail: string, forQuit?: boolean) => Promise<boolean | void>
+  closeFailed?: (outcome: 'closing' | 'refused', forQuit?: boolean) => Promise<boolean | void>
   preview?: Pick<CocosPreviewRouter, 'start' | 'select' | 'remove' | 'close' | 'warning'>
 }

@@ -8,7 +8,11 @@ import {
   type CocosEditorRecord,
   type CocosProjectDetection
 } from '../../shared/cocos-agent/cocos-editor-types'
-import { prepareCocosEditorClose, reportCocosEditorCloseFailure } from './cocos-editor-close'
+import {
+  describeCocosEditorCloseFailure,
+  prepareCocosEditorClose,
+  reportCocosEditorCloseFailure
+} from './cocos-editor-close'
 import { stopAppStartedEditorsOnQuit } from './cocos-editor-quit'
 import { cocosEditorService, onCocosEditorEvicted } from './cocos-editor-service'
 import { detectCocosProject, findCocosEditorForWorkspace } from './cocos-project-detection'
@@ -21,7 +25,9 @@ let unsubscribeEvictions: (() => void) | undefined
 
 export function registerCocosAgentIpc(): void {
   stopAppStartedEditorsOnQuit()
-  cocosEditorService.setCloseHandlers(prepareCocosEditorClose, reportCocosEditorCloseFailure)
+  cocosEditorService.setCloseHandlers(prepareCocosEditorClose, (outcome, forQuit) =>
+    reportCocosEditorCloseFailure(describeCocosEditorCloseFailure(outcome === 'closing'), forQuit)
+  )
   void refreshCocosEditorMcpLauncher().catch(() =>
     console.error('Could not update the bundled Cocos MCP launcher')
   )

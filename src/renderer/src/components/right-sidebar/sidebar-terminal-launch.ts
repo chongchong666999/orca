@@ -1,8 +1,8 @@
 import { useAppStore } from '@/store'
-import { runtimeEnvironmentIdOrLocalUnlessTwin } from '@/lib/worktree-runtime-owner'
+import { resolveOwner } from '@/lib/resolve-owner'
 import { resolveWorktreeOperationRouteResult } from '@/lib/worktree-operation-route'
 import { isWebClientLocation } from '@/lib/web-client-location'
-import { createWebRuntimeSessionTerminalResult } from '@/runtime/web-runtime-terminal-create-operation'
+import { createWebRuntimeTerminalForHost } from '@/runtime/web-runtime-terminal-create-operation'
 import { startStoppedWslHostForUserAct } from '@/lib/wsl-host-user-start'
 import { toWebTerminalSurfaceTabId } from '../../../../shared/workspace-layout/terminal-surface-id'
 import { parseWorkspaceKey } from '../../../../shared/workspace-scope'
@@ -27,24 +27,28 @@ export async function openSidebarTerminal(
   shell?: string
 ): Promise<string | null> {
   const state = useAppStore.getState()
-  const route =
-    parseWorkspaceKey(worktreeId)?.type === 'folder'
-      ? null
-      : resolveWorktreeOperationRouteResult(state, worktreeId)
-  if (route && route.kind !== 'resolved') {
-    return null
+  let environmentId: string | null
+  if (parseWorkspaceKey(worktreeId)?.type === 'folder') {
+    const owner = resolveOwner(state, { workspaceId: worktreeId })
+    if (owner.kind !== 'resolved') {
+      return null
+    }
+    environmentId =
+      owner.owner.endpoint.kind === 'environment' ? owner.owner.endpoint.environmentId : null
+  } else {
+    const route = resolveWorktreeOperationRouteResult(state, worktreeId)
+    if (route.kind !== 'resolved') {
+      return null
+    }
+    environmentId = route.route.runtimeEnvironmentId
   }
-  const environmentId = route
-    ? route.route.runtimeEnvironmentId
-    : runtimeEnvironmentIdOrLocalUnlessTwin(state, worktreeId)
   const groupId = state.activeGroupIdByWorktree[worktreeId]
   if (environmentId) {
     if (!(await startStoppedWslHostForUserAct(environmentId))) {
       return null
     }
-    const result = await createWebRuntimeSessionTerminalResult({
+    const result = await createWebRuntimeTerminalForHost(environmentId, {
       worktreeId,
-      environmentId,
       targetGroupId: groupId,
       shell,
       activate: false,

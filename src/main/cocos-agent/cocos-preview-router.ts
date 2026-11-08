@@ -12,8 +12,11 @@ function listen(server: Server, host: string, port: number): Promise<number> {
     server.listen({ host, port, ipv6Only: true }, () => {
       server.off('error', reject)
       const address = server.address()
-      if (!address || typeof address === 'string') reject(new Error('No TCP address'))
-      else resolve(address.port)
+      if (!address || typeof address === 'string') {
+        reject(new Error('No TCP address'))
+      } else {
+        resolve(address.port)
+      }
     })
   })
 }
@@ -44,12 +47,18 @@ export class CocosPreviewRouter {
   }
 
   remove(editor: CocosEditorRecord): void {
-    if (this.selected?.projectRoot === editor.projectRoot) this.selected = null
+    if (this.selected?.projectRoot === editor.projectRoot) {
+      this.selected = null
+    }
   }
 
   start(): Promise<boolean> {
-    if (this.closed) return Promise.resolve(false)
-    if (this.starting) return this.starting
+    if (this.closed) {
+      return Promise.resolve(false)
+    }
+    if (this.starting) {
+      return this.starting
+    }
     this.starting = this.bind()
     return this.starting
   }
@@ -64,9 +73,13 @@ export class CocosPreviewRouter {
         await listen(ipv6, '::1', this.port)
         this.servers.push(ipv6)
       } catch (error) {
-        if (!['EAFNOSUPPORT', 'EADDRNOTAVAIL'].includes(String(errorCode(error)))) throw error
+        if (!['EAFNOSUPPORT', 'EADDRNOTAVAIL'].includes(String(errorCode(error)))) {
+          throw error
+        }
       }
-      if (!this.closed) return true
+      if (!this.closed) {
+        return true
+      }
     } catch (error) {
       this.warning =
         errorCode(error) === 'EADDRINUSE'
@@ -80,7 +93,9 @@ export class CocosPreviewRouter {
   private server(): Server {
     return createServer((request, response) => {
       void this.respond(request, response).catch(() => {
-        if (!response.headersSent) response.writeHead(503)
+        if (!response.headersSent) {
+          response.writeHead(503)
+        }
         response.end('Selected Cocos project is unavailable')
       })
     })
@@ -88,7 +103,9 @@ export class CocosPreviewRouter {
 
   private async previewPort(editor: CocosEditorRecord): Promise<number | null> {
     const endpoint = editorShutdownUrl(editor.url)
-    if (!endpoint) return null
+    if (!endpoint) {
+      return null
+    }
     const url = new URL(endpoint)
     url.pathname = '/project/devices'
     const response = await this.fetch(url.toString(), {

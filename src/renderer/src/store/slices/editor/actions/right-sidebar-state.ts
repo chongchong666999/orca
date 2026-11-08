@@ -9,6 +9,7 @@ import { getDefaultUIState } from '../../../../../../shared/constants'
 import { normalizeRightSidebarRoute } from '@/store/right-sidebar-route'
 import {
   removeSidebarTerminalSession,
+  selectSidebarTerminalSession,
   type SidebarTerminalSessions
 } from '../../../../../../shared/sidebar-terminal-sessions'
 
@@ -56,21 +57,14 @@ export function createRightSidebarState(set: EditorSet, _get: EditorGet): RightS
     setSidebarTerminalFocused: (focused) => set({ sidebarTerminalFocused: focused }),
     selectSidebarTerminal: (worktreeId, tabId) =>
       set((s) => {
-        const current = s.sidebarTerminalSessionsByWorktree[worktreeId]
-        if (current?.activeTabId === tabId && current.tabIds.includes(tabId)) {
-          return s
-        }
-        return {
-          sidebarTerminalSessionsByWorktree: {
-            ...s.sidebarTerminalSessionsByWorktree,
-            [worktreeId]: {
-              tabIds: current?.tabIds.includes(tabId)
-                ? current.tabIds
-                : [...(current?.tabIds ?? []), tabId],
-              activeTabId: tabId
-            }
-          }
-        }
+        const sessions = selectSidebarTerminalSession(
+          s.sidebarTerminalSessionsByWorktree,
+          worktreeId,
+          tabId
+        )
+        return sessions === s.sidebarTerminalSessionsByWorktree
+          ? s
+          : { sidebarTerminalSessionsByWorktree: sessions }
       }),
     removeSidebarTerminal: (worktreeId, tabId) =>
       set((s) => {

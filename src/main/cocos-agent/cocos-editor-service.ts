@@ -1,5 +1,4 @@
 import { readCocosEditorLifecycle } from './cocos-editor-lifecycle'
-import { describeCocosEditorCloseFailure } from './cocos-editor-close'
 import { CocosEditorShutdown } from './cocos-editor-shutdown'
 import type { CocosEditorServiceDeps } from './cocos-editor-service-deps'
 export type { CocosEditorServiceDeps } from './cocos-editor-service-deps'
@@ -300,10 +299,7 @@ export class CocosEditorService {
       this.closingEditors.set(projectRoot, new URL(shutdownUrl).origin)
     }
     if (outcome !== 'closed' && !onlyIdle) {
-      const keep = await this.deps.closeFailed?.(
-        describeCocosEditorCloseFailure(outcome === 'closing'),
-        forQuit
-      )
+      const keep = await this.deps.closeFailed?.(outcome, forQuit)
       if (forQuit && keep) {
         record.startedByApp = false
         return true

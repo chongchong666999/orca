@@ -40,6 +40,26 @@ export function isSidebarTerminal(
   return sessions?.[worktreeId]?.tabIds.includes(tabId) === true
 }
 
+export function selectSidebarTerminalSession(
+  sessions: SidebarTerminalSessions,
+  worktreeId: string,
+  tabId: string
+): SidebarTerminalSessions {
+  const current = sessions[worktreeId]
+  if (current?.activeTabId === tabId && current.tabIds.includes(tabId)) {
+    return sessions
+  }
+  return {
+    ...sessions,
+    [worktreeId]: {
+      tabIds: current?.tabIds.includes(tabId)
+        ? current.tabIds
+        : [...(current?.tabIds ?? []), tabId],
+      activeTabId: tabId
+    }
+  }
+}
+
 export function removeSidebarTerminalSession(
   sessions: SidebarTerminalSessions,
   worktreeId: string,

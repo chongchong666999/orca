@@ -2,12 +2,12 @@ import { createServer, type Server } from 'node:http'
 import { afterEach, expect, it } from 'vitest'
 import { CocosPreviewRouter } from './cocos-preview-router'
 
-const cleanups: Array<() => Promise<void>> = []
+const cleanups: (() => Promise<void>)[] = []
 afterEach(async () => {
   await Promise.all(
     cleanups
       .splice(0)
-      .reverse()
+      .toReversed()
       .map((close) => close())
   )
 })
@@ -27,7 +27,9 @@ async function listen(server: Server): Promise<number> {
       )
   )
   const address = server.address()
-  if (!address || typeof address === 'string') throw new Error('No TCP address')
+  if (!address || typeof address === 'string') {
+    throw new Error('No TCP address')
+  }
   return address.port
 }
 
@@ -37,7 +39,9 @@ async function project(name: string) {
     if (request.url?.startsWith('/project/devices?token=')) {
       response.setHeader('Content-Type', 'application/json')
       response.end(JSON.stringify({ port }))
-    } else response.end(`game-${name}`)
+    } else {
+      response.end(`game-${name}`)
+    }
   })
   port = await listen(server)
   return {

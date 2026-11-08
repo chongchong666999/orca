@@ -4,10 +4,9 @@ import { mkdtemp, readFile, writeFile, mkdir, rm } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { chromium } from '@playwright/test'
 
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
+const root = path.resolve(import.meta.dirname, '../..')
 const engine = path.resolve(
   process.env.COCOS_ENGINE_SOURCE ?? path.join(root, '../GitNexus/context-engine')
 )
@@ -154,7 +153,9 @@ Editor.Profile.load('profile://project/i18n.json', function(error, profile) { if
     }
     await page.evaluate(() => {
       const address = document.querySelector('#toolbar .info > div > span')
-      if (address) address.textContent = '192.168.0.60:7458'
+      if (address) {
+        address.textContent = '192.168.0.60:7458'
+      }
       const scene = document
         .querySelector('#toolbar .preview')
         .querySelectorAll('ui-select')[1]
@@ -258,8 +259,9 @@ Editor.Profile.load('profile://project/i18n.json', function(error, profile) { if
 }
 
 try {
-  if (process.argv.includes('--render') || process.argv.includes('--layout-only')) await render()
-  else {
+  if (process.argv.includes('--render') || process.argv.includes('--layout-only')) {
+    await render()
+  } else {
     run('pnpm', [
       'exec',
       'vitest',
