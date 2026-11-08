@@ -158,12 +158,16 @@ export async function readPersistedTestAgentSessionStore(
     ) as PersistedAgentSessionRecord
   }
   for (const row of db
-    .prepare('SELECT operation_key, row_json FROM agent_session_operations ORDER BY rowid')
+    .prepare(
+      'SELECT CAST(operation_key AS BLOB) AS operation_key, row_json FROM agent_session_operations ORDER BY rowid'
+    )
     .all()) {
+    if (!(row.operation_key instanceof Uint8Array)) {
+      throw new Error('Expected operation key bytes')
+    }
+    const key = Buffer.from(row.operation_key).toString('utf8')
     // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: test read-back of rows the store wrote after validating them.
-    persisted.operations[String(row.operation_key)] = parsed(
-      row.row_json
-    ) as AgentSessionOperationRow
+    persisted.operations[key] = parsed(row.row_json) as AgentSessionOperationRow
   }
   for (const row of db
     .prepare('SELECT key_id, retired_at FROM agent_session_retired_claim_keys ORDER BY rowid')
