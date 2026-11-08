@@ -23718,6 +23718,8 @@
     "retryAiConnection": "Retry connection",
     "previewEntryUnavailable": "Shared preview entry is unavailable",
     "close": {
+      "cancel": "Cancel",
+      "ok": "OK",
       "message": "Save editor changes before closing?",
       "save": "Save",
       "discard": "Don't Save",

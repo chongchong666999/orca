@@ -37,7 +37,9 @@ export function isSidebarTerminal(
   worktreeId: string,
   tabId: string
 ): boolean {
-  return sessions?.[worktreeId]?.tabIds.includes(tabId) === true
+  return Boolean(
+    sessions && Object.hasOwn(sessions, worktreeId) && sessions[worktreeId].tabIds.includes(tabId)
+  )
 }
 
 export function selectSidebarTerminalSession(
@@ -45,7 +47,7 @@ export function selectSidebarTerminalSession(
   worktreeId: string,
   tabId: string
 ): SidebarTerminalSessions {
-  const current = sessions[worktreeId]
+  const current = Object.hasOwn(sessions, worktreeId) ? sessions[worktreeId] : undefined
   if (current?.activeTabId === tabId && current.tabIds.includes(tabId)) {
     return sessions
   }
@@ -65,7 +67,7 @@ export function removeSidebarTerminalSession(
   worktreeId: string,
   tabId: string
 ): SidebarTerminalSessions {
-  const current = sessions[worktreeId]
+  const current = Object.hasOwn(sessions, worktreeId) ? sessions[worktreeId] : undefined
   if (!current?.tabIds.includes(tabId)) {
     return sessions
   }

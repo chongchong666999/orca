@@ -22944,6 +22944,8 @@
   },
   "cocosEditor": {
     "close": {
+      "cancel": "取消",
+      "ok": "确定",
       "message": "关闭前保存编辑器中的修改吗？",
       "save": "保存",
       "discard": "不保存",

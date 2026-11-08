@@ -107,7 +107,7 @@ export async function prepareCocosEditorClose(
       ].join('\n'),
       buttons: [
         translateMain('cocosEditor.close.save', 'Save'),
-        translateMain('common.cancel', 'Cancel'),
+        translateMain('cocosEditor.close.cancel', 'Cancel'),
         translateMain('cocosEditor.close.discard', "Don't Save")
       ]
     })
@@ -149,10 +149,10 @@ export async function reportCocosEditorCloseFailure(
       : detail,
     buttons: forQuit
       ? [
-          translateMain('common.cancel', 'Cancel'),
+          translateMain('cocosEditor.close.cancel', 'Cancel'),
           translateMain('cocosEditor.close.keepService', 'Quit App and Keep Editor Service')
         ]
-      : [translateMain('common.ok', 'OK')],
+      : [translateMain('cocosEditor.close.ok', 'OK')],
     defaultId: 0,
     cancelId: 0
   })
