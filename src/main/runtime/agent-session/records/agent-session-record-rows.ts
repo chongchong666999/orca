@@ -1,3 +1,7 @@
+import {
+  agentSessionOperationKey,
+  isAgentSessionOperationRow
+} from '../../../../shared/agent-session/lifecycle/agent-session-operation-ledger'
 import { agentSessionConversationView } from '../../../../shared/agent-session/lifecycle/agent-session-conversation-view'
 // Load session/ledger rows once and persist only changed rows inside the journal transaction.
 // Unreadable records remain present and immutable; every mutation of their ids is refused.
@@ -15,7 +19,6 @@ import type { AgentSessionStoreState } from './agent-session-store-state'
 import type { AgentSessionStoreRowWrites } from './agent-session-store-draft'
 import { agentSessionRefusalError } from '../../../../shared/agent-session/failures/agent-session-wire-refusals'
 import {
-  isReadableAgentSessionStoreOperation,
   isReadableAgentSessionStoreRecord,
   isReadableAgentSessionStoreTab,
   isReadableRetiredAgentSessionClaimKey
@@ -124,13 +127,19 @@ export function loadAgentSessionStoreRows(db: Database.Database): AgentSessionSt
       })
     }
   }
+  // The operation key contains NUL, which Node SQLite truncates when returning TEXT.
   for (const row of db
-    .prepare('SELECT operation_key, row_json FROM agent_session_operations ORDER BY rowid')
+    .prepare(
+      'SELECT CAST(operation_key AS BLOB) AS operation_key, row_json FROM agent_session_operations ORDER BY rowid'
+    )
     .all()) {
-    const key = text(row, 'operation_key')
+    const bytes = row.operation_key
     const parsed = parseJson(text(row, 'row_json'))
-    if (key !== null && parsed.ok && isReadableAgentSessionStoreOperation(key, parsed.value)) {
-      state.operations.set(key, parsed.value)
+    if (bytes instanceof Uint8Array && parsed.ok && isAgentSessionOperationRow(parsed.value)) {
+      const key = agentSessionOperationKey(parsed.value.callerKey, parsed.value.operationId)
+      if (Buffer.from(key).equals(bytes)) {
+        state.operations.set(key, parsed.value)
+      }
     }
   }
   for (const row of db
