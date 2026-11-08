@@ -53,6 +53,7 @@ vi.mock('../window/renderer-recovery-prompt', () => ({ presentRendererRecoveryPr
 vi.mock('../window/renderer-launch-failure-probe', () => ({ probeRendererLaunchCapacity: vi.fn() }))
 
 import { focusExistingMainWindow, safelyRevealWindow } from '../window/focus-existing-window'
+import { presentRendererRecoveryPrompt } from '../window/renderer-recovery-prompt'
 import {
   consumeQuitAndStopAllSessionsRequest,
   focusExistingWindow,
@@ -61,7 +62,8 @@ import {
   quitAfterRendererStoppedAllSessions,
   quitAndStopAllSessionsFromUserCommand,
   quitFromUserCommand,
-  setMainWindowOpener
+  setMainWindowOpener,
+  showRendererRecoveryPrompt
 } from './main-window-actions'
 import { mainProcessState as state } from './main-process-state'
 import { quitTeardownStartGate } from './quit/quit-teardown-start-gate'
@@ -98,9 +100,19 @@ beforeEach(() => {
 })
 
 afterEach(() => {
+  vi.unstubAllEnvs()
+  vi.mocked(presentRendererRecoveryPrompt).mockReset()
   vi.useRealTimers()
   vi.restoreAllMocks()
   quitTeardownStartGate.resetForTests()
+})
+
+it('keeps renderer recovery silent during background validation', async () => {
+  vi.stubEnv('ORCA_BACKGROUND_LAUNCH', '1')
+  vi.mocked(presentRendererRecoveryPrompt).mockRejectedValue(
+    new Error('A background launch must not present native recovery UI')
+  )
+  await expect(showRendererRecoveryPrompt(3)).resolves.toBeUndefined()
 })
 
 describe('focusExistingWindow', () => {

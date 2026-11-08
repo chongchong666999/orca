@@ -22,6 +22,7 @@ import {
 } from '../tray/system-tray'
 import { ensureAutoUpdaterConfigured } from '../window/attach-main-window-services'
 import { focusExistingMainWindow, safelyRevealWindow } from '../window/focus-existing-window'
+import { isBackgroundLaunch } from '../window/foreground-activation-policy'
 import { mainProcessState as state } from './main-process-state'
 import { quitTeardownStartGate } from './quit/quit-teardown-start-gate'
 import { getDashboardPopoutWindow } from '../window/dashboard-popout-window'
@@ -306,6 +307,13 @@ export async function showRendererRecoveryPrompt(
   retry?: () => void,
   availableCommitMB?: number
 ): Promise<void> {
+  if (isBackgroundLaunch()) {
+    console.error('[window] Renderer recovery exhausted during background launch', {
+      recentRecoveryCount,
+      failure
+    })
+    return
+  }
   await presentRendererRecoveryPrompt({
     recentRecoveryCount,
     ...(failure ? { failure } : {}),
