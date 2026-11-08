@@ -1,7 +1,7 @@
 {
-  "version": "3.8.279",
+  "version": "3.8.280",
   "target": "darwin-arm64",
-  "file": "a5-game-context-3.8.279-darwin-arm64.tgz",
-  "sha256": "7ad8628a6a7681a8c095c2dca787c9762590906de65b15eb732b13bd35520e0f",
-  "source": "GitNexus codex/creator-parity-fixes-20261107 local 3.8.279 macOS arm64 release with profile loading and editor message isolation"
+  "file": "a5-game-context-3.8.280-darwin-arm64.tgz",
+  "sha256": "a361735a6886cf8d5835d15520a5a8ebce556d8877cc3f5d7ee12352a5752e3b",
+  "source": "GitNexus feature/node-editor-view 03b1f2d70 local 3.8.280 macOS arm64 release with Creator-style panel tab docking"
 }
