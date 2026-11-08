@@ -1,10 +1,10 @@
 # Play 浏览器预览体验
 
-状态：设计稿，2026-11-06；本轮不改变 a5-game-context 的 Play 行为。
+状态：长期设计稿，2026-11-06。2026-11-07 已实现第一步：同步打开独立浏览器窗口，支持 ready、日志、停止、刷新、关窗清理及弹窗受阻时内嵌回退，见 [实现记录](desktop-runtime-2026-11-07.md)。在 Orca 使用现有浏览器弹窗宿主；下文的应用内标签、系统浏览器选择、预览票据和远程支持仍是后续设计。
 
 实施顺序后置于 [产品总方案](ai-cocos-product-plan.md)的同页观察和 UI 修改闭环。第一批可沿用当前 Prefab Scene 的截图通道，不等待独立浏览器 Play 改版；本文是后续专项设计。
 
-## 当前事实
+## 2026-11-06 基线
 
 GitNexus `5d7911f017`，`context-engine/editor-web/src/play.ts` 的 `mountPlay`：点击 Play 后 POST `/project/play`，拿到运行地址，在 Game Preview 面板创建 iframe；通过 `a5-play` 消息接收 ready/log/error。服务端 `editor/play.rs` 用 session/runId 管理游戏运行；`status` 返回 booting 并不意味着画面已就绪。
 

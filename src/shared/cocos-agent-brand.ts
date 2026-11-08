@@ -1,6 +1,6 @@
 import type { PostProcessorModule } from 'i18next'
 
-export const COCOS_AGENT_PRODUCT_NAME = 'cocos-agent'
+export const COCOS_AGENT_PRODUCT_NAME = 'cocos-agent-beta'
 
 // Keep the helper's real bundle name so macOS permission prompts still match the copy.
 const ORCA_BRAND_PATTERN = /\bOrca\b(?! Computer Use)/g

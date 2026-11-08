@@ -1,26 +1,39 @@
 // Why: overlay keeps the fork's identity out of upstream's builder config so syncing Orca never conflicts here.
 const base = require('./electron-builder.config.cjs')
-const { randomUUID } = require('node:crypto')
 const { existsSync } = require('node:fs')
 const path = require('node:path')
 const lock = require('./cocos-agent/a5-game-context.lock.json')
 
-const COCOS_AGENT_NAME = 'cocos-agent'
+const COCOS_AGENT_NAME = 'cocos-agent-beta'
 
 /** @type {import('electron-builder').Configuration} */
 module.exports = {
   ...base,
   appId: 'com.a5labs.cocos-agent',
   productName: COCOS_AGENT_NAME,
-  artifactName: 'cocos-agent-${version}-${arch}.${ext}',
-  dmg: { ...base.dmg, artifactName: 'cocos-agent-${version}-${arch}.${ext}' },
-  files: [...base.files, '!resources/cocos-agent{,/**/*}', '!COCOS-AGENT{,-PLAN}.md'],
+  artifactName: 'cocos-agent-beta-${version}-${arch}.${ext}',
+  dmg: { ...base.dmg, artifactName: 'cocos-agent-beta-${version}-${arch}.${ext}' },
+  files: [
+    ...base.files,
+    '!resources/cocos-agent{,/**/*}',
+    '!COCOS-AGENT{,-PLAN}.md',
+    '!.mcp.json',
+    '!{.context-engine,.cache,.tmp,.anti-slop-plugin,test-results,playwright-report}{,/**/*}'
+  ],
   forceCodeSigning: false,
   mac: {
     ...base.mac,
-    // Ad-hoc builds cannot share a TCC client while an older build still owns live terminals.
-    appId: `com.a5labs.cocos-agent.adhoc.b${randomUUID().replaceAll('-', '')}`,
+    appId: 'com.a5labs.cocos-agent.internal',
+    extendInfo: {
+      ...base.mac.extendInfo,
+      CFBundleName: COCOS_AGENT_NAME,
+      CFBundleDisplayName: COCOS_AGENT_NAME
+    },
     identity: '-',
+    sign: async (options) => {
+      const { signCocosInternalApp } = await import('./scripts/cocos-internal-signing.mjs')
+      await signCocosInternalApp(options)
+    },
     hardenedRuntime: false,
     notarize: false,
     extraResources: [
@@ -39,6 +52,13 @@ module.exports = {
     if (context.electronPlatformName !== 'darwin') {
       return
     }
+    const { assertCocosPackageContents } = await import('./scripts/cocos-package-contents.mjs')
+    assertCocosPackageContents(
+      path.join(
+        context.appOutDir,
+        `${context.packager.appInfo.productFilename}.app/Contents/Resources/app.asar`
+      )
+    )
     const { requiredPackageEntries } = await import('./scripts/import-a5-game-context.mjs')
     const packageRoot = path.join(
       context.appOutDir,
@@ -54,8 +74,8 @@ module.exports = {
   // Packaged package.json name drives Electron's default userData, keeping the official Orca profile untouched.
   extraMetadata: {
     ...base.extraMetadata,
-    name: COCOS_AGENT_NAME,
-    productName: COCOS_AGENT_NAME
+    name: 'cocos-agent',
+    productName: 'cocos-agent'
   },
-  protocols: [{ name: COCOS_AGENT_NAME, schemes: [COCOS_AGENT_NAME] }]
+  protocols: [{ name: COCOS_AGENT_NAME, schemes: ['cocos-agent'] }]
 }

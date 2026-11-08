@@ -1,5 +1,7 @@
-import { realpath } from 'node:fs/promises'
-import path from 'node:path'
+import { readCocosEditorLifecycle } from './cocos-editor-lifecycle'
+import { CocosEditorShutdown } from './cocos-editor-shutdown'
+import type { CocosEditorCloseChoice } from './cocos-editor-close'
+import { CocosPreviewRouter } from './cocos-preview-router'
 import { runProcess } from '@orca/process-host'
 import type { ProcessResult, ProcessSpec } from '@orca/process-host/process-spec'
 import type {
@@ -9,21 +11,23 @@ import type {
 } from '../../shared/cocos-agent/cocos-editor-types'
 import { resolveA5GameContextBinary } from './a5-game-context-binary'
 import { editorShutdownUrl, parseEditorOpenOutput } from './cocos-editor-open-output'
-import { detectCocosProject } from './cocos-project-detection'
+import { findCocosEditorForWorkspace, resolveCocosProjectRoot } from './cocos-project-detection'
 import { prepareBundledCocosSdk } from './cocos-editor-sdk'
 
+const MAX_LIVE_EDITORS = 3
 // Why: GitNexus waits up to 100 s for another starter's project lock, then up to 60 s for the editor to come up.
 const OPEN_TIMEOUT_MS = 180_000
-const SHUTDOWN_TIMEOUT_MS = 3_000
-const SHUTDOWN_SETTLE_MS = 5_000
-const SHUTDOWN_PROBE_INTERVAL_MS = 100
 const MAX_FAILURE_MESSAGE_LENGTH = 500
 
 export type CocosEditorServiceDeps = {
   resolveBinary: () => Promise<string | null>
   runProcess: (spec: ProcessSpec) => Promise<ProcessResult>
   fetch: typeof fetch
+  onEvicted?: (record: CocosEditorRecord) => void
   shutdownSettleMs?: number
+  prepareClose?: (record: CocosEditorRecord) => Promise<CocosEditorCloseChoice | false | undefined>
+  closeFailed?: (detail: string) => Promise<void>
+  preview?: Pick<CocosPreviewRouter, 'start' | 'select' | 'remove' | 'close' | 'warning'>
 }
 
 function failure(code: CocosEditorFailureCode, message: string): CocosEditorOpenResult {
@@ -39,32 +43,35 @@ function lastLine(text: string): string {
   )
 }
 
-// Why: GitNexus keys its one-editor-per-project records by the canonical path.
-async function canonicalPath(target: string): Promise<string> {
-  return realpath(target).catch(() => path.resolve(target))
-}
-
 function isSameEditor(a: string, b: string): boolean {
   const shutdownA = editorShutdownUrl(a)
   return shutdownA !== null && shutdownA === editorShutdownUrl(b)
 }
 
-type ShutdownOutcome = 'closed' | 'closing' | 'refused'
-
-function connectionErrorCode(error: unknown): unknown {
-  const cause = error instanceof Error ? (error.cause as { code?: unknown } | undefined) : undefined
-  return cause?.code
-}
-
 /** Opens and stops GitNexus Cocos editors through `a5-game-context editor open`, which owns their processes. */
 export class CocosEditorService {
   private readonly editors = new Map<string, CocosEditorRecord>()
-  private readonly projectQueues = new Map<string, Promise<void>>()
+  private queue: Promise<void> = Promise.resolve()
+  private readonly activationOrder = new Map<string, number>()
+  private activationSequence = 0
+  private activationRequest = 0
   /** Editors that acknowledged a stop but still answered when the settle time ran out, by project. */
   private readonly closingEditors = new Map<string, string>()
   private quitting = false
 
-  constructor(private readonly deps: CocosEditorServiceDeps) {}
+  private readonly shutdown: CocosEditorShutdown
+
+  constructor(private readonly deps: CocosEditorServiceDeps) {
+    this.shutdown = new CocosEditorShutdown(deps.fetch, deps.shutdownSettleMs)
+  }
+
+  setCloseHandlers(
+    prepareClose: CocosEditorServiceDeps['prepareClose'],
+    closeFailed: CocosEditorServiceDeps['closeFailed']
+  ): void {
+    this.deps.prepareClose = prepareClose
+    this.deps.closeFailed = closeFailed
+  }
 
   async open(projectPath: string, document?: string): Promise<CocosEditorOpenResult> {
     if (this.quitting) {
@@ -74,14 +81,20 @@ export class CocosEditorService {
     if (document !== undefined && (!document.trim() || document.startsWith('-'))) {
       return failure('invalid-document', `Not a document path: ${document}`)
     }
-    const projectRoot = await canonicalPath(projectPath)
-    return this.serialize(projectRoot, () => this.openEditor(projectRoot, document))
+    return this.serialize(async () => {
+      const projectRoot = await resolveCocosProjectRoot(projectPath)
+      return projectRoot
+        ? this.openEditor(projectRoot, document)
+        : failure('not-cocos-project', `Could not resolve one Cocos project in ${projectPath}`)
+    })
   }
 
   /** True once the editor stopped or had already exited; false keeps it listed so the stop can be retried. */
   async stop(projectPath: string): Promise<boolean> {
-    const projectRoot = await canonicalPath(projectPath)
-    return this.serialize(projectRoot, () => this.stopEditor(projectRoot))
+    return this.serialize(async () => {
+      const editor = await findCocosEditorForWorkspace(projectPath, this.list())
+      return editor ? this.stopEditor(editor.projectRoot) : false
+    })
   }
 
   list(): CocosEditorRecord[] {
@@ -95,49 +108,114 @@ export class CocosEditorService {
    */
   shutdownForQuit(): void {
     this.quitting = true
+    this.activationRequest++
+    void this.deps.preview?.close()
     for (const record of this.editors.values()) {
       const shutdownUrl = record.startedByApp ? editorShutdownUrl(record.url) : null
       if (shutdownUrl) {
-        void this.postShutdown(shutdownUrl)
+        void this.shutdown.post(shutdownUrl)
       }
     }
   }
 
   // Why: an open racing a stop would reuse the editor that is shutting down and hand out a dead URL.
-  private serialize<T>(projectRoot: string, operation: () => Promise<T>): Promise<T> {
-    const previous = this.projectQueues.get(projectRoot) ?? Promise.resolve()
-    const result = previous.then(operation)
-    const settled = result.then(
+  private serialize<T>(operation: () => Promise<T>): Promise<T> {
+    const result = this.queue.then(operation)
+    this.queue = result.then(
       () => undefined,
       () => undefined
     )
-    this.projectQueues.set(projectRoot, settled)
-    void settled.then(() => {
-      if (this.projectQueues.get(projectRoot) === settled) {
-        this.projectQueues.delete(projectRoot)
-      }
-    })
     return result
   }
 
+  async activate(projectPath: string | null): Promise<void> {
+    const request = ++this.activationRequest
+    this.deps.preview?.select(null)
+    const editor = projectPath
+      ? await findCocosEditorForWorkspace(projectPath, this.list())
+      : undefined
+    if (request !== this.activationRequest || this.quitting) return
+    // Activation during an open must affect its next eviction decision immediately.
+    if (editor && this.editors.has(editor.projectRoot)) {
+      this.activationOrder.set(editor.projectRoot, ++this.activationSequence)
+      this.deps.preview?.select(editor)
+    }
+  }
+
+  private async makeRoom(): Promise<boolean> {
+    if (this.editors.size < MAX_LIVE_EDITORS) {
+      return true
+    }
+    const candidates = [...this.editors.values()].sort(
+      (a, b) =>
+        (this.activationOrder.get(a.projectRoot) ?? 0) -
+        (this.activationOrder.get(b.projectRoot) ?? 0)
+    )
+    for (const record of candidates) {
+      if (this.quitting) {
+        return false
+      }
+      const closingOrigin = this.closingEditors.get(record.projectRoot)
+      if (closingOrigin && (await this.shutdown.waitUntilClosed(closingOrigin))) {
+        this.closingEditors.delete(record.projectRoot)
+        this.editors.delete(record.projectRoot)
+        this.deps.preview?.remove(record)
+        this.activationOrder.delete(record.projectRoot)
+        this.deps.onEvicted?.(record)
+        return true
+      }
+      if (closingOrigin) {
+        continue
+      }
+      const activation = this.activationOrder.get(record.projectRoot)
+      const lifecycle = await readCocosEditorLifecycle(record.url, this.deps.fetch)
+      if (lifecycle === 'gone') {
+        this.deps.preview?.remove(record)
+        this.editors.delete(record.projectRoot)
+        this.activationOrder.delete(record.projectRoot)
+        this.deps.onEvicted?.(record)
+        return true
+      }
+      if (lifecycle !== 'idle' || !record.startedByApp) {
+        continue
+      }
+      if (activation !== this.activationOrder.get(record.projectRoot)) {
+        continue
+      }
+      if (!(await this.stopEditor(record.projectRoot, true))) {
+        continue
+      }
+      this.activationOrder.delete(record.projectRoot)
+      this.deps.onEvicted?.(record)
+      return true
+    }
+    return false
+  }
+
   private async openEditor(projectRoot: string, document?: string): Promise<CocosEditorOpenResult> {
+    if (this.quitting) {
+      return failure('stopping', 'cocos-agent is quitting.')
+    }
     // Why: the CLI would hand back the editor that acknowledged a stop but has not exited yet.
     const closingOrigin = this.closingEditors.get(projectRoot)
     if (closingOrigin !== undefined) {
-      if (!(await this.waitUntilClosed(closingOrigin))) {
+      if (!(await this.shutdown.waitUntilClosed(closingOrigin))) {
         return failure('stopping', `The previous editor of ${projectRoot} is still shutting down.`)
       }
       this.closingEditors.delete(projectRoot)
       this.editors.delete(projectRoot)
-    }
-    if ((await detectCocosProject(projectRoot)).kind !== 'cocos') {
-      return failure('not-cocos-project', `${projectRoot} has no project.json and assets folder`)
     }
     const binary = await this.deps.resolveBinary()
     if (!binary) {
       return failure(
         'unavailable',
         'a5-game-context is not bundled with this build; set A5_GAME_CONTEXT_BIN in development.'
+      )
+    }
+    if (!this.editors.has(projectRoot) && !(await this.makeRoom())) {
+      return failure(
+        'capacity',
+        'All 3 Cocos editors are protected or still stopping. Save changes or stop an idle editor, then try again.'
       )
     }
     const args = ['editor', 'open', '--project', projectRoot]
@@ -147,6 +225,7 @@ export class CocosEditorService {
     let result: ProcessResult
     try {
       await prepareBundledCocosSdk(binary)
+      await this.deps.preview?.start()
       if (this.quitting) {
         return failure('stopping', 'cocos-agent is quitting.')
       }
@@ -172,7 +251,7 @@ export class CocosEditorService {
     if (this.quitting) {
       const shutdownUrl = output.reused ? null : editorShutdownUrl(output.url)
       if (shutdownUrl) {
-        void this.postShutdown(shutdownUrl)
+        void this.shutdown.post(shutdownUrl)
       }
       return failure('stopping', 'cocos-agent is quitting.')
     }
@@ -184,12 +263,19 @@ export class CocosEditorService {
       url: output.url,
       startedByApp: startedEarlierByApp || !output.reused
     })
-    return { ok: true, url: output.url, projectRoot, reused: output.reused }
+    this.activationOrder.set(projectRoot, ++this.activationSequence)
+    return {
+      ok: true,
+      url: output.url,
+      projectRoot,
+      reused: output.reused,
+      ...(this.deps.preview?.warning ? { previewWarning: this.deps.preview.warning } : {})
+    }
   }
 
-  private async stopEditor(projectRoot: string): Promise<boolean> {
+  private async stopEditor(projectRoot: string, onlyIdle = false): Promise<boolean> {
     const record = this.editors.get(projectRoot)
-    if (!record) {
+    if (!record || !record.startedByApp) {
       return false
     }
     const shutdownUrl = editorShutdownUrl(record.url)
@@ -197,62 +283,51 @@ export class CocosEditorService {
       this.editors.delete(projectRoot)
       return false
     }
-    const outcome = await this.requestShutdown(shutdownUrl)
+    const url = new URL(shutdownUrl)
+    if (onlyIdle) {
+      url.searchParams.set('onlyIdle', '1')
+    } else if (this.deps.prepareClose) {
+      const choice = await this.deps.prepareClose(record)
+      if (choice === false) {
+        return false
+      }
+      if (choice) {
+        url.searchParams.set('action', choice.action)
+        url.searchParams.set('revision', choice.revision)
+      }
+    }
+    const outcome = await this.shutdown.request(url.toString())
     if (outcome === 'closed') {
+      this.deps.preview?.remove(record)
       this.editors.delete(projectRoot)
       this.closingEditors.delete(projectRoot)
     } else if (outcome === 'closing') {
       this.closingEditors.set(projectRoot, new URL(shutdownUrl).origin)
+    } else if (!onlyIdle) {
+      await this.deps.closeFailed?.(
+        'Closing was refused. Changes may have arrived during confirmation, a save may conflict with files on disk, or the editor may still be busy. Review the editor and try again.'
+      )
     }
     return outcome === 'closed'
   }
+}
 
-  /** POST /shutdown once: acknowledged (2xx), closed (nothing listening any more) or refused. */
-  private async postShutdown(shutdownUrl: string): Promise<'acknowledged' | 'closed' | 'refused'> {
-    try {
-      const response = await this.deps.fetch(shutdownUrl, {
-        method: 'POST',
-        signal: AbortSignal.timeout(SHUTDOWN_TIMEOUT_MS)
-      })
-      await response.body?.cancel().catch(() => undefined)
-      return response.ok ? 'acknowledged' : 'refused'
-    } catch (error) {
-      // Why: nothing listening means the editor already exited (idle exit, or stopped elsewhere).
-      return connectionErrorCode(error) === 'ECONNREFUSED' ? 'closed' : 'refused'
-    }
-  }
+const evictionListeners = new Set<(record: CocosEditorRecord) => void>()
 
-  private async requestShutdown(shutdownUrl: string): Promise<ShutdownOutcome> {
-    const posted = await this.postShutdown(shutdownUrl)
-    if (posted !== 'acknowledged') {
-      return posted
-    }
-    return (await this.waitUntilClosed(new URL(shutdownUrl).origin)) ? 'closed' : 'closing'
-  }
-
-  /** True once nothing answers at `origin`; false if it still answers when the settle time runs out. */
-  private async waitUntilClosed(origin: string): Promise<boolean> {
-    const deadline = Date.now() + (this.deps.shutdownSettleMs ?? SHUTDOWN_SETTLE_MS)
-    while (Date.now() < deadline) {
-      try {
-        const response = await this.deps.fetch(origin, {
-          method: 'HEAD',
-          signal: AbortSignal.timeout(SHUTDOWN_PROBE_INTERVAL_MS * 5)
-        })
-        await response.body?.cancel().catch(() => undefined)
-      } catch (error) {
-        const code = connectionErrorCode(error)
-        if (code === 'ECONNREFUSED' || code === 'ECONNRESET') {
-          return true
-        }
-      }
-      await new Promise((resolve) => setTimeout(resolve, SHUTDOWN_PROBE_INTERVAL_MS))
-    }
-    return false
+export function onCocosEditorEvicted(listener: (record: CocosEditorRecord) => void): () => void {
+  evictionListeners.add(listener)
+  return () => {
+    evictionListeners.delete(listener)
   }
 }
 
 export const cocosEditorService = new CocosEditorService({
+  preview: new CocosPreviewRouter((input, init) => fetch(input, init)),
+  onEvicted: (record) => {
+    for (const listener of evictionListeners) {
+      listener(record)
+    }
+  },
   resolveBinary: () => resolveA5GameContextBinary(),
   runProcess: (spec) => runProcess(spec),
   fetch: (input, init) => fetch(input, init)

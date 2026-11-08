@@ -3,6 +3,7 @@ export type CocosProjectDetection =
   | { kind: 'cocos'; creatorVersion: string | null }
 
 export type CocosEditorFailureCode =
+  | 'capacity'
   | 'unavailable'
   | 'not-cocos-project'
   | 'invalid-document'
@@ -12,7 +13,7 @@ export type CocosEditorFailureCode =
   | 'stopping'
 
 export type CocosEditorOpenResult =
-  | { ok: true; url: string; projectRoot: string; reused: boolean }
+  | { ok: true; url: string; projectRoot: string; reused: boolean; previewWarning?: string }
   | { ok: false; code: CocosEditorFailureCode; message: string }
 
 export type CocosEditorRecord = {
@@ -28,9 +29,19 @@ export type CocosAgentPreloadApi = {
   /** True once the editor stopped or had already exited; false keeps it listed so the stop can be retried. */
   stopEditor: (projectRoot: string) => Promise<boolean>
   listEditors: () => Promise<CocosEditorRecord[]>
+  refreshEditorBindings: (args: {
+    projectPath: string
+    workspaceId: string
+    viewId: string
+  }) => Promise<void>
+  activateEditor: (projectRoot: string | null) => Promise<void>
+  onEditorEvicted: (listener: (record: CocosEditorRecord) => void) => () => void
 }
 
 export const COCOS_AGENT_IPC = {
+  refreshEditorBindings: 'cocos-agent:refresh-editor-bindings',
+  activateEditor: 'cocos-agent:activate-editor',
+  editorEvicted: 'cocos-agent:editor-evicted',
   detectProject: 'cocos-agent:detect-project',
   openEditor: 'cocos-agent:open-editor',
   stopEditor: 'cocos-agent:stop-editor',

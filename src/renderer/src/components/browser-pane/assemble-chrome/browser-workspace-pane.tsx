@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useMemo } from 'react'
+import { CocosEditorSuspendedView } from '@/cocos-agent/CocosEditorSuspendedView'
+import { useCocosEditorSuspended } from '@/cocos-agent/cocos-editor-suspension'
 import { useAppStore } from '@/store'
 import { runtimeEnvironmentIdOrLocalUnlessTwin } from '@/lib/worktree-runtime-owner'
 import { isClientHostedBrowserPageHandle } from '@/store/slices/browser'
@@ -43,6 +45,7 @@ export default function BrowserPane({
   isWorktreeActive?: boolean
   chromeShortcutScope?: BrowserChromeShortcutScope
 }): React.JSX.Element {
+  const cocosSuspended = useCocosEditorSuspended(browserTab.id)
   const resolvedChromeShortcutScope = chromeShortcutScope ?? (isActive ? 'focused' : 'inactive')
   const activeRuntimeEnvironmentId = useAppStore((s) =>
     runtimeEnvironmentIdOrLocalUnlessTwin(s, browserTab.worktreeId)
@@ -112,6 +115,10 @@ export default function BrowserPane({
       throw new Error('Could not reclaim browser control')
     }
   }, [activeBrowserPageId])
+
+  if (cocosSuspended) {
+    return <CocosEditorSuspendedView worktreeId={browserTab.worktreeId} />
+  }
 
   if (activeBrowserRuntimeEnvironmentId) {
     const environmentHandle =

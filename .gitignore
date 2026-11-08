@@ -80,6 +80,7 @@ tmp/
 .tmp/
 design-docs/
 .context/
+/.context-engine/
 .atl/
 
 # Machine-local agent hook endpoint files may contain auth tokens.

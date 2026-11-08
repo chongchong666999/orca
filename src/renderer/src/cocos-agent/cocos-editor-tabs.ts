@@ -1,11 +1,26 @@
+import type { CocosEditorRecord } from '../../../shared/cocos-agent/cocos-editor-types'
+import { destroyWorkspaceWebviews } from '@/store/slices/browser-webview-cleanup'
+import {
+  isCocosEditorSuspended,
+  setCocosEditorSuspended,
+  markCocosEditorEvicted,
+  wasCocosEditorEvicted
+} from './cocos-editor-suspension'
+import { refreshCocosEditorTabBindings } from './cocos-editor-binding-refresh'
 import { toast } from 'sonner'
 import type { ExecutionHostId } from '../../../shared/execution-host'
 import { translate } from '@/i18n/i18n'
 import { useAppStore, type AppState } from '@/store'
 import { cocosAgentApi, localCocosWorkspacePath } from './cocos-workspace-project'
+import {
+  editorIdentity,
+  findEditorPageTabs,
+  isCocosEditorPageUrl,
+  markedEditorUrl
+} from './cocos-editor-page-identity'
+export { findEditorPageTabs, isCocosEditorPageUrl } from './cocos-editor-page-identity'
 
 const EDITOR_TAB_TITLE = translate('cocosEditor.tab.title', 'Cocos Creator')
-const LOOPBACK_HOSTS = new Set(['127.0.0.1', 'localhost', '[::1]'])
 
 /** The browser tab this app session opened for each workspace's editor. */
 const editorTabIdByWorkspace = new Map<string, string>()
@@ -28,48 +43,23 @@ export function findCocosEditorTabId(state: AppState, worktreeId: string): strin
     : null
 }
 
-// Why: only tabs cocos-agent opened carry this; the editor page keeps unknown query params as it switches documents.
-const EDITOR_TAB_MARKER = ['cocos-agent', 'editor'] as const
-
-function markedEditorUrl(url: string, worktreeId: string): string {
-  const parsed = new URL(url)
-  parsed.searchParams.set(...EDITOR_TAB_MARKER)
-  parsed.searchParams.set('cocos-workspace', worktreeId)
-  return parsed.toString()
-}
-
-/** The editor a GitNexus editor page URL belongs to (its origin and session token); null for any other page. */
-function editorIdentity(url: string, requireMarker: boolean): string | null {
-  try {
-    const parsed = new URL(url)
-    const token = parsed.searchParams.get('token')
-    const isEditorPage =
-      parsed.protocol === 'http:' &&
-      LOOPBACK_HOSTS.has(parsed.hostname) &&
-      parsed.pathname === '/' &&
-      Boolean(token) &&
-      (!requireMarker || parsed.searchParams.get(EDITOR_TAB_MARKER[0]) === EDITOR_TAB_MARKER[1])
-    return isEditorPage ? `${parsed.origin}\0${token}` : null
-  } catch {
-    return null
+/** Keep the workspace tab while releasing only this editor's browser guests. */
+export function suspendCocosEditor(record: CocosEditorRecord): void {
+  const identity = editorIdentity(record.url, false)
+  if (!identity) {
+    return
   }
-}
-
-export function isCocosEditorPageUrl(url: string): boolean {
-  return editorIdentity(url, true) !== null
-}
-
-/** Browser tabs in the workspace showing an editor page cocos-agent opened, including ones restored from an earlier app session. */
-export function findEditorPageTabs(
-  state: AppState,
-  worktreeId: string
-): { tabId: string; identity: string }[] {
-  return (state.browserTabsByWorktree[worktreeId] ?? []).flatMap((tab) => {
-    const identity = (state.browserPagesByWorkspace[tab.id] ?? [])
-      .map((page) => editorIdentity(page.url, true))
-      .find((value) => value !== null)
-    return identity ? [{ tabId: tab.id, identity }] : []
-  })
+  markCocosEditorEvicted(identity)
+  const state = useAppStore.getState()
+  for (const worktreeId of Object.keys(state.browserTabsByWorktree)) {
+    for (const tab of findEditorPageTabs(state, worktreeId)) {
+      if (tab.identity !== identity) {
+        continue
+      }
+      setCocosEditorSuspended(tab.tabId, true)
+      destroyWorkspaceWebviews(state.browserPagesByWorkspace, tab.tabId)
+    }
+  }
 }
 
 /**
@@ -126,16 +116,74 @@ async function startEditorTab(
       )
     }
   }
-  const result = await api.openEditor({ projectPath }).catch((error: unknown) => ({
-    ok: false as const,
-    message: error instanceof Error ? error.message : String(error)
-  }))
+  const before = useAppStore.getState()
+  const retainedTabs = findEditorPageTabs(before, worktreeId).filter(
+    (tab) => !options.replacing || options.replacing.includes(tab.tabId)
+  )
+  const retainedPage = retainedTabs
+    .flatMap((tab) => before.browserPagesByWorkspace[tab.tabId] ?? [])
+    .find((page) => isCocosEditorPageUrl(page.url))
+  const document = retainedPage
+    ? (new URL(retainedPage.url).searchParams.get('doc') ?? undefined)
+    : undefined
+  const result = await api
+    .openEditor({ projectPath, ...(document ? { document } : {}) })
+    .catch((error: unknown) => ({
+      ok: false as const,
+      message: error instanceof Error ? error.message : String(error)
+    }))
   const state = useAppStore.getState()
   if (localCocosWorkspacePath(state, worktreeId, options.executionHostId) !== projectPath) {
     return { kind: 'abandoned' }
   }
   if (!result.ok) {
     return { kind: 'failed', message: result.message }
+  }
+  if (result.previewWarning) {
+    toast.warning(
+      translate('cocosEditor.previewEntryUnavailable', 'Shared preview entry is unavailable'),
+      { description: result.previewWarning }
+    )
+  }
+  if (state.activeWorktreeId === worktreeId) {
+    void api.activateEditor(projectPath).catch(() => undefined)
+  }
+  if (wasCocosEditorEvicted(editorIdentity(result.url, false) ?? '')) {
+    return { kind: 'abandoned' }
+  }
+  if (retainedTabs.length > 0) {
+    let resumed = false
+    for (const tab of retainedTabs) {
+      let tabResumed = false
+      for (const page of state.browserPagesByWorkspace[tab.tabId] ?? []) {
+        if (!isCocosEditorPageUrl(page.url)) {
+          continue
+        }
+        const url = new URL(markedEditorUrl(result.url, worktreeId))
+        const previousUrl = new URL(page.url)
+        const previousView = previousUrl.searchParams.get('cocos-view')
+        if (previousView) {
+          url.searchParams.set('cocos-view', previousView)
+        }
+        const previousDocument = previousUrl.searchParams.get('doc')
+        if (previousDocument) {
+          url.searchParams.set('doc', previousDocument)
+        } else {
+          url.searchParams.delete('doc')
+        }
+        if (url.toString() !== page.url) {
+          state.setBrowserPageUrl(page.id, url.toString())
+        }
+        resumed = true
+        tabResumed = true
+      }
+      if (tabResumed) {
+        editorTabIdByWorkspace.set(worktreeId, tab.tabId)
+        setCocosEditorSuspended(tab.tabId, false)
+        void refreshCocosEditorTabBindings(worktreeId, projectPath, tab.tabId)
+      }
+    }
+    return { kind: resumed ? 'opened' : 'abandoned' }
   }
   if (findCocosEditorTabId(state, worktreeId)) {
     return { kind: 'opened' }
@@ -189,8 +237,12 @@ export async function focusOrOpenCocosEditor(
 ): Promise<void> {
   const state = useAppStore.getState()
   const existingTabId = findCocosEditorTabId(state, worktreeId)
-  if (existingTabId) {
+  if (existingTabId && !isCocosEditorSuspended(existingTabId)) {
     state.setActiveBrowserTab(existingTabId, worktreeId)
+    void cocosAgentApi()
+      ?.activateEditor(projectPath)
+      .catch(() => undefined)
+    await refreshCocosEditorTabBindings(worktreeId, projectPath, existingTabId)
     return
   }
   let outcome = await openCocosEditorTab(worktreeId, projectPath)
@@ -219,12 +271,6 @@ export async function stopCocosEditor(worktreeId: string, projectPath: string): 
   }
   const stopped = await api.stopEditor(projectPath).catch(() => false)
   if (!stopped) {
-    toast.error(translate('cocosEditor.errors.stop', 'Could not stop the Cocos Creator editor'), {
-      description: translate(
-        'cocosEditor.errors.stopDescription',
-        'It did not confirm the shutdown or is still shutting down; try again shortly.'
-      )
-    })
     return
   }
   const tabId = findCocosEditorTabId(useAppStore.getState(), worktreeId)

@@ -21724,7 +21724,8 @@
   },
   "common": {
     "retry": "Retry",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "ok": "OK"
   },
   "terminal": {
     "sessionSaveFailure": {
@@ -23705,12 +23706,22 @@
       "reopen": "Could not reopen the Cocos Creator editor",
       "unavailable": "cocos-agent is not available in this window.",
       "open": "Could not open the Cocos Creator editor",
-      "stop": "Could not stop the Cocos Creator editor",
-      "stopDescription": "It did not confirm the shutdown or is still shutting down; try again shortly.",
-      "unsupportedVersion": "cocos-agent opens its editor for Cocos Creator 2.4 projects; this project uses {{version}}."
+      "unsupportedVersion": "cocos-agent opens its editor for Cocos Creator 2.4 projects; this project uses {{version}}.",
+      "aiResume": "Could not reconnect the AI terminal"
     },
     "tab": {
       "title": "Cocos Creator"
+    },
+    "suspended": "This editor was paused to free memory.",
+    "resuming": "Resuming editor…",
+    "resume": "Resume Cocos Creator",
+    "retryAiConnection": "Retry connection",
+    "previewEntryUnavailable": "Shared preview entry is unavailable",
+    "close": {
+      "message": "Save editor changes before closing?",
+      "save": "Save",
+      "discard": "Don't Save",
+      "failed": "The editor remains open. Your unsaved changes were not discarded."
     }
   },
   "cocosSidebar": {
