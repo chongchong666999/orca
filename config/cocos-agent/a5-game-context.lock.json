@@ -1,7 +1,7 @@
 {
-  "version": "3.8.280",
+  "version": "3.8.281",
   "target": "darwin-arm64",
-  "file": "a5-game-context-3.8.280-darwin-arm64.tgz",
-  "sha256": "a361735a6886cf8d5835d15520a5a8ebce556d8877cc3f5d7ee12352a5752e3b",
-  "source": "GitNexus feature/node-editor-view 03b1f2d70 local 3.8.280 macOS arm64 release with Creator-style panel tab docking"
+  "file": "a5-game-context-3.8.281-darwin-arm64.tgz",
+  "sha256": "e26743a8133ad39de475522a638202bfd29765e7b4142f2a80aff3bbe87a14f5",
+  "source": "GitNexus feature/node-editor-view 9b802b337 local 3.8.281 macOS arm64 release: prefabs follow branch switches, asset sync waits for git"
 }
