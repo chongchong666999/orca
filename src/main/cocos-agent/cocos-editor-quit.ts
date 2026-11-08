@@ -26,7 +26,7 @@ export function stopAppStartedEditorsOnQuit(): void {
     void (async () => {
       try {
         for (const record of owned) {
-          if (!(await cocosEditorService.stop(record.projectRoot))) {
+          if (!(await cocosEditorService.stop(record.projectRoot, true))) {
             return
           }
         }

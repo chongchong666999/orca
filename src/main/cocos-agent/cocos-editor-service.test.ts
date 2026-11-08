@@ -172,6 +172,22 @@ describe('CocosEditorService', () => {
     expect(closeFailed).toHaveBeenCalledOnce()
   })
 
+  it('lets quit retain an unreachable editor without sending a shutdown request', async () => {
+    const fetch = vi.fn(async () => new Response(''))
+    const service = new CocosEditorService({
+      resolveBinary: async () => '/opt/a5-game-context',
+      runProcess: async () => openOutput(projectRoot, false),
+      fetch,
+      prepareClose: async () => ({ action: 'keep' })
+    })
+    await service.open(projectRoot)
+    fetch.mockClear()
+    expect(await service.stop(projectRoot, true)).toBe(true)
+    expect(service.list()[0].startedByApp).toBe(false)
+    service.shutdownForQuit()
+    expect(fetch).not.toHaveBeenCalled()
+  })
+
   it('starts an open only after a stop in flight for the same project finishes', async () => {
     let acknowledge: ((response: Response) => void) | null = null
     const runProcess = vi.fn(async (_spec: ProcessSpec) => openOutput(projectRoot, false))
@@ -278,7 +294,9 @@ describe('CocosEditorService', () => {
     const stops: string[] = []
     const runProcess = vi.fn(async (spec: ProcessSpec) => {
       const root = spec.cwd
-      if (typeof root !== 'string') throw new Error('Expected a project working directory')
+      if (typeof root !== 'string') {
+        throw new Error('Expected a project working directory')
+      }
       const reused = live.has(root) || externalRoots.has(root)
       live.add(root)
       expect(live.size).toBeLessThanOrEqual(3)

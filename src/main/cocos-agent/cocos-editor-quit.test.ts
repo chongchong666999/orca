@@ -36,7 +36,7 @@ it('vetoes quit before teardown and stays open when an editor close is cancelled
     }
   })
   app.emit('before-quit', event)
-  await vi.waitFor(() => expect(state.stop).toHaveBeenCalledWith('/project'))
+  await vi.waitFor(() => expect(state.stop).toHaveBeenCalledWith('/project', true))
   expect(event.defaultPrevented).toBe(true)
   expect(teardown).toBe(false)
   expect(state.quit).not.toHaveBeenCalled()
@@ -53,7 +53,7 @@ it('finishes owned editor closes before retrying quit and leaves external servic
   stopAppStartedEditorsOnQuit()
   app.emit('before-quit', { defaultPrevented: false, preventDefault() {} })
   await vi.waitFor(() => expect(state.quit).toHaveBeenCalledOnce())
-  expect(state.stop.mock.calls).toEqual([['/project']])
+  expect(state.stop.mock.calls).toEqual([['/project', true]])
 })
 
 it('rechecks editors started during the first quit attempt', async () => {
@@ -69,5 +69,10 @@ it('rechecks editors started during the first quit attempt', async () => {
   })
   stopAppStartedEditorsOnQuit()
   app.emit('before-quit', { defaultPrevented: false, preventDefault() {} })
-  await vi.waitFor(() => expect(state.stop.mock.calls).toEqual([['/first'], ['/new']]))
+  await vi.waitFor(() =>
+    expect(state.stop.mock.calls).toEqual([
+      ['/first', true],
+      ['/new', true]
+    ])
+  )
 })

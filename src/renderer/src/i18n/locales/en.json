@@ -23721,7 +23721,11 @@
       "message": "Save editor changes before closing?",
       "save": "Save",
       "discard": "Don't Save",
-      "failed": "The editor remains open. Your unsaved changes were not discarded."
+      "failed": "Could not confirm that the editor has closed. Check its status before trying again.",
+      "keepService": "Quit App and Keep Editor Service",
+      "keepWarning": "Keeping the service does not save pending page edits. Return to the editor if you need to preserve those edits.",
+      "stillClosing": "The service accepted the close request but has not finished exiting.",
+      "unconfirmed": "The close request could not be confirmed. Check for save conflicts or a busy editor."
     }
   },
   "cocosSidebar": {

@@ -1,4 +1,4 @@
-const SHUTDOWN_TIMEOUT_MS = 3_000
+const SHUTDOWN_TIMEOUT_MS = 120_000
 const SHUTDOWN_PROBE_INTERVAL_MS = 100
 
 function connectionErrorCode(error: unknown): unknown {
@@ -22,7 +22,11 @@ export class CocosEditorShutdown {
       await response.body?.cancel().catch(() => undefined)
       return response.ok ? 'acknowledged' : 'refused'
     } catch (error) {
-      return connectionErrorCode(error) === 'ECONNREFUSED' ? 'closed' : 'refused'
+      if (connectionErrorCode(error) === 'ECONNREFUSED') {
+        return 'closed'
+      }
+      // The server may have saved and exited after the request timed out.
+      return (await this.waitUntilClosed(new URL(url).origin)) ? 'closed' : 'refused'
     }
   }
 

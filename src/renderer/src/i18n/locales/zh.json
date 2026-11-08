@@ -22942,6 +22942,18 @@
     "terminalStopped": "WSL 发行版 {{distro}} 已停止，因此 Orca 没有启动此终端。请启动该发行版后重试。",
     "terminalUnverifiable": "Orca 无法确认 WSL 发行版 {{distro}} 是否正在运行，因此没有启动此终端。请启动该发行版后重试。"
   },
+  "cocosEditor": {
+    "close": {
+      "message": "关闭前保存编辑器中的修改吗？",
+      "save": "保存",
+      "discard": "不保存",
+      "failed": "无法确认编辑器是否已关闭，请检查状态后再试。",
+      "keepService": "退出应用并保留编辑器服务",
+      "keepWarning": "保留服务不会保存尚未提交的页面输入。需要保留这些输入时，请取消退出并返回编辑器处理。",
+      "stillClosing": "服务已接受关闭请求，但尚未完成退出。",
+      "unconfirmed": "无法确认关闭请求是否完成，请检查保存冲突或编辑器是否仍忙。"
+    }
+  },
   "cocosSidebar": {
     "terminal": {
       "moveExisting": "移入已有终端",

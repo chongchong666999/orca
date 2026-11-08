@@ -53,3 +53,17 @@ export function editorShutdownUrl(pageUrl: string): string | null {
   shutdown.searchParams.set('token', url.searchParams.get('token') ?? '')
   return shutdown.toString()
 }
+
+export function lastLine(text: string): string {
+  return (
+    text
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .findLast(Boolean) ?? ''
+  )
+}
+
+export function isSameEditor(a: string, b: string): boolean {
+  const shutdownA = editorShutdownUrl(a)
+  return shutdownA !== null && shutdownA === editorShutdownUrl(b)
+}

@@ -4,7 +4,9 @@ import { z } from 'zod'
 import { translateMain } from '../i18n/main-i18n'
 import { editorShutdownUrl } from './cocos-editor-open-output'
 
-export type CocosEditorCloseChoice = { action: 'save' | 'discard'; revision: string }
+export type CocosEditorCloseChoice =
+  | { action: 'save' | 'discard'; revision: string }
+  | { action: 'keep' }
 
 async function message(options: MessageBoxOptions): Promise<number> {
   const window = BrowserWindow.getFocusedWindow()
@@ -54,7 +56,8 @@ async function flushPages(pageUrl: string): Promise<void> {
 }
 
 export async function prepareCocosEditorClose(
-  record: CocosEditorRecord
+  record: CocosEditorRecord,
+  forQuit = false
 ): Promise<CocosEditorCloseChoice | false | undefined> {
   try {
     await flushPages(record.url)
@@ -118,20 +121,52 @@ export async function prepareCocosEditorClose(
     if (cause && typeof cause === 'object' && 'code' in cause && cause.code === 'ECONNREFUSED') {
       return undefined
     }
-    await reportCocosEditorCloseFailure(error instanceof Error ? error.message : String(error))
+    if (
+      await reportCocosEditorCloseFailure(
+        error instanceof Error ? error.message : String(error),
+        forQuit
+      )
+    ) {
+      return { action: 'keep' }
+    }
     return false
   }
 }
 
-export async function reportCocosEditorCloseFailure(detail: string): Promise<void> {
-  await message({
+export async function reportCocosEditorCloseFailure(
+  detail: string,
+  forQuit = false
+): Promise<boolean> {
+  const choice = await message({
     type: 'error',
     title: 'Cocos Creator',
     message: translateMain(
       'cocosEditor.close.failed',
-      'The editor remains open. Your unsaved changes were not discarded.'
+      'Could not confirm that the editor has closed. Check its status before trying again.'
     ),
-    detail,
-    buttons: [translateMain('common.ok', 'OK')]
+    detail: forQuit
+      ? `${translateMain('cocosEditor.close.keepWarning', 'Keeping the service does not save pending page edits. Return to the editor if you need to preserve those edits.')}\n\n${detail}`
+      : detail,
+    buttons: forQuit
+      ? [
+          translateMain('common.cancel', 'Cancel'),
+          translateMain('cocosEditor.close.keepService', 'Quit App and Keep Editor Service')
+        ]
+      : [translateMain('common.ok', 'OK')],
+    defaultId: 0,
+    cancelId: 0
   })
+  return forQuit && choice === 1
+}
+
+export function describeCocosEditorCloseFailure(closing: boolean): string {
+  return closing
+    ? translateMain(
+        'cocosEditor.close.stillClosing',
+        'The service accepted the close request but has not finished exiting.'
+      )
+    : translateMain(
+        'cocosEditor.close.unconfirmed',
+        'The close request could not be confirmed. Check for save conflicts or a busy editor.'
+      )
 }
