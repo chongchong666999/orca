@@ -315,7 +315,9 @@ export async function main(root, argv) {
   )
 
   // Typecheck and tests lead the queue: they take longest, so the short checks fill in around them.
-  const concurrency = Math.max(3, Math.floor(availableParallelism() / 3))
+  const concurrency = options.maxWorkers
+    ? Math.max(1, Math.min(Number(options.maxWorkers), Math.floor(availableParallelism() / 3)))
+    : Math.max(3, Math.floor(availableParallelism() / 3))
   const running = new Map()
   // Why: output is buffered until a task ends, so long test runs would otherwise look hung.
   const heartbeat = setInterval(() => {
