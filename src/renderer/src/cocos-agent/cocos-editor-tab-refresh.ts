@@ -1,6 +1,6 @@
 import { refreshCocosEditorTabBindings } from './cocos-editor-binding-refresh'
 import { toast } from 'sonner'
-import { translate } from '@/i18n/i18n'
+import { cocosText } from './cocos-text'
 import { useAppStore, type AppState } from '@/store'
 import {
   cocosAgentApi,
@@ -58,12 +58,9 @@ function refreshRestoredEditorTabs(state: AppState): void {
     })
     restorationAttempts.set(worktreeId, outcome.kind === 'failed' ? 'failed' : 'opened')
     if (outcome.kind === 'failed') {
-      toast.error(
-        translate('cocosEditor.errors.reopen', 'Could not reopen the Cocos Creator editor'),
-        {
-          description: outcome.message
-        }
-      )
+      toast.error(cocosText('editor.errors.reopen', 'Could not reopen the Cocos Creator editor'), {
+        description: outcome.message
+      })
     }
   })
 }

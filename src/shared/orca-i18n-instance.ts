@@ -11,6 +11,7 @@ import { DEFAULT_UI_LOCALE } from './ui-locale'
 import type { PluginLanguagePackRegistration } from './plugins/artifacts/plugin-language-pack-artifact'
 import { replacePluginLanguagePackResources } from './plugins/plugin-language-pack-i18n-resources'
 import { COCOS_AGENT_BRAND_POST_PROCESS, cocosAgentBrandPostProcessor } from './cocos-agent-brand'
+import { cocosAgentI18nModule } from './cocos-agent/cocos-agent-i18n'
 
 export type OrcaI18n = {
   i18n: I18nInstance
@@ -51,7 +52,7 @@ export function createOrcaI18n(options: {
     }
   }
 
-  i18n.use(backend).use(cocosAgentBrandPostProcessor)
+  i18n.use(backend).use(cocosAgentBrandPostProcessor).use(cocosAgentI18nModule)
   for (const module of options.modules ?? []) {
     i18n.use(module)
   }

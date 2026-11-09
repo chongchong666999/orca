@@ -9,7 +9,7 @@ import {
 import { refreshCocosEditorTabBindings } from './cocos-editor-binding-refresh'
 import { toast } from 'sonner'
 import type { ExecutionHostId } from '../../../shared/execution-host'
-import { translate } from '@/i18n/i18n'
+import { cocosText } from './cocos-text'
 import { useAppStore, type AppState } from '@/store'
 import { cocosAgentApi, localCocosWorkspacePath } from './cocos-workspace-project'
 import {
@@ -20,7 +20,7 @@ import {
 } from './cocos-editor-page-identity'
 export { findEditorPageTabs, isCocosEditorPageUrl } from './cocos-editor-page-identity'
 
-const EDITOR_TAB_TITLE = translate('cocosEditor.tab.title', 'Cocos Creator')
+const EDITOR_TAB_TITLE = cocosText('editor.tab.title', 'Cocos Creator')
 
 /** The browser tab this app session opened for each workspace's editor. */
 const editorTabIdByWorkspace = new Map<string, string>()
@@ -110,8 +110,8 @@ async function startEditorTab(
   if (!api) {
     return {
       kind: 'failed',
-      message: translate(
-        'cocosEditor.errors.unavailable',
+      message: cocosText(
+        'editor.errors.unavailable',
         'cocos-agent is not available in this window.'
       )
     }
@@ -141,7 +141,7 @@ async function startEditorTab(
   }
   if (result.previewWarning) {
     toast.warning(
-      translate('cocosEditor.previewEntryUnavailable', 'Shared preview entry is unavailable'),
+      cocosText('editor.previewEntryUnavailable', 'Shared preview entry is unavailable'),
       { description: result.previewWarning }
     )
   }
@@ -251,7 +251,7 @@ export async function focusOrOpenCocosEditor(
     outcome = await openCocosEditorTab(worktreeId, projectPath)
   }
   if (outcome.kind === 'failed') {
-    toast.error(translate('cocosEditor.errors.open', 'Could not open the Cocos Creator editor'), {
+    toast.error(cocosText('editor.errors.open', 'Could not open the Cocos Creator editor'), {
       description: outcome.message
     })
     return

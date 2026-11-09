@@ -16,6 +16,7 @@ import { useAgentLaunchPickerInventorySource } from '../agent/use-agent-launch-p
 import { orderAgentLaunchPickerAgents } from '../../../../shared/agent-launch/picker/agent-launch-picker-rows'
 import type { AgentPickerEntry } from '../../../../shared/agent-launch/picker/agent-launch-picker'
 import { translate } from '@/i18n/i18n'
+import { cocosText } from '@/cocos-agent/cocos-text'
 import { openSidebarAgent, openSidebarTerminal } from './sidebar-terminal-launch'
 import { toast } from 'sonner'
 import { useAppStore } from '@/store'
@@ -78,8 +79,8 @@ export function SidebarTerminalCreateMenu({
       return true
     } catch {
       toast.error(
-        translate(
-          'cocosSidebar.terminal.createFailed',
+        cocosText(
+          'sidebar.terminal.createFailed',
           'Could not open the terminal. Check the workspace connection and agent settings.'
         )
       )
@@ -96,7 +97,7 @@ export function SidebarTerminalCreateMenu({
           variant="ghost"
           size="icon-sm"
           disabled={pending}
-          aria-label={translate('cocosSidebar.terminal.newSession', 'New session')}
+          aria-label={cocosText('sidebar.terminal.newSession', 'New session')}
         >
           <Plus className="size-4" />
         </Button>
@@ -113,7 +114,7 @@ export function SidebarTerminalCreateMenu({
         {existingTerminals.length > 0 && (
           <>
             <DropdownMenuLabel>
-              {translate('cocosSidebar.terminal.moveExisting', 'Move existing terminal here')}
+              {cocosText('sidebar.terminal.moveExisting', 'Move existing terminal here')}
             </DropdownMenuLabel>
             {existingTerminals.map((tab) => (
               <DropdownMenuItem

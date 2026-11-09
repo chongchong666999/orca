@@ -22890,18 +22890,5 @@
     "sameAsTextDefault": "與預設值相同 · {{value0}}",
     "chatChoicesNote": "沒有 CLI 旗標的 {{agent}} 模型或推理力度選項適用於聊天。",
     "composedChoicesNote": "{{agent}} 的推理力度和速度選項包含在模型引數中。"
-  },
-  "cocosSidebar": {
-    "terminal": {
-      "moveExisting": "移入現有終端",
-      "title": "終端機",
-      "history": "工作階段歷史",
-      "sessions": "終端機工作階段",
-      "closeSession": "關閉 {{name}}",
-      "connecting": "正在連線終端機…",
-      "empty": "點擊 + 開啟終端機或選擇 AI 智慧體。",
-      "newSession": "新增工作階段",
-      "createFailed": "無法開啟終端機，請檢查工作區連線與智慧體設定。"
-    }
   }
 }

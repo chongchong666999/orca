@@ -1,0 +1,29 @@
+{
+  "editor": {
+    "close": {
+      "cancel": "取消",
+      "ok": "确定",
+      "message": "关闭前保存编辑器中的修改吗？",
+      "save": "保存",
+      "discard": "不保存",
+      "failed": "无法确认编辑器是否已关闭，请检查状态后再试。",
+      "keepService": "退出应用并保留编辑器服务",
+      "keepWarning": "保留服务不会保存尚未提交的页面输入。需要保留这些输入时，请取消退出并返回编辑器处理。",
+      "stillClosing": "服务已接受关闭请求，但尚未完成退出。",
+      "unconfirmed": "无法确认关闭请求是否完成，请检查保存冲突或编辑器是否仍忙。"
+    }
+  },
+  "sidebar": {
+    "terminal": {
+      "moveExisting": "移入已有终端",
+      "title": "终端",
+      "history": "会话历史",
+      "sessions": "终端会话",
+      "closeSession": "关闭 {{name}}",
+      "connecting": "正在连接终端…",
+      "empty": "点击 + 打开终端或选择 AI 智能体。",
+      "newSession": "新建会话",
+      "createFailed": "无法打开终端，请检查工作区连接和智能体设置。"
+    }
+  }
+}

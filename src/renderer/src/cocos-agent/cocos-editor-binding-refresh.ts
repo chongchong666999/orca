@@ -1,5 +1,5 @@
 import { toast } from 'sonner'
-import { translate } from '@/i18n/i18n'
+import { cocosText } from './cocos-text'
 import { useAppStore } from '@/store'
 import { cocosAgentApi, localCocosWorkspacePath } from './cocos-workspace-project'
 import { editorIdentity } from './cocos-editor-page-identity'
@@ -52,11 +52,11 @@ export async function refreshCocosEditorTabBindings(
         .catch((error: unknown) => {
           if (isCurrent()) {
             toast.error(
-              translate('cocosEditor.errors.aiResume', 'Could not reconnect the AI terminal'),
+              cocosText('editor.errors.aiResume', 'Could not reconnect the AI terminal'),
               {
                 description: error instanceof Error ? error.message : String(error),
                 action: {
-                  label: translate('cocosEditor.retryAiConnection', 'Retry connection'),
+                  label: cocosText('editor.retryAiConnection', 'Retry connection'),
                   onClick: () => {
                     if (isCurrent()) {
                       void refreshCocosEditorTabBindings(worktreeId, projectPath, tabId)

@@ -1,5 +1,5 @@
 import { toast } from 'sonner'
-import { translate } from '@/i18n/i18n'
+import { cocosText } from './cocos-text'
 import { useAppStore } from '@/store'
 import { holdEmptyWorkspaceDefaultSurfaceForLaunch } from '@/lib/empty-workspace-default-surface-claims'
 import type { InitialTerminalOptions } from '@/lib/worktree-activation-store-contract'
@@ -69,7 +69,7 @@ function openEditorAsFirstSurface(
     if (outcome.kind !== 'failed') {
       return
     }
-    toast.error(translate('cocosEditor.errors.open', 'Could not open the Cocos Creator editor'), {
+    toast.error(cocosText('editor.errors.open', 'Could not open the Cocos Creator editor'), {
       description: outcome.message
     })
     editorFailedAtByWorkspace.set(worktreeId, Date.now())
@@ -119,8 +119,8 @@ export function openCocosEditorInEmptyWorkspace(
   }
   if (!isSupportedCreatorVersion(detection.creatorVersion)) {
     toast.info(
-      translate(
-        'cocosEditor.errors.unsupportedVersion',
+      cocosText(
+        'editor.errors.unsupportedVersion',
         'cocos-agent opens its editor for Cocos Creator 2.4 projects; this project uses {{version}}.',
         { version: detection.creatorVersion }
       )

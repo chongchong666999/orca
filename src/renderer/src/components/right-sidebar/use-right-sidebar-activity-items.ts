@@ -19,6 +19,7 @@ import {
 } from '@/store/plugin-panels'
 import { useShortcutLabel } from '@/hooks/useShortcutLabel'
 import { translate } from '@/i18n/i18n'
+import { cocosText } from '@/cocos-agent/cocos-text'
 import { useUiLanguageRevision } from '@/i18n/use-ui-language-revision'
 import { AgentSessionHistoryIcon } from './agent-session-history-icon'
 import type { ActivityBarItem } from './activity-bar-buttons'
@@ -82,7 +83,7 @@ export function useRightSidebarActivityItems({
       {
         id: 'terminal',
         icon: TerminalSquare,
-        title: translate('cocosSidebar.terminal.title', 'Terminal'),
+        title: cocosText('sidebar.terminal.title', 'Terminal'),
         shortcut: ''
       },
       {

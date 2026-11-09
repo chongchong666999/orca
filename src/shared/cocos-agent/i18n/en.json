@@ -1,0 +1,49 @@
+{
+  "editor": {
+    "menu": {
+      "goTo": "Go to Cocos Creator",
+      "open": "Cocos Creator",
+      "stop": "Stop Cocos Creator"
+    },
+    "errors": {
+      "reopen": "Could not reopen the Cocos Creator editor",
+      "unavailable": "cocos-agent is not available in this window.",
+      "open": "Could not open the Cocos Creator editor",
+      "unsupportedVersion": "cocos-agent opens its editor for Cocos Creator 2.4 projects; this project uses {{version}}.",
+      "aiResume": "Could not reconnect the AI terminal"
+    },
+    "tab": {
+      "title": "Cocos Creator"
+    },
+    "suspended": "This editor was paused to free memory.",
+    "resuming": "Resuming editor…",
+    "resume": "Resume Cocos Creator",
+    "retryAiConnection": "Retry connection",
+    "previewEntryUnavailable": "Shared preview entry is unavailable",
+    "close": {
+      "cancel": "Cancel",
+      "ok": "OK",
+      "message": "Save editor changes before closing?",
+      "save": "Save",
+      "discard": "Don't Save",
+      "failed": "Could not confirm that the editor has closed. Check its status before trying again.",
+      "keepService": "Quit App and Keep Editor Service",
+      "keepWarning": "Keeping the service does not save pending page edits. Return to the editor if you need to preserve those edits.",
+      "stillClosing": "The service accepted the close request but has not finished exiting.",
+      "unconfirmed": "The close request could not be confirmed. Check for save conflicts or a busy editor."
+    }
+  },
+  "sidebar": {
+    "terminal": {
+      "createFailed": "Could not open the terminal. Check the workspace connection and agent settings.",
+      "newSession": "New session",
+      "title": "Terminal",
+      "history": "Session history",
+      "sessions": "Terminal sessions",
+      "closeSession": "Close {{name}}",
+      "connecting": "Connecting to terminal…",
+      "empty": "Open a terminal or choose an AI agent with +.",
+      "moveExisting": "Move existing terminal here"
+    }
+  }
+}

@@ -1,7 +1,7 @@
 import { BrowserWindow, dialog, webContents, type MessageBoxOptions } from 'electron'
 import type { CocosEditorRecord } from '../../shared/cocos-agent/cocos-editor-types'
 import { z } from 'zod'
-import { translateMain } from '../i18n/main-i18n'
+import { cocosTextMain } from './cocos-text-main'
 import { editorShutdownUrl } from './cocos-editor-open-output'
 
 export type CocosEditorCloseChoice =
@@ -100,15 +100,15 @@ export async function prepareCocosEditorClose(
       defaultId: 0,
       cancelId: 1,
       title: 'Cocos Creator',
-      message: translateMain('cocosEditor.close.message', 'Save editor changes before closing?'),
+      message: cocosTextMain('editor.close.message', 'Save editor changes before closing?'),
       detail: [
         record.projectRoot,
         ...(state.documents ?? []).filter((doc) => doc.dirty).map((doc) => doc.path ?? '')
       ].join('\n'),
       buttons: [
-        translateMain('cocosEditor.close.save', 'Save'),
-        translateMain('cocosEditor.close.cancel', 'Cancel'),
-        translateMain('cocosEditor.close.discard', "Don't Save")
+        cocosTextMain('editor.close.save', 'Save'),
+        cocosTextMain('editor.close.cancel', 'Cancel'),
+        cocosTextMain('editor.close.discard', "Don't Save")
       ]
     })
     if (choice !== 0 && choice !== 2) {
@@ -140,19 +140,19 @@ export async function reportCocosEditorCloseFailure(
   const choice = await message({
     type: 'error',
     title: 'Cocos Creator',
-    message: translateMain(
-      'cocosEditor.close.failed',
+    message: cocosTextMain(
+      'editor.close.failed',
       'Could not confirm that the editor has closed. Check its status before trying again.'
     ),
     detail: forQuit
-      ? `${translateMain('cocosEditor.close.keepWarning', 'Keeping the service does not save pending page edits. Return to the editor if you need to preserve those edits.')}\n\n${detail}`
+      ? `${cocosTextMain('editor.close.keepWarning', 'Keeping the service does not save pending page edits. Return to the editor if you need to preserve those edits.')}\n\n${detail}`
       : detail,
     buttons: forQuit
       ? [
-          translateMain('cocosEditor.close.cancel', 'Cancel'),
-          translateMain('cocosEditor.close.keepService', 'Quit App and Keep Editor Service')
+          cocosTextMain('editor.close.cancel', 'Cancel'),
+          cocosTextMain('editor.close.keepService', 'Quit App and Keep Editor Service')
         ]
-      : [translateMain('cocosEditor.close.ok', 'OK')],
+      : [cocosTextMain('editor.close.ok', 'OK')],
     defaultId: 0,
     cancelId: 0
   })
@@ -161,12 +161,12 @@ export async function reportCocosEditorCloseFailure(
 
 export function describeCocosEditorCloseFailure(closing: boolean): string {
   return closing
-    ? translateMain(
-        'cocosEditor.close.stillClosing',
+    ? cocosTextMain(
+        'editor.close.stillClosing',
         'The service accepted the close request but has not finished exiting.'
       )
-    : translateMain(
-        'cocosEditor.close.unconfirmed',
+    : cocosTextMain(
+        'editor.close.unconfirmed',
         'The close request could not be confirmed. Check for save conflicts or a busy editor.'
       )
 }

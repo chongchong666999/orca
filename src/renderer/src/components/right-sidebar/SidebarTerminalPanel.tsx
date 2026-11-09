@@ -5,7 +5,7 @@ import { useAppStore } from '@/store'
 import { Button } from '@/components/ui/button'
 import { closeTerminalTab } from '../terminal/terminal-tab-actions'
 import { SidebarTerminalCreateMenu } from './SidebarTerminalCreateMenu'
-import { translate } from '@/i18n/i18n'
+import { cocosText } from '@/cocos-agent/cocos-text'
 import { cn } from '@/lib/utils'
 import { TerminalOverlaySlot } from '../terminal-pane/TerminalOverlaySlot'
 import { isSidebarTerminal } from '../../../../shared/sidebar-terminal-sessions'
@@ -50,7 +50,7 @@ function WorkspaceTerminals({ worktreeId }: { worktreeId: string }): React.JSX.E
     >
       <div className="flex h-10 shrink-0 items-center gap-2 border-b border-border px-2">
         <span className="text-sm font-medium">
-          {translate('cocosSidebar.terminal.title', 'Terminal')}
+          {cocosText('sidebar.terminal.title', 'Terminal')}
         </span>
         <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
           {workspace?.path.split(/[\\/]/).findLast(Boolean)}
@@ -58,90 +58,88 @@ function WorkspaceTerminals({ worktreeId }: { worktreeId: string }): React.JSX.E
         <Button
           variant="ghost"
           size="icon-sm"
-          aria-label={translate('cocosSidebar.terminal.history', 'Session history')}
+          aria-label={cocosText('sidebar.terminal.history', 'Session history')}
           onClick={() => useAppStore.getState().setRightSidebarTab('vault')}
         >
           <History className="size-4" />
         </Button>
         <SidebarTerminalCreateMenu worktreeId={worktreeId} onCreated={select} />
       </div>
-      <>
-        {tabs.length > 0 && (
-          <div
-            className="flex shrink-0 gap-1 overflow-x-auto border-b border-border p-1 scrollbar-sleek"
-            role="tablist"
-            aria-label={translate('cocosSidebar.terminal.sessions', 'Terminal sessions')}
-          >
-            {tabs.map((tab) => (
-              <div
-                key={tab.id}
-                className={cn(
-                  'flex shrink-0 items-center rounded-md',
-                  selected?.id === tab.id && 'bg-accent'
-                )}
+      {tabs.length > 0 && (
+        <div
+          className="flex shrink-0 gap-1 overflow-x-auto border-b border-border p-1 scrollbar-sleek"
+          role="tablist"
+          aria-label={cocosText('sidebar.terminal.sessions', 'Terminal sessions')}
+        >
+          {tabs.map((tab) => (
+            <div
+              key={tab.id}
+              className={cn(
+                'flex shrink-0 items-center rounded-md',
+                selected?.id === tab.id && 'bg-accent'
+              )}
+            >
+              <Button
+                variant="ghost"
+                size="sm"
+                role="tab"
+                aria-selected={selected?.id === tab.id}
+                onClick={() => select(tab.id)}
+                className="max-w-40"
               >
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  role="tab"
-                  aria-selected={selected?.id === tab.id}
-                  onClick={() => select(tab.id)}
-                  className="max-w-40"
-                >
-                  <span className="truncate">
-                    {tab.customTitle ?? tab.quickCommandLabel ?? tab.title}
-                  </span>
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon-xs"
-                  aria-label={translate('cocosSidebar.terminal.closeSession', 'Close {{name}}', {
-                    name: tab.customTitle ?? tab.title
-                  })}
-                  onClick={() => close(tab.id)}
-                >
-                  <X className="size-3" />
-                </Button>
-              </div>
-            ))}
-          </div>
-        )}
-        {selected && workspace ? (
-          <div className="relative min-h-0 flex-1 overflow-hidden">
-            {tabs.map((tab) => (
-              <TerminalOverlaySlot
-                key={tab.id}
-                inline
-                terminalTabId={tab.id}
-                terminalGeneration={tab.generation}
-                worktreeId={worktreeId}
-                worktreePath={workspace.path}
-                startupCwd={tab.startupCwd}
-                groupId={undefined}
-                isWorktreeActive
-                isVisible={selected.id === tab.id}
-                isActive={selected.id === tab.id}
-                activityTerminalPortal={null}
-                onFocusOwningGroup={undefined}
-                consumeSuppressedPtyExit={consumeSuppressedPtyExit}
-                captureEmptiedReaction={NO_REACTION}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="flex flex-1 flex-col items-center justify-center gap-3 p-4 text-center text-sm text-muted-foreground">
-            <TerminalSquare className="size-6" />
-            <span>
-              {selected
-                ? translate('cocosSidebar.terminal.connecting', 'Connecting to terminal…')
-                : translate(
-                    'cocosSidebar.terminal.empty',
-                    'Open a terminal or choose an AI agent with +.'
-                  )}
-            </span>
-          </div>
-        )}
-      </>
+                <span className="truncate">
+                  {tab.customTitle ?? tab.quickCommandLabel ?? tab.title}
+                </span>
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                aria-label={cocosText('sidebar.terminal.closeSession', 'Close {{name}}', {
+                  name: tab.customTitle ?? tab.title
+                })}
+                onClick={() => close(tab.id)}
+              >
+                <X className="size-3" />
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
+      {selected && workspace ? (
+        <div className="relative min-h-0 flex-1 overflow-hidden">
+          {tabs.map((tab) => (
+            <TerminalOverlaySlot
+              key={tab.id}
+              inline
+              terminalTabId={tab.id}
+              terminalGeneration={tab.generation}
+              worktreeId={worktreeId}
+              worktreePath={workspace.path}
+              startupCwd={tab.startupCwd}
+              groupId={undefined}
+              isWorktreeActive
+              isVisible={selected.id === tab.id}
+              isActive={selected.id === tab.id}
+              activityTerminalPortal={null}
+              onFocusOwningGroup={undefined}
+              consumeSuppressedPtyExit={consumeSuppressedPtyExit}
+              captureEmptiedReaction={NO_REACTION}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="flex flex-1 flex-col items-center justify-center gap-3 p-4 text-center text-sm text-muted-foreground">
+          <TerminalSquare className="size-6" />
+          <span>
+            {selected
+              ? cocosText('sidebar.terminal.connecting', 'Connecting to terminal…')
+              : cocosText(
+                  'sidebar.terminal.empty',
+                  'Open a terminal or choose an AI agent with +.'
+                )}
+          </span>
+        </div>
+      )}
     </div>
   )
 }
