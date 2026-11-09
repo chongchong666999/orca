@@ -3,6 +3,7 @@ import type { BrowserPage as BrowserPageState } from '../../../../../shared/brow
 import type { ShareableBrowserArtifactFile } from '../describe-page/browser-artifact-upload'
 import type { GrabModeHook } from '../annotate/useGrabMode'
 import { BrowserPageToolbar } from './browser-page-toolbar'
+import { HiddenBrowserPageToolbar } from '@/cocos-agent/HiddenBrowserPageToolbar'
 import { isCocosEditorPageUrl } from '@/cocos-agent/cocos-editor-tabs'
 import { BrowserPageDownloadList } from '../navigate/browser-page-download-list'
 import { BrowserPageChromeBanners } from './browser-page-chrome-banners'
@@ -62,50 +63,51 @@ export function BrowserPageChromeHeader({
   resourceNotice: string | null
   setResourceNotice: Dispatch<SetStateAction<string | null>>
 }): React.JSX.Element {
+  const Toolbar = isCocosEditorPageUrl(currentBrowserUrl)
+    ? HiddenBrowserPageToolbar
+    : BrowserPageToolbar
   return (
     <div ref={chromeHeaderRef} className="pointer-events-auto shrink-0">
-      {!isCocosEditorPageUrl(currentBrowserUrl) && (
-        <BrowserPageToolbar
-          browserPageId={browserTab.id}
-          workspaceId={workspaceId}
-          worktreeId={worktreeId}
-          sessionProfileId={sessionProfileId}
-          viewportPresetId={browserTab.viewportPresetId ?? null}
-          isActive={isActive}
-          canGoBack={browserTab.canGoBack}
-          canGoForward={browserTab.canGoForward}
-          convertedFrom={browserTab.convertedFrom ?? null}
-          convertedTo={browserTab.convertedTo ?? null}
-          loading={browserTab.loading}
-          loadFailed={browserTab.loadError !== null}
-          webviewRef={webviewRef}
-          reloadMenuOpen={reload.reloadMenuOpen}
-          setReloadMenuOpen={reload.setReloadMenuOpen}
-          reloadButtonLabel={reload.reloadButtonLabel}
-          reloadButtonLabelKind={reload.reloadButtonLabelKind}
-          reloadShortcut={reload.reloadShortcut}
-          hardReloadShortcut={reload.hardReloadShortcut}
-          runReloadTrigger={reload.runReloadTrigger}
-          addressBarValue={nav.addressBarValue}
-          setAddressBarValue={nav.setAddressBarValue}
-          submitAddressBar={nav.submitAddressBar}
-          navigateToUrl={nav.navigateToUrl}
-          addressBarInputRef={addressBarInputRef}
-          dismissAddressBarSuggestionsRef={dismissAddressBarSuggestionsRef}
-          grab={grab}
-          grabIntent={grabAnnotations.grabIntent}
-          startGrabIntent={grabAnnotations.startGrabIntent}
-          isBlankTab={isBlankTab}
-          markupIsActive={markupIsActive}
-          markupStart={markupStart}
-          markupCancel={markupCancel}
-          grabElementShortcut={grabElementShortcut}
-          browserAnnotationsLength={annotationSend.browserAnnotations.length}
-          shareableArtifactFile={shareableArtifactFile}
-          currentBrowserUrl={currentBrowserUrl}
-          externalUrl={externalUrl}
-        />
-      )}
+      <Toolbar
+        browserPageId={browserTab.id}
+        workspaceId={workspaceId}
+        worktreeId={worktreeId}
+        sessionProfileId={sessionProfileId}
+        viewportPresetId={browserTab.viewportPresetId ?? null}
+        isActive={isActive}
+        canGoBack={browserTab.canGoBack}
+        canGoForward={browserTab.canGoForward}
+        convertedFrom={browserTab.convertedFrom ?? null}
+        convertedTo={browserTab.convertedTo ?? null}
+        loading={browserTab.loading}
+        loadFailed={browserTab.loadError !== null}
+        webviewRef={webviewRef}
+        reloadMenuOpen={reload.reloadMenuOpen}
+        setReloadMenuOpen={reload.setReloadMenuOpen}
+        reloadButtonLabel={reload.reloadButtonLabel}
+        reloadButtonLabelKind={reload.reloadButtonLabelKind}
+        reloadShortcut={reload.reloadShortcut}
+        hardReloadShortcut={reload.hardReloadShortcut}
+        runReloadTrigger={reload.runReloadTrigger}
+        addressBarValue={nav.addressBarValue}
+        setAddressBarValue={nav.setAddressBarValue}
+        submitAddressBar={nav.submitAddressBar}
+        navigateToUrl={nav.navigateToUrl}
+        addressBarInputRef={addressBarInputRef}
+        dismissAddressBarSuggestionsRef={dismissAddressBarSuggestionsRef}
+        grab={grab}
+        grabIntent={grabAnnotations.grabIntent}
+        startGrabIntent={grabAnnotations.startGrabIntent}
+        isBlankTab={isBlankTab}
+        markupIsActive={markupIsActive}
+        markupStart={markupStart}
+        markupCancel={markupCancel}
+        grabElementShortcut={grabElementShortcut}
+        browserAnnotationsLength={annotationSend.browserAnnotations.length}
+        shareableArtifactFile={shareableArtifactFile}
+        currentBrowserUrl={currentBrowserUrl}
+        externalUrl={externalUrl}
+      />
       <BrowserPageDownloadList
         visibleDownloads={nav.visibleDownloads}
         onOpenDownloadedFile={nav.handleOpenDownloadedFile}

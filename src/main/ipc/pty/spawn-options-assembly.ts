@@ -140,7 +140,8 @@ export async function assemblePtySpawnLaunchOptions(input: PtySpawnLaunchOptions
       : {})
   })
   const env = openCodeLaunch.env
-  const editorCommand = await prepareCocosEditorMcpLaunch({
+  // cocos-agent: the Cocos MCP config joins the command before upstream adds its plugin-dir argument.
+  openCodeLaunch.command = await prepareCocosEditorMcpLaunch({
     command: openCodeLaunch.command,
     agent: launchAgent,
     cwd: input.cwd,
@@ -150,9 +151,9 @@ export async function assemblePtySpawnLaunchOptions(input: PtySpawnLaunchOptions
   })
   const pluginDir = !connectionId ? env?.ORCA_CLAUDE_AGENT_VIEW_PLUGIN_DIR : undefined
   const launchCommand =
-    pluginDir && editorCommand
-      ? withClaudeAgentViewPlugin(editorCommand, pluginDir, shell)
-      : editorCommand
+    pluginDir && openCodeLaunch.command
+      ? withClaudeAgentViewPlugin(openCodeLaunch.command, pluginDir, shell)
+      : openCodeLaunch.command
   promoteAgentTeamsShimPath(env, input.requestedAgentTeamsPath)
   const spawnOptions: PtySpawnOptions = {
     cols: args.cols,
