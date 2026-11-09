@@ -108,6 +108,12 @@ export const VERIFY_CHECKS = [
     ]
   },
   {
+    // cocos-agent: a changed source, config or resource file may be an unregistered upstream touch point.
+    name: 'cocos-agent upstream touch points',
+    args: ['config/scripts/cocos-agent/check-upstream-touch-points.mjs'],
+    inputs: [...SOURCE_ROOTS, 'resources/', '.gitattributes', '.gitignore']
+  },
+  {
     // CI's own predicate, so local and CI select this check identically.
     name: 'localization extraction',
     args: ['config/scripts/verify-localization-extraction.mjs'],

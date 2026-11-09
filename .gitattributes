@@ -80,3 +80,9 @@
 **/__snapshots__/*.snap text eol=lf
 # Generated, minified bundles (config/scripts/build-plugin-declarative-runtime.mjs).
 /resources/plugins/declarative/orca-test*.mjs linguist-generated=true -diff
+# cocos-agent brand assets: an upstream merge keeps our files (needs `git config merge.ours.driver true`).
+/resources/build/icon.icns merge=ours
+/resources/build/icon.png merge=ours
+/resources/icon.png merge=ours
+/resources/icon-dev.png merge=ours
+/resources/icon-source/cocos-agent-1024.png merge=ours

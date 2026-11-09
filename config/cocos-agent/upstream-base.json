@@ -1,0 +1,8 @@
+{
+  "upstream": "https://github.com/stablyai/orca",
+  "upstreamSha": "974bb4a7cab99cb9735b493d348a33a2b465cd7e",
+  "upstreamRef": "upstream/main as fetched on 2026-11-04 (merge-base of dev/0.1.0)",
+  "mergedInto": "dev/0.1.0",
+  "cocosPackage": "3.8.281",
+  "verified": "2026-11-08 touch-point layout refactor (dev/0.1.1); no upstream merge performed yet"
+}

@@ -1,0 +1,324 @@
+{
+  "$comment": "Every upstream (stablyai/orca) file cocos-agent modifies, deletes or renames. Verified by config/scripts/cocos-agent/check-upstream-touch-points.mjs against upstream-base.json; COCOS-AGENT.md's table is generated from it. kind: hook (1-4 added lines calling cocos-agent code), brand (product identity), enum (a 'terminal' sidebar tab value), upstream-candidate (a fix for Orca itself, to be sent upstream and dropped once merged).",
+  "entries": [
+    {
+      "path": ".gitattributes",
+      "kind": "brand",
+      "change": "品牌二进制文件 merge=ours，共 6 行追加",
+      "onConflict": "保留上游改动，重新追加这几行"
+    },
+    {
+      "path": ".gitignore",
+      "kind": "brand",
+      "change": "忽略 /.context-engine/；docs/cocos-agent、docs/specs 白名单，共 5 行追加",
+      "onConflict": "保留上游改动，重新追加这几行"
+    },
+    {
+      "path": "config/packaged-runtime-node-modules.cjs",
+      "kind": "upstream-candidate",
+      "change": "用 Node 的 isBuiltin 识别 node:sqlite 等内置模块",
+      "onConflict": "上游若已改用 isBuiltin 则取上游版本"
+    },
+    {
+      "path": "config/scripts/check-changed-selection.mjs",
+      "kind": "hook",
+      "change": "VERIFY_CHECKS 增加 cocos-agent upstream touch points 一项（6 行）",
+      "onConflict": "保留上游改动，重新加上这一项"
+    },
+    {
+      "path": "config/scripts/check-changed.mjs",
+      "kind": "upstream-candidate",
+      "change": "--maxWorkers 限制并发（3 行）",
+      "onConflict": "保留上游改动，重新加上并发上限；上游若已支持则取上游"
+    },
+    {
+      "path": "config/scripts/electron-builder-runtime-resources.test.mjs",
+      "kind": "upstream-candidate",
+      "change": "随 isBuiltin 修复：断言 node:sqlite 不被当成缺失依赖",
+      "onConflict": "随 packaged-runtime-node-modules.cjs 处理"
+    },
+    {
+      "path": "config/scripts/install-dev-cli.mjs",
+      "kind": "upstream-candidate",
+      "change": "ORCA_SKIP_DEV_CLI_INSTALL=1 时跳过（4 行）",
+      "onConflict": "保留上游改动，重新加上这 4 行"
+    },
+    {
+      "path": "resources/build/icon.icns",
+      "kind": "brand",
+      "change": "cocos-agent 图标",
+      "onConflict": "merge=ours 自动取我方；否则 git checkout --ours"
+    },
+    {
+      "path": "resources/build/icon.png",
+      "kind": "brand",
+      "change": "cocos-agent 图标",
+      "onConflict": "merge=ours 自动取我方；否则 git checkout --ours"
+    },
+    {
+      "path": "resources/darwin/bin/orca",
+      "kind": "upstream-candidate",
+      "change": "ELECTRON= 从 Info.plist 读可执行文件名（1 行）",
+      "onConflict": "保留读取 Info.plist 的写法"
+    },
+    {
+      "path": "resources/icon-dev.png",
+      "kind": "brand",
+      "change": "cocos-agent 图标",
+      "onConflict": "merge=ours 自动取我方；否则 git checkout --ours"
+    },
+    {
+      "path": "resources/icon.png",
+      "kind": "brand",
+      "change": "cocos-agent 图标",
+      "onConflict": "merge=ours 自动取我方；否则 git checkout --ours"
+    },
+    {
+      "path": "src/main/ipc/pty/spawn-options-assembly.ts",
+      "kind": "hook",
+      "change": "import + 在 pluginDir 之前给 openCodeLaunch.command 注入 Cocos MCP（10 行追加，不改上游行）",
+      "onConflict": "保留上游改动，把这段追加放回 env 之后、pluginDir 之前"
+    },
+    {
+      "path": "src/main/persistence/applying-settings/ui-selection-normalization.ts",
+      "kind": "enum",
+      "change": "normalizeRightSidebarTab 接受 'terminal'（1 行）",
+      "onConflict": "保留上游改动，重新加上这一行"
+    },
+    {
+      "path": "src/main/runtime/agent-session/records/agent-session-record-rows.ts",
+      "kind": "upstream-candidate",
+      "change": "SQLite 返回含 NUL 的 operation_key 会被截断：按 BLOB 读取并核对",
+      "onConflict": "上游若已修则取上游版本"
+    },
+    {
+      "path": "src/main/runtime/agent-session/records/agent-session-record-store-test-harness.ts",
+      "kind": "upstream-candidate",
+      "change": "随 operation_key 修复调整测试夹具",
+      "onConflict": "随 agent-session-record-rows.ts 处理"
+    },
+    {
+      "path": "src/main/runtime/runtime-agent-sender-history-triggers.ts",
+      "kind": "upstream-candidate",
+      "change": "触发器内不写 temp. 前缀（3 行）",
+      "onConflict": "上游若已修则取上游版本"
+    },
+    {
+      "path": "src/main/startup/dev-instance-identity.ts",
+      "kind": "brand",
+      "change": "BASE_APP_NAME、BASE_APP_USER_MODEL_ID（2 行）",
+      "onConflict": "保留上游其他改动，把这两个常量改回 cocos-agent 的值"
+    },
+    {
+      "path": "src/main/startup/gpu-lifecycle.ts",
+      "kind": "hook",
+      "change": "import COCOS_AGENT_VERSION；关于面板 appVersion 改用它（2 行）",
+      "onConflict": "保留上游改动，重新改这 1 行并加 import"
+    },
+    {
+      "path": "src/main/startup/main-process-ipc-bootstrap.ts",
+      "kind": "hook",
+      "change": "import + registerCocosAgentIpc()（2 行）",
+      "onConflict": "保留上游改动，重新加上这 2 行"
+    },
+    {
+      "path": "src/main/startup/main-window-actions-quit-and-stop-all-sessions.test.ts",
+      "kind": "upstream-candidate",
+      "change": "后台启动时不弹恢复对话框的测试",
+      "onConflict": "随 main-window-actions.ts 处理"
+    },
+    {
+      "path": "src/main/startup/main-window-actions.ts",
+      "kind": "upstream-candidate",
+      "change": "isBackgroundLaunch() 时恢复失败只写日志，不弹原生对话框（8 行）",
+      "onConflict": "保留上游改动，重新加上这段早退"
+    },
+    {
+      "path": "src/main/updater/updater-service.ts",
+      "kind": "hook",
+      "change": "new UpdaterSetup() 换成 new CocosAgentUpdaterSetup() 并调整 import",
+      "onConflict": "保留上游改动，重新换成 CocosAgentUpdaterSetup"
+    },
+    {
+      "path": "src/preload/index.ts",
+      "kind": "hook",
+      "change": "import './cocos-agent-preload'（1 行）",
+      "onConflict": "保留上游改动，重新加上这 1 行"
+    },
+    {
+      "path": "src/renderer/index.html",
+      "kind": "brand",
+      "change": "<title>",
+      "onConflict": "保留上游其他改动，标题改回 cocos-agent"
+    },
+    {
+      "path": "src/renderer/src/app-shell/use-onboarding-and-feature-tips.ts",
+      "kind": "hook",
+      "change": "有 cocos-agent preload 时跳过全局 CLI 安装探测与引导",
+      "onConflict": "保留上游改动，重新加上条件"
+    },
+    {
+      "path": "src/renderer/src/components/TerminalLegacyTerminalPanes.tsx",
+      "kind": "hook",
+      "change": "import + useLegacyPaneSidebarState()：侧栏持有的 tab 不渲染，侧栏聚焦时中央不 active",
+      "onConflict": "保留上游改动，重新加上 hook 调用、map 内的早退和 isActive 包装"
+    },
+    {
+      "path": "src/renderer/src/components/browser-pane/assemble-chrome/browser-page-chrome-header.tsx",
+      "kind": "hook",
+      "change": "import + const Toolbar 组件替换：Cocos 编辑器页不渲染浏览器工具栏（4 行）",
+      "onConflict": "保留上游改动，重新加上 Toolbar 常量并把标签改回 <Toolbar"
+    },
+    {
+      "path": "src/renderer/src/components/browser-pane/assemble-chrome/browser-workspace-pane.tsx",
+      "kind": "hook",
+      "change": "import + useCocosEditorSuspended：暂停的编辑器显示恢复视图（7 行）",
+      "onConflict": "保留上游改动，重新加上 hook 与早退"
+    },
+    {
+      "path": "src/renderer/src/components/right-sidebar/right-sidebar-panel-content.tsx",
+      "kind": "hook",
+      "change": "lazy import + effectiveTab === 'terminal' 渲染 SidebarTerminalPanel（2 行）",
+      "onConflict": "保留上游改动，重新加上这 2 行"
+    },
+    {
+      "path": "src/renderer/src/components/right-sidebar/use-right-sidebar-activity-items.ts",
+      "kind": "hook",
+      "change": "import + 活动栏增加 terminal 项（8 行）",
+      "onConflict": "保留上游改动，重新加上这一项"
+    },
+    {
+      "path": "src/renderer/src/components/settings/general/GeneralPane.tsx",
+      "kind": "hook",
+      "change": "有 cocos-agent preload 时隐藏原版 CLI 安装入口（1 行）",
+      "onConflict": "保留上游改动，重新加上条件"
+    },
+    {
+      "path": "src/renderer/src/components/tab-bar/tab-bar-static-create-menu.tsx",
+      "kind": "hook",
+      "change": "import + 两种菜单顺序各插 1 行 CocosEditorMenuItems（3 行）",
+      "onConflict": "保留上游改动，重新加上这 3 行（New Browser Tab 之后）"
+    },
+    {
+      "path": "src/renderer/src/components/tab-bar/use-tab-bar-item-projection.ts",
+      "kind": "hook",
+      "change": "import + useCentralTerminalTabs：标签栏只投影中央终端（4 行）",
+      "onConflict": "保留上游改动，重新加上 hook 并让 terminalMap/terminalIds 用 centralTabs"
+    },
+    {
+      "path": "src/renderer/src/components/terminal-pane/TerminalOverlaySlot.tsx",
+      "kind": "hook",
+      "change": "inline 模式：侧栏内渲染、焦点归属、关闭时保留工作区选择（第二阶段改为 portal）",
+      "onConflict": "保留上游改动，重新加上 inline 分支"
+    },
+    {
+      "path": "src/renderer/src/components/terminal-pane/TerminalPaneOverlayLayer.tsx",
+      "kind": "hook",
+      "change": "import + useCentralTerminalTabs：冷停与渲染只看中央终端（4 行）",
+      "onConflict": "保留上游改动，重新加上 hook 并把两处 terminalTabs 换成 centralTerminalTabs"
+    },
+    {
+      "path": "src/renderer/src/components/terminal/terminal-tab-bulk-actions.ts",
+      "kind": "hook",
+      "change": "import + 两处 currentTabs 改用 selectCentralTerminalTabs（3 行）",
+      "onConflict": "保留上游改动，重新换成 selectCentralTerminalTabs"
+    },
+    {
+      "path": "src/renderer/src/lib/worktree-initial-terminal-seeding.ts",
+      "kind": "hook",
+      "change": "import + 默认 agent 聊天之前 3 行判断 openCocosEditorInEmptyWorkspace",
+      "onConflict": "保留上游改动，重新加上这 4 行；位置在 applyDefaultTerminalTabs 之后、默认 agent 聊天之前"
+    },
+    {
+      "path": "src/renderer/src/main.tsx",
+      "kind": "hook",
+      "change": "import + installCocosAgentRenderer()（2 行）",
+      "onConflict": "保留上游改动，重新加上这 2 行"
+    },
+    {
+      "path": "src/renderer/src/runtime/web-runtime-terminal-create-operation.ts",
+      "kind": "hook",
+      "change": "抽出 createWebRuntimeTerminalForHost（显式 environmentId），上游函数改为委托；纯插入 7 行",
+      "onConflict": "保留上游改动，重新插入这个导出函数并让上游函数委托给它；侧栏终端必须走它，否则 focus-read ratchet 会把侧栏启动算作读取默认主机"
+    },
+    {
+      "path": "src/renderer/src/store/index.ts",
+      "kind": "hook",
+      "change": "import + ...createSidebarTerminalSlice(...a)（2 行）",
+      "onConflict": "保留上游改动，重新加上这 2 行"
+    },
+    {
+      "path": "src/renderer/src/store/right-sidebar-route.ts",
+      "kind": "enum",
+      "change": "normalizeRightSidebarRoute 接受 'terminal'（1 行）",
+      "onConflict": "保留上游改动，重新加上这一行"
+    },
+    {
+      "path": "src/renderer/src/store/slices/store-test-helpers.ts",
+      "kind": "hook",
+      "change": "import + ...createSidebarTerminalSlice(...a)（2 行）",
+      "onConflict": "保留上游改动，重新加上这 2 行"
+    },
+    {
+      "path": "src/renderer/src/store/slices/tabs/tabs-focus-actions.ts",
+      "kind": "hook",
+      "change": "import + routeTerminalTabToSidebarState 早退（5 行）",
+      "onConflict": "保留上游改动，重新加上 found 之后的早退"
+    },
+    {
+      "path": "src/renderer/src/store/slices/worktrees/session/worktree-identity-rename-state.ts",
+      "kind": "hook",
+      "change": "WORKTREE_ID_KEYED_MAP_KEYS 加 sidebarTerminalSessionsByWorktree（1 行）",
+      "onConflict": "保留上游改动，重新加上这一行"
+    },
+    {
+      "path": "src/renderer/src/store/slices/worktrees/teardown/worktree-purge-state.ts",
+      "kind": "hook",
+      "change": "清理时 omitByWorktree(sidebarTerminalSessionsByWorktree)（1 行）",
+      "onConflict": "保留上游改动，重新加上这一行"
+    },
+    {
+      "path": "src/renderer/src/store/terminals/terminal-tab-close.ts",
+      "kind": "hook",
+      "change": "import + ...sidebarSessionsAfterTabClosed(s, closedWorktreeId, tabId)（2 行）",
+      "onConflict": "保留上游改动，重新加上这一行展开"
+    },
+    {
+      "path": "src/renderer/src/store/terminals/terminal-tab-navigation.ts",
+      "kind": "hook",
+      "change": "import + setActiveTab 开头 routeTerminalTabToSidebar 早退（4 行）",
+      "onConflict": "保留上游改动，重新加上早退"
+    },
+    {
+      "path": "src/renderer/src/store/types.ts",
+      "kind": "hook",
+      "change": "import + AppState 交叉 SidebarTerminalSlice（2 行）",
+      "onConflict": "保留上游改动，重新加上这 2 行"
+    },
+    {
+      "path": "src/shared/orca-i18n-instance.ts",
+      "kind": "hook",
+      "change": "import + .use(cocosAgentBrandPostProcessor).use(cocosAgentI18nModule) + postProcess（4 行）",
+      "onConflict": "保留上游改动，重新挂上两个模块和 postProcess"
+    },
+    {
+      "path": "src/shared/rpc-contract/client-ui-params.ts",
+      "kind": "enum",
+      "change": "STATIC_RIGHT_SIDEBAR_TABS 加 'terminal'（1 行）",
+      "onConflict": "保留上游改动，重新加上这一行"
+    },
+    {
+      "path": "src/shared/ui-chrome-types.ts",
+      "kind": "enum",
+      "change": "RightSidebarTab 加 'terminal'（1 行）",
+      "onConflict": "保留上游改动，重新加上这一行"
+    }
+  ],
+  "mirrors": [
+    {
+      "path": "src/shared/agent-launch/startup/insert-agent-startup-args.ts",
+      "mirrorOf": "src/shared/claude-agent-view-launch.ts",
+      "note": "通用化的启动参数插入（claude/codex），上游修改 withClaudeAgentViewPlugin 的 tokenization 时同步"
+    }
+  ]
+}
