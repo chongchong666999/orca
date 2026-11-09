@@ -1,7 +1,4 @@
-import {
-  isSidebarTerminal,
-  selectSidebarTerminalSession
-} from '../../../../../shared/sidebar-terminal-sessions'
+import { routeTerminalTabToSidebarState } from '@/cocos-agent/sidebar-terminal-routing'
 import type { TabsSlice, TabsSliceGet, TabsSliceSet } from './tabs-slice-contract'
 import {
   findTabAndWorktree,
@@ -124,20 +121,9 @@ export function createTabsFocusActions(
           return state
         }
         const { tab, worktreeId } = found
-        if (
-          tab.contentType === 'terminal' &&
-          isSidebarTerminal(state.sidebarTerminalSessionsByWorktree, worktreeId, tab.entityId)
-        ) {
-          return {
-            rightSidebarOpen: true,
-            rightSidebarTab: 'terminal' as const,
-            rightSidebarRouteRequestId: state.rightSidebarRouteRequestId + 1,
-            sidebarTerminalSessionsByWorktree: selectSidebarTerminalSession(
-              state.sidebarTerminalSessionsByWorktree,
-              worktreeId,
-              tab.entityId
-            )
-          }
+        const sidebarRoute = routeTerminalTabToSidebarState(state, worktreeId, tab)
+        if (sidebarRoute) {
+          return sidebarRoute
         }
         if (ORCA_LAYOUT_OWNER_IS_MAIN && tab.isPreview && !opts?.preservePreview) {
           promoted.push(tab)

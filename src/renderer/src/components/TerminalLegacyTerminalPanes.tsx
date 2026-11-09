@@ -4,16 +4,14 @@ import { TerminalRestoringPlaceholder } from './terminal-pane/TerminalRestoringP
 import { findActivityTerminalPortal } from './activity/activity-terminal-portal'
 import { shouldMountBackgroundWorktreeTab } from './terminal/background-terminal-worktree-mount'
 import type { TerminalController } from './use-terminal-controller'
-import { useAppStore } from '@/store'
-import { isSidebarTerminal } from '../../../shared/sidebar-terminal-sessions'
+import { useLegacyPaneSidebarState } from '@/cocos-agent/use-central-terminal-tabs'
 
 export function TerminalLegacyTerminalPanes({
   controller
 }: {
   controller: TerminalController
 }): React.JSX.Element {
-  const sidebarSessions = useAppStore((s) => s.sidebarTerminalSessionsByWorktree)
-  const sidebarFocused = useAppStore((s) => s.sidebarTerminalFocused === true)
+  const sidebar = useLegacyPaneSidebarState()
   const {
     activeTabId,
     activeTabType,
@@ -65,7 +63,7 @@ export function TerminalLegacyTerminalPanes({
               aria-hidden={!isVisible}
             >
               {(tabsByWorktree[workspace.id] ?? []).map((tab) => {
-                if (isSidebarTerminal(sidebarSessions, workspace.id, tab.id)) {
+                if (sidebar.hides(workspace.id, tab.id)) {
                   return null
                 }
                 const isActiveTerminalTab =
@@ -97,10 +95,9 @@ export function TerminalLegacyTerminalPanes({
                     tabId={tab.id}
                     worktreeId={workspace.id}
                     cwd={tab.startupCwd ?? workspace.path}
-                    isActive={
-                      !sidebarFocused &&
-                      (isActiveTerminalTab || activityTerminalPortal?.active === true)
-                    }
+                    isActive={sidebar.active(
+                      isActiveTerminalTab || activityTerminalPortal?.active === true
+                    )}
                     isVisible={isActiveTerminalTab || isActivityPortalTab}
                     isWorktreeActive={isVisible || isActivityPortalTab}
                     isolatedPaneKey={activityTerminalPortal?.paneKey ?? null}

@@ -12,7 +12,7 @@ import {
 } from './tab-bar-item-model'
 import type { DropIndicator } from './drop-indicator'
 import { sameStringArray } from '@/runtime/web-session-tabs-sync/state-equality-core'
-import { useAppStore } from '@/store'
+import { useCentralTerminalTabs } from '@/cocos-agent/use-central-terminal-tabs'
 
 export type TabBarItemProjection = {
   orderedItems: TabBarItem[]
@@ -51,13 +51,7 @@ export function useTabBarItemProjection({
     activeTabType,
     expandedPaneByTabId
   } = props
-  const sidebarSessions = useAppStore((s) =>
-    props.worktreeId ? s.sidebarTerminalSessionsByWorktree?.[props.worktreeId] : undefined
-  )
-  const centralTabs = useMemo(
-    () => tabs.filter((tab) => !sidebarSessions?.tabIds.includes(tab.id)),
-    [tabs, sidebarSessions]
-  )
+  const centralTabs = useCentralTerminalTabs(props.worktreeId, tabs)
   const terminalMap = useMemo(() => new Map(centralTabs.map((tab) => [tab.id, tab])), [centralTabs])
   const editorMap = useMemo(
     () => new Map((editorFiles ?? []).map((file) => [file.tabId ?? file.id, file])),

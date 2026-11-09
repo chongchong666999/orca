@@ -16,6 +16,7 @@ import { TerminalOverlaySlot } from './TerminalOverlaySlot'
 import { captureWorkspaceEmptiedReaction } from '../tab-group/workspace-emptied-reaction'
 import { TerminalRestoringPlaceholder } from './TerminalRestoringPlaceholder'
 import { useTerminalTabColdParking } from './use-terminal-tab-cold-parking'
+import { useCentralTerminalTabs } from '@/cocos-agent/use-central-terminal-tabs'
 
 type TerminalOverlayAssignment = {
   unifiedTabId: string
@@ -66,11 +67,7 @@ const TerminalPaneOverlayLayer = memo(function TerminalPaneOverlayLayer({
       activeGroupId: state.activeGroupIdByWorktree[worktreeId]
     }))
   )
-  const sidebarSessions = useAppStore((s) => s.sidebarTerminalSessionsByWorktree?.[worktreeId])
-  const centralTerminalTabs = useMemo(
-    () => terminalTabs.filter((tab) => !sidebarSessions?.tabIds.includes(tab.id)),
-    [terminalTabs, sidebarSessions]
-  )
+  const centralTerminalTabs = useCentralTerminalTabs(worktreeId, terminalTabs)
   const focusGroup = useAppStore((state) => state.focusGroup)
   const consumeSuppressedPtyExit = useAppStore((state) => state.consumeSuppressedPtyExit)
 

@@ -62,6 +62,33 @@ export function selectSidebarTerminalSession(
   }
 }
 
+/** The terminals a workspace shows in the central tab strip: every tab the sidebar has not taken. */
+export function selectCentralTerminalTabs<T extends { id: string }>(
+  state: {
+    tabsByWorktree: Record<string, T[] | undefined>
+    sidebarTerminalSessionsByWorktree?: SidebarTerminalSessions
+  },
+  worktreeId: string
+): T[] {
+  const tabs = state.tabsByWorktree[worktreeId] ?? []
+  const taken = state.sidebarTerminalSessionsByWorktree?.[worktreeId]?.tabIds
+  return taken?.length ? tabs.filter((tab) => !taken.includes(tab.id)) : tabs
+}
+
+/** The sidebar assignments after a terminal tab closed; nothing to merge when it was never in the sidebar. */
+export function sidebarSessionsAfterTabClosed(
+  state: { sidebarTerminalSessionsByWorktree?: SidebarTerminalSessions },
+  worktreeId: string | null | undefined,
+  tabId: string
+): { sidebarTerminalSessionsByWorktree?: SidebarTerminalSessions } {
+  const sessions = state.sidebarTerminalSessionsByWorktree
+  if (!worktreeId || !sessions) {
+    return {}
+  }
+  const next = removeSidebarTerminalSession(sessions, worktreeId, tabId)
+  return next === sessions ? {} : { sidebarTerminalSessionsByWorktree: next }
+}
+
 export function removeSidebarTerminalSession(
   sessions: SidebarTerminalSessions,
   worktreeId: string,
