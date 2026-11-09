@@ -132,15 +132,6 @@ export const UiUpdateFields = z
     rightSidebarTab: RightSidebarTabParam.optional(),
     rightSidebarExplorerView: z.enum(['files', 'search']).optional(),
     rightSidebarWidth: z.number().finite().optional(),
-    sidebarTerminalSessionsByWorktree: z
-      .record(
-        z.string(),
-        z.object({
-          tabIds: z.array(z.string()),
-          activeTabId: NullableString
-        })
-      )
-      .optional(),
     markdownTocPanelWidth: z.number().finite().optional(),
     combinedDiffFileTreeWidth: z.number().finite().optional(),
     groupBy: z.enum(['none', 'workspace-status', 'repo', 'pr-status']).optional(),

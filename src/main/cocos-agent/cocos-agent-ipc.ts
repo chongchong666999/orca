@@ -16,6 +16,7 @@ import {
 import { stopAppStartedEditorsOnQuit } from './cocos-editor-quit'
 import { cocosEditorService, onCocosEditorEvicted } from './cocos-editor-service'
 import { detectCocosProject, findCocosEditorForWorkspace } from './cocos-project-detection'
+import { readSidebarTerminalRecord, writeSidebarTerminalRecord } from './sidebar-terminal-store'
 
 function isAbsolutePath(value: unknown): value is string {
   return typeof value === 'string' && path.isAbsolute(value)
@@ -96,4 +97,8 @@ export function registerCocosAgentIpc(): void {
       isAbsolutePath(projectRoot) ? cocosEditorService.stop(projectRoot) : false
   )
   ipcMain.handle(COCOS_AGENT_IPC.listEditors, (): CocosEditorRecord[] => cocosEditorService.list())
+  ipcMain.handle(COCOS_AGENT_IPC.readSidebarTerminals, () => readSidebarTerminalRecord())
+  ipcMain.handle(COCOS_AGENT_IPC.writeSidebarTerminals, (_event, record: unknown) =>
+    writeSidebarTerminalRecord(record)
+  )
 }

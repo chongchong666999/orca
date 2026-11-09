@@ -72,11 +72,7 @@ export const UI_STATE_DISPOSITIONS = {
     38,
     'Filters belong to the Jira host, not a moved workspace.'
   ),
-  taskResumeState: notApplicableDisposition(38),
-  sidebarTerminalSessionsByWorktree: notApplicableDisposition(
-    38,
-    'Client presentation only; transferred terminals remain available in the destination tab strip and can be moved to its sidebar.'
-  )
+  taskResumeState: notApplicableDisposition(38)
 } as const satisfies Partial<Record<keyof PersistedUIState, WslMoveFieldDisposition>>
 
 export const UI_STATE_GLOBAL_FIELDS = [

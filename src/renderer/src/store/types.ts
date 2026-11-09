@@ -1,3 +1,4 @@
+import type { SidebarTerminalSlice } from '../cocos-agent/sidebar-terminal-slice'
 import type { RepoSlice } from './repos/repo-state'
 import type { SparsePresetsSlice } from './slices/sparse-presets'
 import type { WorktreeSlice } from './slices/worktrees'
@@ -64,6 +65,7 @@ export type AppState = RepoSlice &
   PreflightSlice &
   JiraSlice &
   EditorSlice &
+  SidebarTerminalSlice &
   StatsSlice &
   MemorySlice &
   WorkspaceSpaceSlice &

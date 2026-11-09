@@ -2,7 +2,7 @@
 import './lib/react-devtools-commit-hook-shim'
 import './lib/react-commit-cascade-observer'
 import './assets/main.css'
-import { installRestoredEditorTabRefresh } from './cocos-agent/cocos-editor-tab-refresh'
+import { installCocosAgentRenderer } from './cocos-agent/install-cocos-agent-renderer'
 
 import { StrictMode } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -42,7 +42,7 @@ installRendererCrashDiagnostics()
 installTypingLatencyDiagnostic()
 installAppKeyboardRouter()
 installAutomationHostDiagnostic()
-installRestoredEditorTabRefresh()
+installCocosAgentRenderer()
 
 if (
   import.meta.env.DEV &&

@@ -1,3 +1,5 @@
+import type { SidebarTerminalRecord } from './sidebar-terminal-record'
+
 export type CocosProjectDetection =
   | { kind: 'not-cocos' }
   | { kind: 'cocos'; creatorVersion: string | null }
@@ -36,6 +38,8 @@ export type CocosAgentPreloadApi = {
   }) => Promise<void>
   activateEditor: (projectRoot: string | null) => Promise<void>
   onEditorEvicted: (listener: (record: CocosEditorRecord) => void) => () => void
+  readSidebarTerminals: () => Promise<SidebarTerminalRecord>
+  writeSidebarTerminals: (record: SidebarTerminalRecord) => Promise<void>
 }
 
 export const COCOS_AGENT_IPC = {
@@ -45,5 +49,7 @@ export const COCOS_AGENT_IPC = {
   detectProject: 'cocos-agent:detect-project',
   openEditor: 'cocos-agent:open-editor',
   stopEditor: 'cocos-agent:stop-editor',
-  listEditors: 'cocos-agent:list-editors'
+  listEditors: 'cocos-agent:list-editors',
+  readSidebarTerminals: 'cocos-agent:read-sidebar-terminals',
+  writeSidebarTerminals: 'cocos-agent:write-sidebar-terminals'
 } as const

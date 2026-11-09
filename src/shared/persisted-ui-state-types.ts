@@ -29,7 +29,6 @@ import type {
 import type { WorkspaceStatusDefinition } from './worktree/types'
 import type { PersistedAutomationHostFilter } from './automation-host-filter'
 import type { PendingRuntimeRepoRemoval } from './pending-runtime-repo-removal'
-import type { SidebarTerminalSessions } from './sidebar-terminal-sessions'
 
 export type PersistedUIState = {
   /** Paired-server project removals still owed to their server; optional so older builds ignore it. */
@@ -46,7 +45,6 @@ export type PersistedUIState = {
   rightSidebarTab: RightSidebarTab
   rightSidebarExplorerView: RightSidebarExplorerView
   rightSidebarWidth: number
-  sidebarTerminalSessionsByWorktree?: SidebarTerminalSessions
   markdownTocPanelWidth?: number
   combinedDiffFileTreeWidth?: number
   groupBy: 'none' | 'workspace-status' | 'repo' | 'pr-status'

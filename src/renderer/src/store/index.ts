@@ -16,6 +16,7 @@ import { createLinearSlice } from './slices/linear'
 import { createPreflightSlice } from './slices/preflight'
 import { createJiraSlice } from './slices/jira'
 import { createEditorSlice } from './slices/editor'
+import { createSidebarTerminalSlice } from '../cocos-agent/sidebar-terminal-slice'
 import { createStatsSlice } from './slices/stats'
 import { createMemorySlice } from './slices/memory'
 import { createWorkspaceSpaceSlice } from './slices/workspace-space'
@@ -113,6 +114,7 @@ export const useAppStore = create<AppState>()(
           ...createPreflightSlice(...a),
           ...createJiraSlice(...a),
           ...createEditorSlice(...a),
+          ...createSidebarTerminalSlice(...a),
           ...createStatsSlice(...a),
           ...createMemorySlice(...a),
           ...createWorkspaceSpaceSlice(...a),

@@ -15,6 +15,7 @@ import { createLinearSlice } from './linear'
 import { createPreflightSlice } from './preflight'
 import { createJiraSlice } from './jira'
 import { createEditorSlice } from './editor'
+import { createSidebarTerminalSlice } from '../../cocos-agent/sidebar-terminal-slice'
 import { createStatsSlice } from './stats'
 import { createMemorySlice } from './memory'
 import { createWorkspaceSpaceSlice } from './workspace-space'
@@ -89,6 +90,7 @@ export function createTestStore(
         ...createPreflightSlice(...a),
         ...createJiraSlice(...a),
         ...createEditorSlice(...a),
+        ...createSidebarTerminalSlice(...a),
         ...createStatsSlice(...a),
         ...createMemorySlice(...a),
         ...createWorkspaceSpaceSlice(...a),

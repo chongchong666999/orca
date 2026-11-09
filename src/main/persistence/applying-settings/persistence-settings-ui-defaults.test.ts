@@ -169,7 +169,7 @@ describe('Store', () => {
     const ui = store.getUI()
     expect(ui.sidebarWidth).toBe(280)
     expect(ui.rightSidebarOpen).toBe(true)
-    expect(ui.rightSidebarTab).toBe('terminal')
+    expect(ui.rightSidebarTab).toBe('explorer')
     expect(ui.groupBy).toBe('repo')
     expect(ui.lastActiveRepoId).toBeNull()
     expect(ui.dismissedUpdateVersion).toBeNull()

@@ -19,7 +19,10 @@ const cocosAgentApi: CocosAgentPreloadApi = {
   detectProject: (projectPath) => ipcRenderer.invoke(COCOS_AGENT_IPC.detectProject, projectPath),
   openEditor: (args) => ipcRenderer.invoke(COCOS_AGENT_IPC.openEditor, args),
   stopEditor: (projectRoot) => ipcRenderer.invoke(COCOS_AGENT_IPC.stopEditor, projectRoot),
-  listEditors: () => ipcRenderer.invoke(COCOS_AGENT_IPC.listEditors)
+  listEditors: () => ipcRenderer.invoke(COCOS_AGENT_IPC.listEditors),
+  readSidebarTerminals: () => ipcRenderer.invoke(COCOS_AGENT_IPC.readSidebarTerminals),
+  writeSidebarTerminals: (record) =>
+    ipcRenderer.invoke(COCOS_AGENT_IPC.writeSidebarTerminals, record)
 }
 
 // Why: its own global keeps cocos-agent out of upstream's PreloadApi, so syncing Orca never conflicts there.

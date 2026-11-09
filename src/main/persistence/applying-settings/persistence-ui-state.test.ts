@@ -397,7 +397,7 @@ describe('Store', () => {
     })
 
     const store = await createStore()
-    expect(store.getUI().rightSidebarTab).toBe('terminal')
+    expect(store.getUI().rightSidebarTab).toBe('explorer')
   })
 
   it('updateUI merges feature interactions instead of replacing stale snapshots', async () => {
