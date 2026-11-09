@@ -104,6 +104,8 @@ docs/**
 !docs/agents-md-refs/**
 !docs/cocos-agent/
 !docs/cocos-agent/**
+!docs/specs/
+!docs/specs/**
 !docs/agent-skill-sharing-implementation-checklist.md
 !docs/mobile-terminal-shortcut-bar.md
 
