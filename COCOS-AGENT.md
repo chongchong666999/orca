@@ -45,6 +45,7 @@ cocos-agent 基于 [Orca](https://github.com/stablyai/orca)（MIT 协议，保�
 | --- | --- | --- | --- |
 | `.gitattributes` | 品牌 | 品牌二进制文件与 logo.svg merge=ours，共 7 行追加 | 保留上游改动，重新追加这几行 |
 | `.gitignore` | 品牌 | 忽略 /.context-engine/；docs/cocos-agent、docs/specs 白名单，共 5 行追加 | 保留上游改动，重新追加这几行 |
+| `config/nsis/orca-installer-hooks.nsh` | 挂点 | 卸载时移除 cocos-agent 的 a5-game-context 命令目录（resources\a5-game-context-bin）的用户 PATH 条目，共 2 行追加 | 保留上游改动，重新追加这两行 |
 | `config/packaged-runtime-node-modules.cjs` | 待回馈上游 | 用 Node 的 isBuiltin 识别 node:sqlite 等内置模块 | 上游若已改用 isBuiltin 则取上游版本 |
 | `config/scripts/check-changed-selection.mjs` | 挂点 | VERIFY_CHECKS 增加 cocos-agent upstream touch points 一项（6 行） | 保留上游改动，重新加上这一项 |
 | `config/scripts/check-changed.mjs` | 待回馈上游 | --maxWorkers 限制并发（3 行） | 保留上游改动，重新加上并发上限；上游若已支持则取上游 |
@@ -106,7 +107,7 @@ cocos-agent 基于 [Orca](https://github.com/stablyai/orca)（MIT 协议，保�
 | `src/shared/rpc-contract/client-ui-params.ts` | 枚举 | STATIC_RIGHT_SIDEBAR_TABS 加 'terminal'（1 行） | 保留上游改动，重新加上这一行 |
 | `src/shared/ui-chrome-types.ts` | 枚举 | RightSidebarTab 加 'terminal'（1 行） | 保留上游改动，重新加上这一行 |
 
-共 62 个上游文件。由 `node config/scripts/cocos-agent/check-upstream-touch-points.mjs --write-doc` 生成，请改 `config/cocos-agent/upstream-touch-points.json`。
+共 63 个上游文件。由 `node config/scripts/cocos-agent/check-upstream-touch-points.mjs --write-doc` 生成，请改 `config/cocos-agent/upstream-touch-points.json`。
 
 自有文件中复制自上游的逻辑（上游改了来源时要对比）：
 

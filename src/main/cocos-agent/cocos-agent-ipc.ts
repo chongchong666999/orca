@@ -1,5 +1,9 @@
 import { BrowserWindow, ipcMain } from 'electron'
 import path from 'node:path'
+import {
+  registerA5GameContextCommands,
+  reportA5GameContextCommands
+} from './a5-game-context-commands'
 import { refreshCocosEditorMcpLauncher } from './cocos-editor-mcp-launcher'
 import { refreshCocosEditorBindings } from './cocos-editor-mcp-bindings'
 import {
@@ -32,6 +36,9 @@ export function registerCocosAgentIpc(): void {
   void refreshCocosEditorMcpLauncher().catch(() =>
     console.error('Could not update the bundled Cocos MCP launcher')
   )
+  void registerA5GameContextCommands()
+    .then(reportA5GameContextCommands)
+    .catch((error) => console.error('Could not register the a5-game-context commands', error))
   unsubscribeEvictions?.()
   unsubscribeEvictions = onCocosEditorEvicted((record) => {
     for (const window of BrowserWindow.getAllWindows()) {

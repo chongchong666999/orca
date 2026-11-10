@@ -1,0 +1,15 @@
+#!/bin/sh
+# Git Bash entry for the cocos-cli cocos-agent bundles; cmd and PowerShell use cocos-cli.cmd beside it.
+resources=$(cd "$(dirname "$0")/.." && pwd)
+electron="$(cd "$resources/.." && pwd)/Orca.exe"
+if [ ! -f "$electron" ]; then
+	echo "Unable to find cocos-agent's Orca.exe next to $resources" >&2
+	exit 1
+fi
+windows_path() { cygpath -w "$1" 2>/dev/null || printf '%s\n' "$1"; }
+A5_NODE_EXE=$(windows_path "$electron")
+A5_GAME_CONTEXT_PACKAGE_ROOT=$(windows_path "$resources/a5-game-context")
+export ELECTRON_RUN_AS_NODE=1 A5_NODE_EXE A5_NODE_BINARY="$A5_NODE_EXE" A5_GAME_CONTEXT_PACKAGE_ROOT
+# Why: options set for the user's own Node may not be valid for Electron's.
+unset NODE_OPTIONS
+exec "$electron" "$(windows_path "$resources/a5-game-context/dist/cli/cocos-cli.js")" "$@"

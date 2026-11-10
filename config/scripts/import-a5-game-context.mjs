@@ -1,5 +1,6 @@
-// Unpacks the a5-game-context package pinned in config/cocos-agent/a5-game-context.lock.json into
-// resources/cocos-agent/a5-game-context/ for the cocos-agent build (a local package, never downloaded).
+// Unpacks the a5-game-context package pinned for a target (config/cocos-agent/a5-game-context.lock.json for
+// darwin-arm64, a5-game-context.<target>.lock.json otherwise) into resources/cocos-agent/a5-game-context/ for the
+// cocos-agent build (a local package, never downloaded). Usage: import-a5-game-context.mjs [--target win32-x64]
 import { createHash } from 'node:crypto'
 import { spawnSync } from 'node:child_process'
 import {
@@ -14,7 +15,9 @@ import {
 import path from 'node:path'
 
 const repoRoot = path.resolve(import.meta.dirname, '../..')
-export const LOCK_PATH = path.join(repoRoot, 'config/cocos-agent/a5-game-context.lock.json')
+const LOCK_DIR = path.join(repoRoot, 'config/cocos-agent')
+export const LOCK_PATH = path.join(LOCK_DIR, 'a5-game-context.lock.json')
+const DEFAULT_TARGET = 'darwin-arm64'
 export const TARGET_DIR = path.join(repoRoot, 'resources/cocos-agent/a5-game-context')
 const MARKER = '.cocos-agent-package.json'
 
@@ -32,6 +35,31 @@ function sha256File(file) {
 
 function readJson(file) {
   return JSON.parse(readFileSync(file, 'utf8'))
+}
+
+/** The lock pinning `target`'s package; every target must pin the version darwin-arm64 does (one version everywhere). */
+export function readA5GameContextLock(target = DEFAULT_TARGET, directory = LOCK_DIR) {
+  const primaryPath = path.join(directory, 'a5-game-context.lock.json')
+  const lockPath =
+    target === DEFAULT_TARGET
+      ? primaryPath
+      : path.join(directory, `a5-game-context.${target}.lock.json`)
+  if (!existsSync(lockPath)) {
+    throw new Error(
+      `no ${target} a5-game-context package is pinned: add ${path.relative(repoRoot, lockPath)} for the tarball GitNexus's pack:platform --target ${target} makes`
+    )
+  }
+  const lock = readJson(lockPath)
+  if (lock.target !== target) {
+    throw new Error(`${path.relative(repoRoot, lockPath)} pins ${lock.target}, not ${target}`)
+  }
+  const primary = target === DEFAULT_TARGET ? lock : readJson(primaryPath)
+  if (lock.version !== primary.version) {
+    throw new Error(
+      `a5-game-context ${target} is pinned at ${lock.version} but darwin-arm64 at ${primary.version}; pin the same version on every platform`
+    )
+  }
+  return lock
 }
 
 /** An existing install's JSON, or null when it is missing or unreadable (a damaged install is re-imported). */
@@ -206,7 +234,8 @@ export function importA5GameContext({ lock, tarball, targetDir }) {
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === import.meta.filename) {
-  const lock = readJson(LOCK_PATH)
+  const targetFlag = process.argv.indexOf('--target')
+  const lock = readA5GameContextLock(targetFlag > 0 ? process.argv[targetFlag + 1] : DEFAULT_TARGET)
   const status = importA5GameContext({
     lock,
     tarball: defaultTarballPath(lock),

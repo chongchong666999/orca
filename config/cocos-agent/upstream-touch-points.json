@@ -14,6 +14,12 @@
       "onConflict": "保留上游改动，重新追加这几行"
     },
     {
+      "path": "config/nsis/orca-installer-hooks.nsh",
+      "kind": "hook",
+      "change": "卸载时移除 cocos-agent 的 a5-game-context 命令目录（resources\\a5-game-context-bin）的用户 PATH 条目，共 2 行追加",
+      "onConflict": "保留上游改动，重新追加这两行"
+    },
+    {
       "path": "config/packaged-runtime-node-modules.cjs",
       "kind": "upstream-candidate",
       "change": "用 Node 的 isBuiltin 识别 node:sqlite 等内置模块",

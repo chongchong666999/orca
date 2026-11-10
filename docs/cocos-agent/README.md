@@ -18,6 +18,8 @@
 
 macOS 无证书内部分发与反复文件授权的根因、打包处理和验收边界见 [权限记录](macos-internal-distribution-2026-11-06.md)。
 
+装好 cocos-agent 即可在任何终端、Claude Code 和 Codex 使用内置的 `a5-game-context` 与 `cocos-cli`，不再单独 npm 安装，版本跟随 cocos-agent。macOS 和 Windows 的做法、决策与 Windows 剩余阻塞见 [命令注册记录](a5-game-context-commands-2026-11-11.md)。
+
 ## 专项设计与后续范围
 
 - [对照 Creator 2.4.13 的缺陷与修复清单（2026-11-07）](creator-parity-audit-2026-11-07.md)：依据 REA 恢复资料与当前实现，列出 9 项问题、修复顺序及验收条件，区分源码确认和隔离实测。

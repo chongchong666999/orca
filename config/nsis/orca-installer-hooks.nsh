@@ -122,6 +122,8 @@
     ${endIf}
     ; The `orca` command's PATH entry (Settings → Command line) would otherwise outlive the app.
     !insertmacro ORCA_REMOVE_USER_PATH_ENTRY "$INSTDIR\resources\bin"
+    ; cocos-agent puts its a5-game-context commands on PATH from here (absent in Orca builds).
+    !insertmacro ORCA_REMOVE_USER_PATH_ENTRY "$INSTDIR\resources\a5-game-context-bin"
     Pop $2
     Pop $1
     Pop $0

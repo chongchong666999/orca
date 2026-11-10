@@ -4,7 +4,11 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import os from 'node:os'
 import path from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { importA5GameContext, requiredPackageEntries } from './import-a5-game-context.mjs'
+import {
+  importA5GameContext,
+  readA5GameContextLock,
+  requiredPackageEntries
+} from './import-a5-game-context.mjs'
 
 describe('importA5GameContext', () => {
   let work
@@ -75,5 +79,26 @@ describe('importA5GameContext', () => {
     expect(() =>
       importA5GameContext({ lock: { ...lock, version: '3.8.271' }, tarball, targetDir })
     ).toThrow('lock pins 3.8.271')
+  })
+})
+
+describe('readA5GameContextLock', () => {
+  it('refuses a platform pinned at another version than darwin-arm64', () => {
+    const directory = mkdtempSync(path.join(os.tmpdir(), 'a5-game-context-locks-'))
+    try {
+      writeFileSync(
+        path.join(directory, 'a5-game-context.lock.json'),
+        '{"version":"3.8.285","target":"darwin-arm64"}'
+      )
+      writeFileSync(
+        path.join(directory, 'a5-game-context.win32-x64.lock.json'),
+        '{"version":"3.8.283","target":"win32-x64"}'
+      )
+      expect(() => readA5GameContextLock('win32-x64', directory)).toThrow(
+        'a5-game-context win32-x64 is pinned at 3.8.283 but darwin-arm64 at 3.8.285; pin the same version on every platform'
+      )
+    } finally {
+      rmSync(directory, { recursive: true, force: true })
+    }
   })
 })
