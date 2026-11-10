@@ -1,7 +1,7 @@
 {
-  "version": "3.8.282",
+  "version": "3.8.283",
   "target": "darwin-arm64",
-  "file": "a5-game-context-3.8.282-darwin-arm64.tgz",
-  "sha256": "61e1572814323eac80f2e386edbeaa72a7407ad5a721b48bc2fead84c1a02ecd",
-  "source": "GitNexus feature/node-editor-view bf999e0f4 local 3.8.282 macOS arm64 release: the editor footer says when files changed on disk were synced"
+  "file": "a5-game-context-3.8.283-darwin-arm64.tgz",
+  "sha256": "fea8faaa01721eed8c7b1302fa23a5e8fd0b8e25b87c75f16e6198ea61574ce6",
+  "source": "GitNexus feature/node-editor-view 8a4d6d386 local 3.8.283 macOS arm64 release: the editor page reconnects after its connection drops (system sleep)"
 }
