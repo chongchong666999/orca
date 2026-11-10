@@ -6,7 +6,7 @@ import type { AgentStartupShell } from '../../shared/agent-launch/startup/tui-ag
 import { resolveA5GameContextBinary } from './a5-game-context-binary'
 import { readCocosEditorBinding, registerCocosEditorBinding } from './cocos-editor-mcp-bindings'
 import { refreshCocosEditorMcpLauncher } from './cocos-editor-mcp-launcher'
-import { cocosEditorService } from './cocos-editor-service'
+import { cocosEditorService } from './cocos-editor-service-instance'
 import { findCocosEditorForWorkspace } from './cocos-project-detection'
 
 export async function prepareCocosEditorMcpLaunch(input: {

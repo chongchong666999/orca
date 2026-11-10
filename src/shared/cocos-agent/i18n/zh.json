@@ -1,5 +1,18 @@
 {
   "editor": {
+    "menu": {
+      "goTo": "转到 Cocos Creator",
+      "open": "Cocos Creator",
+      "stop": "停止 Cocos Creator"
+    },
+    "errors": {
+      "reopen": "无法重新打开 Cocos Creator 编辑器",
+      "open": "无法打开 Cocos Creator 编辑器",
+      "unsupportedVersion": "cocos-agent 的编辑器只支持 Cocos Creator 2.4 项目，此项目使用 {{version}}。"
+    },
+    "suspended": "此编辑器已暂停以释放内存。",
+    "resuming": "正在恢复编辑器…",
+    "resume": "恢复 Cocos Creator",
     "close": {
       "cancel": "取消",
       "ok": "确定",
@@ -14,6 +27,9 @@
     }
   },
   "sidebar": {
+    "creator": {
+      "unavailable": "选择一个 Cocos Creator 2.4 项目工作区后即可打开编辑器。"
+    },
     "terminal": {
       "moveExisting": "移入已有终端",
       "title": "终端",

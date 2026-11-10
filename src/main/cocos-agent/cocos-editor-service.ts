@@ -2,15 +2,12 @@ import { readCocosEditorLifecycle } from './cocos-editor-lifecycle'
 import { CocosEditorShutdown } from './cocos-editor-shutdown'
 import type { CocosEditorServiceDeps } from './cocos-editor-service-deps'
 export type { CocosEditorServiceDeps } from './cocos-editor-service-deps'
-import { CocosPreviewRouter } from './cocos-preview-router'
-import { runProcess } from '@orca/process-host'
 import type { ProcessResult } from '@orca/process-host/process-spec'
 import type {
   CocosEditorFailureCode,
   CocosEditorOpenResult,
   CocosEditorRecord
 } from '../../shared/cocos-agent/cocos-editor-types'
-import { resolveA5GameContextBinary } from './a5-game-context-binary'
 import {
   editorShutdownUrl,
   parseEditorOpenOutput,
@@ -122,7 +119,28 @@ export class CocosEditorService {
     if (editor && this.editors.has(editor.projectRoot)) {
       this.activationOrder.set(editor.projectRoot, ++this.activationSequence)
       this.deps.preview?.select(editor)
+      await this.releaseIfExited(editor.projectRoot)
     }
+  }
+
+  /** GitNexus stops an editor no page used for 10 minutes; its tab is told so it reopens one instead of a dead address. */
+  private async releaseIfExited(projectRoot: string): Promise<void> {
+    const record = this.editors.get(projectRoot)
+    if (!record || this.closingEditors.has(projectRoot)) {
+      return
+    }
+    const lifecycle = await readCocosEditorLifecycle(record.url, this.deps.fetch)
+    if (lifecycle === 'gone' && !this.quitting && this.editors.get(projectRoot) === record) {
+      this.forget(record)
+      this.deps.onEvicted?.(record)
+    }
+  }
+
+  private forget(record: CocosEditorRecord): void {
+    this.closingEditors.delete(record.projectRoot)
+    this.editors.delete(record.projectRoot)
+    this.deps.preview?.remove(record)
+    this.activationOrder.delete(record.projectRoot)
   }
 
   private async makeRoom(): Promise<boolean> {
@@ -140,10 +158,7 @@ export class CocosEditorService {
       }
       const closingOrigin = this.closingEditors.get(record.projectRoot)
       if (closingOrigin && (await this.shutdown.waitUntilClosed(closingOrigin))) {
-        this.closingEditors.delete(record.projectRoot)
-        this.editors.delete(record.projectRoot)
-        this.deps.preview?.remove(record)
-        this.activationOrder.delete(record.projectRoot)
+        this.forget(record)
         this.deps.onEvicted?.(record)
         return true
       }
@@ -153,9 +168,7 @@ export class CocosEditorService {
       const activation = this.activationOrder.get(record.projectRoot)
       const lifecycle = await readCocosEditorLifecycle(record.url, this.deps.fetch)
       if (lifecycle === 'gone') {
-        this.deps.preview?.remove(record)
-        this.editors.delete(record.projectRoot)
-        this.activationOrder.delete(record.projectRoot)
+        this.forget(record)
         this.deps.onEvicted?.(record)
         return true
       }
@@ -308,20 +321,3 @@ export class CocosEditorService {
     return outcome === 'closed'
   }
 }
-
-const evictionListeners = new Set<(record: CocosEditorRecord) => void>()
-
-export function onCocosEditorEvicted(listener: (record: CocosEditorRecord) => void): () => void {
-  evictionListeners.add(listener)
-  return () => {
-    evictionListeners.delete(listener)
-  }
-}
-
-export const cocosEditorService = new CocosEditorService({
-  preview: new CocosPreviewRouter((input, init) => fetch(input, init)),
-  onEvicted: (record) => evictionListeners.forEach((listener) => listener(record)),
-  resolveBinary: () => resolveA5GameContextBinary(),
-  runProcess: (spec) => runProcess(spec),
-  fetch: (input, init) => fetch(input, init)
-})

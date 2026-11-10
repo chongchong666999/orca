@@ -5,7 +5,7 @@ import path from 'node:path'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 import { getAppEnvironment } from '../../shared/app-environment'
 import { tokenizeStartupCommand } from '../../shared/agent-launch/startup/tui-agent-startup-shell'
-import { cocosEditorService } from './cocos-editor-service'
+import { cocosEditorService } from './cocos-editor-service-instance'
 import { refreshCocosEditorBindings } from './cocos-editor-mcp-bindings'
 import { prepareCocosEditorMcpLaunch } from './cocos-editor-mcp-launch'
 

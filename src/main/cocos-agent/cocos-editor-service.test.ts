@@ -377,6 +377,18 @@ describe('CocosEditorService', () => {
     expect(service.list()).toHaveLength(3)
   })
 
+  it('releases an editor that exited on its own when its workspace is activated', async () => {
+    const { service, roots, live, evicted } = budgetFixture()
+    await service.open(roots[0])
+    await service.open(roots[1])
+    live.delete(roots[0])
+    await service.activate(roots[1])
+    expect(evicted).toEqual([])
+    await service.activate(roots[0])
+    expect(evicted).toEqual([roots[0]])
+    expect(service.list().map((record) => record.projectRoot)).toEqual([roots[1]])
+  })
+
   it('protects dirty, busy and unknown lifecycle states with an explicit capacity error', async () => {
     const { service, roots, protectedRoots, stops, runProcess } = budgetFixture()
     for (const root of roots.slice(0, 3)) {

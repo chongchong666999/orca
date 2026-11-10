@@ -1093,6 +1093,11 @@ html.native-shell .app-layout {
   user-select: none;
 }
 
+/* The sidebar body sets the open column's width, even when the titlebar has more content. */
+.titlebar-left:not(.titlebar-left-floating) {
+  container: sidebar-titlebar / inline-size;
+}
+
 /* Why: when the sidebar is collapsed this header floats over the tab strip,
    so keep the standard titlebar surface instead of the sidebar tint. */
 .titlebar-left-floating {
@@ -1249,9 +1254,6 @@ html.native-shell .app-layout {
   gap: 4px;
   height: 24px;
   max-width: min(280px, 32vw);
-  margin-left: 2px;
-  margin-right: 4px;
-  padding: 0 6px;
   border-radius: 4px;
   color: var(--muted-foreground);
   font-size: 12px;
@@ -1269,7 +1271,9 @@ html.native-shell .app-layout {
 }
 
 .titlebar-app-name-main {
-  flex: 0 0 auto;
+  margin-inline: 8px 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .titlebar-icon-button {

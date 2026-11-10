@@ -13,6 +13,7 @@ import {
   findCocosEditorTabId,
   findEditorPageTabs,
   openCocosEditorTab,
+  resumeVisibleCocosEditor,
   suspendCocosEditor
 } from './cocos-editor-tabs'
 
@@ -80,40 +81,37 @@ export function installRestoredEditorTabRefresh(): void {
       state.activeBrowserTabId !== previous.activeBrowserTabId ||
       state.activeTabType !== previous.activeTabType
     if (selectionChanged) {
-      const projectPath = state.activeWorktreeId
-        ? localCocosWorkspacePath(state, state.activeWorktreeId)
-        : null
-      void cocosAgentApi()
-        ?.activateEditor(projectPath)
-        .catch(() => undefined)
-    }
-    if (selectionChanged && state.activeWorktreeId) {
-      const projectPath = localCocosWorkspacePath(state, state.activeWorktreeId)
-      if (projectPath) {
-        const tabId = state.activeBrowserTabId
-        if (state.activeTabType === 'browser' && tabId && isCocosEditorSuspended(tabId)) {
-          void openCocosEditorTab(state.activeWorktreeId, projectPath, { focus: 'unchanged' }).then(
-            (outcome) => {
-              if (outcome.kind === 'failed') {
-                toast.error(outcome.message)
-              }
-            }
-          )
-        } else if (
-          state.activeTabType === 'browser' &&
-          tabId &&
-          findEditorPageTabs(state, state.activeWorktreeId).some((tab) => tab.tabId === tabId)
-        ) {
-          if (restorationAttempts.get(state.activeWorktreeId) === 'failed') {
-            restorationAttempts.delete(state.activeWorktreeId)
-          }
-          if (findCocosEditorTabId(state, state.activeWorktreeId) === tabId) {
-            void refreshCocosEditorTabBindings(state.activeWorktreeId, projectPath, tabId)
-          }
-        }
-      }
+      activateSelectedEditor(state)
     }
     // Project ownership and page URLs can hydrate after the selected tab.
     refreshRestoredEditorTabs(state)
+  })
+}
+
+function activateSelectedEditor(state: AppState): void {
+  const worktreeId = state.activeWorktreeId
+  const projectPath = worktreeId ? localCocosWorkspacePath(state, worktreeId) : null
+  // Why: activation probes the editor; one that exited meanwhile comes back evicted and reopens instead.
+  const activated = cocosAgentApi()
+    ?.activateEditor(projectPath)
+    .catch(() => undefined)
+  const tabId = state.activeBrowserTabId
+  if (!worktreeId || !projectPath || state.activeTabType !== 'browser' || !tabId) {
+    return
+  }
+  if (isCocosEditorSuspended(tabId)) {
+    resumeVisibleCocosEditor()
+    return
+  }
+  if (!findEditorPageTabs(state, worktreeId).some((tab) => tab.tabId === tabId)) {
+    return
+  }
+  if (restorationAttempts.get(worktreeId) === 'failed') {
+    restorationAttempts.delete(worktreeId)
+  }
+  void Promise.resolve(activated).then(() => {
+    if (findCocosEditorTabId(useAppStore.getState(), worktreeId) === tabId) {
+      void refreshCocosEditorTabBindings(worktreeId, projectPath, tabId)
+    }
   })
 }

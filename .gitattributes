@@ -86,3 +86,4 @@
 /resources/icon.png merge=ours
 /resources/icon-dev.png merge=ours
 /resources/icon-source/cocos-agent-1024.png merge=ours
+/resources/logo.svg merge=ours

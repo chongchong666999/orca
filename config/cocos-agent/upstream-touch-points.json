@@ -4,7 +4,7 @@
     {
       "path": ".gitattributes",
       "kind": "brand",
-      "change": "品牌二进制文件 merge=ours，共 6 行追加",
+      "change": "品牌二进制文件与 logo.svg merge=ours，共 7 行追加",
       "onConflict": "保留上游改动，重新追加这几行"
     },
     {
@@ -72,6 +72,18 @@
       "kind": "brand",
       "change": "cocos-agent 图标",
       "onConflict": "merge=ours 自动取我方；否则 git checkout --ours"
+    },
+    {
+      "path": "resources/logo.svg",
+      "kind": "brand",
+      "change": "cocos-agent 吉祥物（白色字形、透明底，内嵌 PNG），落地页、标题栏、引导页、设置图标共用",
+      "onConflict": "merge=ours 自动取我方；否则 git checkout --ours"
+    },
+    {
+      "path": "src/main/github/client/fetch/orca-star.ts",
+      "kind": "brand",
+      "change": "import + ORCA_REPO 改为 COCOS_AGENT_GITHUB_REPO：加星标与检测改查 a5-game-context-server（2 行）",
+      "onConflict": "保留上游改动，常量改回 COCOS_AGENT_GITHUB_REPO 并加 import"
     },
     {
       "path": "src/main/ipc/pty/spawn-options-assembly.ts",
@@ -152,10 +164,34 @@
       "onConflict": "保留上游其他改动，标题改回 cocos-agent"
     },
     {
+      "path": "src/renderer/src/app-shell/TitlebarLeftControls.tsx",
+      "kind": "upstream-candidate",
+      "change": "左侧标题栏收窄时让名称为导航按钮腾出空间",
+      "onConflict": "保留上游改动，确认窄侧栏仍能操作导航按钮"
+    },
+    {
       "path": "src/renderer/src/app-shell/use-onboarding-and-feature-tips.ts",
       "kind": "hook",
       "change": "有 cocos-agent preload 时跳过全局 CLI 安装探测与引导",
       "onConflict": "保留上游改动，重新加上条件"
+    },
+    {
+      "path": "src/renderer/src/assets/main.css",
+      "kind": "upstream-candidate",
+      "change": "展开的标题栏跟随侧栏宽度，窄栏内省略过长名称",
+      "onConflict": "保留上游改动，重新约束标题栏宽度并保留名称省略"
+    },
+    {
+      "path": "src/renderer/src/components/Landing.tsx",
+      "kind": "brand",
+      "onConflict": "保留上游改动，常量改回 COCOS_AGENT_GITHUB_URL 并加 import",
+      "change": "import + ORCA_GITHUB_URL 改为 COCOS_AGENT_GITHUB_URL（2 行）"
+    },
+    {
+      "path": "src/renderer/src/components/StarNagCard.tsx",
+      "kind": "brand",
+      "onConflict": "保留上游改动，常量改回 COCOS_AGENT_GITHUB_URL 并加 import",
+      "change": "import + ORCA_REPO_URL 改为 COCOS_AGENT_GITHUB_URL（2 行）"
     },
     {
       "path": "src/renderer/src/components/TerminalLegacyTerminalPanes.tsx",
@@ -192,6 +228,30 @@
       "kind": "hook",
       "change": "有 cocos-agent preload 时隐藏原版 CLI 安装入口（1 行）",
       "onConflict": "保留上游改动，重新加上条件"
+    },
+    {
+      "path": "src/renderer/src/components/settings/general/GeneralSupportSection.tsx",
+      "kind": "brand",
+      "onConflict": "保留上游改动，常量改回 COCOS_AGENT_GITHUB_URL 并加 import",
+      "change": "import + ORCA_GITHUB_URL 改为 COCOS_AGENT_GITHUB_URL（2 行）"
+    },
+    {
+      "path": "src/renderer/src/components/sidebar/SidebarNav.tsx",
+      "kind": "hook",
+      "change": "import + 导航列表第一项插入 CocosCreatorSidebarEntry（2 行）",
+      "onConflict": "保留上游改动，重新加上 import，并把 <CocosCreatorSidebarEntry /> 放回导航容器的第一个子元素"
+    },
+    {
+      "path": "src/renderer/src/components/star-nag/StarNagToastHost.test.tsx",
+      "kind": "brand",
+      "change": "网页回退断言改为 a5-game-context-server 地址",
+      "onConflict": "随 StarNagToastHost.tsx 处理，断言保持 a5-game-context-server 地址"
+    },
+    {
+      "path": "src/renderer/src/components/star-nag/StarNagToastHost.tsx",
+      "kind": "brand",
+      "onConflict": "保留上游改动，常量改回 COCOS_AGENT_GITHUB_URL 并加 import",
+      "change": "import + ORCA_REPO_URL 改为 COCOS_AGENT_GITHUB_URL（2 行）"
     },
     {
       "path": "src/renderer/src/components/tab-bar/tab-bar-static-create-menu.tsx",

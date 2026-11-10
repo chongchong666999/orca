@@ -15,6 +15,7 @@ import { HideSidebarMenu } from './sidebar-nav-controls'
 import { translate } from '@/i18n/i18n'
 import { lazyWithRetry } from '@/lib/lazy-with-retry'
 import type { GlobalSettings } from '../../../../shared/global-settings-types'
+import { CocosCreatorSidebarEntry } from '@/cocos-agent/CocosCreatorSidebarEntry'
 
 export function shouldShowMobileButton(
   settings: Partial<Pick<GlobalSettings, 'showMobileButton'>> | null | undefined
@@ -87,6 +88,7 @@ const SidebarNav = React.memo(function SidebarNav() {
       className="flex flex-col gap-0.5 px-2 pt-2 pb-1"
       data-contextual-tour-target="sidebar-navigation"
     >
+      <CocosCreatorSidebarEntry />
       <button
         type="button"
         onClick={() => openModal('worktree-palette')}

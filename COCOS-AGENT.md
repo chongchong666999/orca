@@ -13,28 +13,28 @@ cocos-agent 基于 [Orca](https://github.com/stablyai/orca)（MIT 协议，保�
 
 ### 新增文件（不会冲突）
 
-| 文件                                                          | 作用                                                                                                                                                                                                                                     |
-| ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `config/electron-builder.cocos-agent.cjs`                     | 在 Orca 打包配置的基础上，改 appId、产品名、用户数据目录名和 URL scheme                                                                                                                                                                  |
-| `config/scripts/build-cocos-agent-mac.mjs`                    | 校验并导入内置包，构建 arm64 的 ad-hoc 签名应用；`--release` 另产出 dmg、zip 和 sha256，跳过全局开发命令安装                                                                                                                             |
-| `config/cocos-agent/a5-game-context.lock.json`                | 内置的 a5-game-context 包：版本、文件名、sha256、来源提交                                                                                                                                                                                |
-| `config/scripts/import-a5-game-context.mjs`（及 `.test.mjs`） | 校验 sha256 和版本后，把包解到 `resources/cocos-agent/a5-game-context/`；默认从 `../GitNexus/context-engine/release/` 找，`A5_GAME_CONTEXT_TARBALL` 可指定                                                                               |
-| `resources/cocos-agent/.gitignore`                            | 忽略解出来的包，不改上游的 `.gitignore`                                                                                                                                                                                                  |
-| `resources/cocos-agent/bin/a5-game-context`、`cocos-cli`      | 启动脚本：从 symlink 找到 app，用 app 自带的 Electron 当 Node 运行内置包的 CLI，并设 `ELECTRON_RUN_AS_NODE`、`A5_NODE_EXE`、`A5_NODE_BINARY`、`A5_GAME_CONTEXT_PACKAGE_ROOT`                                                             |
-| `src/main/updater/cocos-agent-updater-setup.ts`               | 关闭自动更新（Orca 的更新源写死为 stablyai/orca）                                                                                                                                                                                        |
-| `src/shared/cocos-agent-brand.ts`                             | i18next 后置处理器，把界面和菜单翻译里的 `Orca` 统一替换成 `cocos-agent`                                                                                                                                                                 |
-| `resources/icon-source/cocos-agent-1024.png`                  | 1024×1024 透明背景的图标原图                                                                                                                                                                                                             |
-| `COCOS-AGENT.md`                                              | 本文件（上游 `.gitignore` 忽略了 `docs/`，所以放在根目录）                                                                                                                                                                               |
-| `COCOS-AGENT-PLAN.md`                                         | v0.1.0 路线和 loop 执行规则                                                                                                                                                                                                              |
-| `src/main/cocos-agent/`                                       | 主进程 Cocos 编辑器服务：检测项目、调用 `a5-game-context editor open`、停止编辑器、退出 app 时停止本次启动的编辑器，以及对应的 IPC                                                                                                       |
-| `src/shared/cocos-agent/`                                     | 主进程和渲染进程共用的类型、IPC 通道名、cocos-agent 自己的版本号 `COCOS_AGENT_VERSION`                                                                                                                                                   |
-| `src/preload/cocos-agent-preload.ts`                          | 单独暴露 `window.cocosAgent`，不改上游的 `PreloadApi`                                                                                                                                                                                    |
-| `src/renderer/src/cocos-agent/`                               | 渲染进程：Cocos 项目检测（按主机解析本地路径）、编辑器标签的打开/切换/停止、重启后恢复的编辑器标签换成可用的、空工作区的首个界面、「+」菜单的 Cocos Creator 项、`window.cocosAgent` 的类型、侧栏终端的 store slice 与持久化、`cocosText` |
-| `src/shared/cocos-agent/i18n/`、`cocos-agent-i18n.ts`         | cocos-agent 自己的词条（en / zh / zh-Hant）和把它们挂到 `cocosAgent` 命名空间的 i18next 模块                                                                                                                                             |
-| `src/main/cocos-agent/sidebar-terminal-store.ts`              | 侧栏终端归属的持久化文件 `userData/cocos-agent/sidebar-terminals.json`；首次运行把右侧栏默认到「终端」、宽 420                                                                                                                           |
-| `config/cocos-agent/upstream-base.json`                       | 上次合入的上游提交、内置 cocos 包版本、验证记录                                                                                                                                                                                          |
-| `config/cocos-agent/upstream-touch-points.json`               | 改动过的上游文件登记表（机读）                                                                                                                                                                                                           |
-| `config/scripts/cocos-agent/check-upstream-touch-points.mjs`  | 校验登记表与实际改动一致，`--write-doc` 生成下表                                                                                                                                                                                         |
+| 文件                                                          | 作用                                                                                                                                                                                                                                                                                       |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `config/electron-builder.cocos-agent.cjs`                     | 在 Orca 打包配置的基础上，改 appId、产品名、用户数据目录名和 URL scheme                                                                                                                                                                                                                    |
+| `config/scripts/build-cocos-agent-mac.mjs`                    | 校验并导入内置包，构建 arm64 的 ad-hoc 签名应用；`--release` 另产出 dmg、zip 和 sha256，跳过全局开发命令安装                                                                                                                                                                               |
+| `config/cocos-agent/a5-game-context.lock.json`                | 内置的 a5-game-context 包：版本、文件名、sha256、来源提交                                                                                                                                                                                                                                  |
+| `config/scripts/import-a5-game-context.mjs`（及 `.test.mjs`） | 校验 sha256 和版本后，把包解到 `resources/cocos-agent/a5-game-context/`；默认从 `../GitNexus/context-engine/release/` 找，`A5_GAME_CONTEXT_TARBALL` 可指定                                                                                                                                 |
+| `resources/cocos-agent/.gitignore`                            | 忽略解出来的包，不改上游的 `.gitignore`                                                                                                                                                                                                                                                    |
+| `resources/cocos-agent/bin/a5-game-context`、`cocos-cli`      | 启动脚本：从 symlink 找到 app，用 app 自带的 Electron 当 Node 运行内置包的 CLI，并设 `ELECTRON_RUN_AS_NODE`、`A5_NODE_EXE`、`A5_NODE_BINARY`、`A5_GAME_CONTEXT_PACKAGE_ROOT`                                                                                                               |
+| `src/main/updater/cocos-agent-updater-setup.ts`               | 关闭自动更新（Orca 的更新源写死为 stablyai/orca）                                                                                                                                                                                                                                          |
+| `src/shared/cocos-agent-brand.ts`                             | i18next 后置处理器，把界面和菜单翻译里的 `Orca` 统一替换成 `cocos-agent`，落地页标题 `ORCA` 换成 `COCOS AGENT`；所有「在 GitHub 上加星标」入口指向的仓库 `A5Labs-Prime/a5-game-context-server`                                                                                             |
+| `resources/icon-source/cocos-agent-1024.png`                  | 1024×1024 透明背景的图标原图                                                                                                                                                                                                                                                               |
+| `COCOS-AGENT.md`                                              | 本文件（上游 `.gitignore` 忽略了 `docs/`，所以放在根目录）                                                                                                                                                                                                                                 |
+| `COCOS-AGENT-PLAN.md`                                         | v0.1.0 路线和 loop 执行规则                                                                                                                                                                                                                                                                |
+| `src/main/cocos-agent/`                                       | 主进程 Cocos 编辑器服务：检测项目、调用 `a5-game-context editor open`、停止编辑器、退出 app 时停止本次启动的编辑器，以及对应的 IPC                                                                                                                                                         |
+| `src/shared/cocos-agent/`                                     | 主进程和渲染进程共用的类型、IPC 通道名、cocos-agent 自己的版本号 `COCOS_AGENT_VERSION`                                                                                                                                                                                                     |
+| `src/preload/cocos-agent-preload.ts`                          | 单独暴露 `window.cocosAgent`，不改上游的 `PreloadApi`                                                                                                                                                                                                                                      |
+| `src/renderer/src/cocos-agent/`                               | 渲染进程：Cocos 项目检测（按主机解析本地路径）、编辑器标签的打开/切换/停止、重启后恢复的编辑器标签换成可用的、编辑器服务空闲退出后标签自动重开、空工作区的首个界面、「+」菜单和左侧栏第一项的 Cocos Creator 入口、`window.cocosAgent` 的类型、侧栏终端的 store slice 与持久化、`cocosText` |
+| `src/shared/cocos-agent/i18n/`、`cocos-agent-i18n.ts`         | cocos-agent 自己的词条（en / zh / zh-Hant）和把它们挂到 `cocosAgent` 命名空间的 i18next 模块                                                                                                                                                                                               |
+| `src/main/cocos-agent/sidebar-terminal-store.ts`              | 侧栏终端归属的持久化文件 `userData/cocos-agent/sidebar-terminals.json`；首次运行把右侧栏默认到「终端」、宽 420                                                                                                                                                                             |
+| `config/cocos-agent/upstream-base.json`                       | 上次合入的上游提交、内置 cocos 包版本、验证记录                                                                                                                                                                                                                                            |
+| `config/cocos-agent/upstream-touch-points.json`               | 改动过的上游文件登记表（机读）                                                                                                                                                                                                                                                             |
+| `config/scripts/cocos-agent/check-upstream-touch-points.mjs`  | 校验登记表与实际改动一致，`--write-doc` 生成下表                                                                                                                                                                                                                                           |
 
 ### 改动的上游文件（可能冲突）
 
@@ -43,7 +43,7 @@ cocos-agent 基于 [Orca](https://github.com/stablyai/orca)（MIT 协议，保�
 <!-- prettier-ignore-start -->
 | 文件 | 类型 | 改动 | 冲突时 |
 | --- | --- | --- | --- |
-| `.gitattributes` | 品牌 | 品牌二进制文件 merge=ours，共 6 行追加 | 保留上游改动，重新追加这几行 |
+| `.gitattributes` | 品牌 | 品牌二进制文件与 logo.svg merge=ours，共 7 行追加 | 保留上游改动，重新追加这几行 |
 | `.gitignore` | 品牌 | 忽略 /.context-engine/；docs/cocos-agent、docs/specs 白名单，共 5 行追加 | 保留上游改动，重新追加这几行 |
 | `config/packaged-runtime-node-modules.cjs` | 待回馈上游 | 用 Node 的 isBuiltin 识别 node:sqlite 等内置模块 | 上游若已改用 isBuiltin 则取上游版本 |
 | `config/scripts/check-changed-selection.mjs` | 挂点 | VERIFY_CHECKS 增加 cocos-agent upstream touch points 一项（6 行） | 保留上游改动，重新加上这一项 |
@@ -55,6 +55,8 @@ cocos-agent 基于 [Orca](https://github.com/stablyai/orca)（MIT 协议，保�
 | `resources/darwin/bin/orca` | 待回馈上游 | ELECTRON= 从 Info.plist 读可执行文件名（1 行） | 保留读取 Info.plist 的写法 |
 | `resources/icon-dev.png` | 品牌 | cocos-agent 图标 | merge=ours 自动取我方；否则 git checkout --ours |
 | `resources/icon.png` | 品牌 | cocos-agent 图标 | merge=ours 自动取我方；否则 git checkout --ours |
+| `resources/logo.svg` | 品牌 | cocos-agent 吉祥物（白色字形、透明底，内嵌 PNG），落地页、标题栏、引导页、设置图标共用 | merge=ours 自动取我方；否则 git checkout --ours |
+| `src/main/github/client/fetch/orca-star.ts` | 品牌 | import + ORCA_REPO 改为 COCOS_AGENT_GITHUB_REPO：加星标与检测改查 a5-game-context-server（2 行） | 保留上游改动，常量改回 COCOS_AGENT_GITHUB_REPO 并加 import |
 | `src/main/ipc/pty/spawn-options-assembly.ts` | 挂点 | import + 在 pluginDir 之前给 openCodeLaunch.command 注入 Cocos MCP（10 行追加，不改上游行） | 保留上游改动，把这段追加放回 env 之后、pluginDir 之前 |
 | `src/main/persistence/applying-settings/ui-selection-normalization.ts` | 枚举 | normalizeRightSidebarTab 接受 'terminal'（1 行） | 保留上游改动，重新加上这一行 |
 | `src/main/runtime/agent-session/records/agent-session-record-rows.ts` | 待回馈上游 | SQLite 返回含 NUL 的 operation_key 会被截断：按 BLOB 读取并核对 | 上游若已修则取上游版本 |
@@ -68,12 +70,20 @@ cocos-agent 基于 [Orca](https://github.com/stablyai/orca)（MIT 协议，保�
 | `src/main/updater/updater-service.ts` | 挂点 | new UpdaterSetup() 换成 new CocosAgentUpdaterSetup() 并调整 import | 保留上游改动，重新换成 CocosAgentUpdaterSetup |
 | `src/preload/index.ts` | 挂点 | import './cocos-agent-preload'（1 行） | 保留上游改动，重新加上这 1 行 |
 | `src/renderer/index.html` | 品牌 | <title> | 保留上游其他改动，标题改回 cocos-agent |
+| `src/renderer/src/app-shell/TitlebarLeftControls.tsx` | 待回馈上游 | 左侧标题栏收窄时让名称为导航按钮腾出空间 | 保留上游改动，确认窄侧栏仍能操作导航按钮 |
 | `src/renderer/src/app-shell/use-onboarding-and-feature-tips.ts` | 挂点 | 有 cocos-agent preload 时跳过全局 CLI 安装探测与引导 | 保留上游改动，重新加上条件 |
+| `src/renderer/src/assets/main.css` | 待回馈上游 | 展开的标题栏跟随侧栏宽度，窄栏内省略过长名称 | 保留上游改动，重新约束标题栏宽度并保留名称省略 |
 | `src/renderer/src/components/browser-pane/assemble-chrome/browser-page-chrome-header.tsx` | 挂点 | import + const Toolbar 组件替换：Cocos 编辑器页不渲染浏览器工具栏（4 行） | 保留上游改动，重新加上 Toolbar 常量并把标签改回 <Toolbar |
 | `src/renderer/src/components/browser-pane/assemble-chrome/browser-workspace-pane.tsx` | 挂点 | import + useCocosEditorSuspended：暂停的编辑器显示恢复视图（7 行） | 保留上游改动，重新加上 hook 与早退 |
+| `src/renderer/src/components/Landing.tsx` | 品牌 | import + ORCA_GITHUB_URL 改为 COCOS_AGENT_GITHUB_URL（2 行） | 保留上游改动，常量改回 COCOS_AGENT_GITHUB_URL 并加 import |
 | `src/renderer/src/components/right-sidebar/right-sidebar-panel-content.tsx` | 挂点 | lazy import + effectiveTab === 'terminal' 渲染 SidebarTerminalPanel（2 行） | 保留上游改动，重新加上这 2 行 |
 | `src/renderer/src/components/right-sidebar/use-right-sidebar-activity-items.ts` | 挂点 | import + 活动栏增加 terminal 项（8 行） | 保留上游改动，重新加上这一项 |
 | `src/renderer/src/components/settings/general/GeneralPane.tsx` | 挂点 | 有 cocos-agent preload 时隐藏原版 CLI 安装入口（1 行） | 保留上游改动，重新加上条件 |
+| `src/renderer/src/components/settings/general/GeneralSupportSection.tsx` | 品牌 | import + ORCA_GITHUB_URL 改为 COCOS_AGENT_GITHUB_URL（2 行） | 保留上游改动，常量改回 COCOS_AGENT_GITHUB_URL 并加 import |
+| `src/renderer/src/components/sidebar/SidebarNav.tsx` | 挂点 | import + 导航列表第一项插入 CocosCreatorSidebarEntry（2 行） | 保留上游改动，重新加上 import，并把 <CocosCreatorSidebarEntry /> 放回导航容器的第一个子元素 |
+| `src/renderer/src/components/star-nag/StarNagToastHost.test.tsx` | 品牌 | 网页回退断言改为 a5-game-context-server 地址 | 随 StarNagToastHost.tsx 处理，断言保持 a5-game-context-server 地址 |
+| `src/renderer/src/components/star-nag/StarNagToastHost.tsx` | 品牌 | import + ORCA_REPO_URL 改为 COCOS_AGENT_GITHUB_URL（2 行） | 保留上游改动，常量改回 COCOS_AGENT_GITHUB_URL 并加 import |
+| `src/renderer/src/components/StarNagCard.tsx` | 品牌 | import + ORCA_REPO_URL 改为 COCOS_AGENT_GITHUB_URL（2 行） | 保留上游改动，常量改回 COCOS_AGENT_GITHUB_URL 并加 import |
 | `src/renderer/src/components/tab-bar/tab-bar-static-create-menu.tsx` | 挂点 | import + 两种菜单顺序各插 1 行 CocosEditorMenuItems（3 行） | 保留上游改动，重新加上这 3 行（New Browser Tab 之后） |
 | `src/renderer/src/components/tab-bar/use-tab-bar-item-projection.ts` | 挂点 | import + useCentralTerminalTabs：标签栏只投影中央终端（4 行） | 保留上游改动，重新加上 hook 并让 terminalMap/terminalIds 用 centralTabs |
 | `src/renderer/src/components/terminal-pane/TerminalOverlaySlot.tsx` | 挂点 | inline 模式：侧栏内渲染、焦点归属、关闭时保留工作区选择（第二阶段改为 portal） | 保留上游改动，重新加上 inline 分支 |
@@ -96,7 +106,7 @@ cocos-agent 基于 [Orca](https://github.com/stablyai/orca)（MIT 协议，保�
 | `src/shared/rpc-contract/client-ui-params.ts` | 枚举 | STATIC_RIGHT_SIDEBAR_TABS 加 'terminal'（1 行） | 保留上游改动，重新加上这一行 |
 | `src/shared/ui-chrome-types.ts` | 枚举 | RightSidebarTab 加 'terminal'（1 行） | 保留上游改动，重新加上这一行 |
 
-共 52 个上游文件。由 `node config/scripts/cocos-agent/check-upstream-touch-points.mjs --write-doc` 生成，请改 `config/cocos-agent/upstream-touch-points.json`。
+共 62 个上游文件。由 `node config/scripts/cocos-agent/check-upstream-touch-points.mjs --write-doc` 生成，请改 `config/cocos-agent/upstream-touch-points.json`。
 
 自有文件中复制自上游的逻辑（上游改了来源时要对比）：
 

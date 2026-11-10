@@ -60,6 +60,31 @@ export function suspendCocosEditor(record: CocosEditorRecord): void {
       destroyWorkspaceWebviews(state.browserPagesByWorkspace, tab.tabId)
     }
   }
+  resumeVisibleCocosEditor()
+}
+
+/** The suspended editor in the tab on screen starts again; one in a background workspace waits until it is selected. */
+export function resumeVisibleCocosEditor(): void {
+  const state = useAppStore.getState()
+  const worktreeId = state.activeWorktreeId
+  const tabId = state.activeBrowserTabId
+  if (
+    !worktreeId ||
+    state.activeTabType !== 'browser' ||
+    !tabId ||
+    !isCocosEditorSuspended(tabId)
+  ) {
+    return
+  }
+  const projectPath = localCocosWorkspacePath(state, worktreeId)
+  if (!projectPath) {
+    return
+  }
+  void openCocosEditorTab(worktreeId, projectPath, { focus: 'unchanged' }).then((outcome) => {
+    if (outcome.kind === 'failed') {
+      toast.error(outcome.message)
+    }
+  })
 }
 
 /**
@@ -230,18 +255,19 @@ export function hasCocosEditorTab(state: AppState, worktreeId: string): boolean 
   )
 }
 
-/** The + menu's Cocos Creator entry: back to this session's editor tab, else a restored or new one. */
+/** The + menu's and the sidebar's Cocos Creator entry: back to this session's editor tab, else a restored or new one. */
 export async function focusOrOpenCocosEditor(
   worktreeId: string,
   projectPath: string
 ): Promise<void> {
+  // Why: activation probes the editor first; one that has exited comes back evicted, so its tab reopens it below.
+  await cocosAgentApi()
+    ?.activateEditor(projectPath)
+    .catch(() => undefined)
   const state = useAppStore.getState()
   const existingTabId = findCocosEditorTabId(state, worktreeId)
   if (existingTabId && !isCocosEditorSuspended(existingTabId)) {
     state.setActiveBrowserTab(existingTabId, worktreeId)
-    void cocosAgentApi()
-      ?.activateEditor(projectPath)
-      .catch(() => undefined)
     await refreshCocosEditorTabBindings(worktreeId, projectPath, existingTabId)
     return
   }

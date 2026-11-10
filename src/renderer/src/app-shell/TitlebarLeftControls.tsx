@@ -36,7 +36,7 @@ export function TitlebarLeftControls({ layout }: { layout: AppChromeLayout }): R
         layout.leftTitlebarChromeLayout.isFloating ? ' w-max' : ' w-full'
       }`}
     >
-      <div className="flex h-full items-center">
+      <div className="flex h-full min-w-0 items-center">
         {hasMacTrafficLights && !layout.isFullScreen ? (
           <div className="titlebar-traffic-light-pad" />
         ) : hasCustomTitleBar ? (
@@ -106,7 +106,7 @@ export function TitlebarLeftControls({ layout }: { layout: AppChromeLayout }): R
       {/* Show shared workspace/page history wherever its shortcut is available. */}
       {shouldShowWorktreeHistoryControls(layout.activeView) && (
         // Collapsed headers shrink-wrap, so ml-auto alone cannot leave a history-button gutter.
-        <div className="ml-auto mr-3 flex items-center pl-2">
+        <div className="ml-auto mr-3 flex shrink-0 items-center pl-2 @max-3xs/sidebar-titlebar:mr-1 @max-3xs/sidebar-titlebar:pl-0">
           <Tooltip>
             <TooltipTrigger asChild>
               <button

@@ -10,7 +10,7 @@ const state = vi.hoisted(() => ({
 const app = new EventEmitter()
 Object.assign(app, { quit: state.quit })
 vi.mock('electron', () => ({ app }))
-vi.mock('./cocos-editor-service', () => ({ cocosEditorService: state }))
+vi.mock('./cocos-editor-service-instance', () => ({ cocosEditorService: state }))
 
 beforeEach(() => {
   app.removeAllListeners()

@@ -1,5 +1,23 @@
 {
+  "editor": {
+    "menu": {
+      "goTo": "前往 Cocos Creator",
+      "open": "Cocos Creator",
+      "stop": "停止 Cocos Creator"
+    },
+    "errors": {
+      "reopen": "無法重新開啟 Cocos Creator 編輯器",
+      "open": "無法開啟 Cocos Creator 編輯器",
+      "unsupportedVersion": "cocos-agent 的編輯器只支援 Cocos Creator 2.4 專案，此專案使用 {{version}}。"
+    },
+    "suspended": "此編輯器已暫停以釋放記憶體。",
+    "resuming": "正在恢復編輯器…",
+    "resume": "恢復 Cocos Creator"
+  },
   "sidebar": {
+    "creator": {
+      "unavailable": "選擇一個 Cocos Creator 2.4 專案工作區後即可開啟編輯器。"
+    },
     "terminal": {
       "moveExisting": "移入現有終端",
       "title": "終端機",

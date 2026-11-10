@@ -34,6 +34,9 @@
     }
   },
   "sidebar": {
+    "creator": {
+      "unavailable": "Select a Cocos Creator 2.4 project workspace to open its editor."
+    },
     "terminal": {
       "createFailed": "Could not open the terminal. Check the workspace connection and agent settings.",
       "newSession": "New session",

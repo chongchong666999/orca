@@ -1,7 +1,7 @@
 {
-  "version": "3.8.281",
+  "version": "3.8.282",
   "target": "darwin-arm64",
-  "file": "a5-game-context-3.8.281-darwin-arm64.tgz",
-  "sha256": "e26743a8133ad39de475522a638202bfd29765e7b4142f2a80aff3bbe87a14f5",
-  "source": "GitNexus feature/node-editor-view 9b802b337 local 3.8.281 macOS arm64 release: prefabs follow branch switches, asset sync waits for git"
+  "file": "a5-game-context-3.8.282-darwin-arm64.tgz",
+  "sha256": "61e1572814323eac80f2e386edbeaa72a7407ad5a721b48bc2fead84c1a02ecd",
+  "source": "GitNexus feature/node-editor-view bf999e0f4 local 3.8.282 macOS arm64 release: the editor footer says when files changed on disk were synced"
 }

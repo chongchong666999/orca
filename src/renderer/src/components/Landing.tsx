@@ -18,6 +18,7 @@ import { hasGitHubBackedProject, type PreflightIssue } from './landing-preflight
 import { useLandingPreflightRuntime } from './landing-preflight-runtime'
 import { useLandingOrcaStarState, type LandingStarState } from './landing-github-star-state'
 import { openAppHttpLink } from '@/lib/app-http-link-open'
+import { COCOS_AGENT_GITHUB_URL } from '../../../shared/cocos-agent-brand'
 
 type ShortcutItem = {
   id: string
@@ -26,7 +27,7 @@ type ShortcutItem = {
 }
 
 // Do not deep-link to /stargazers: GitHub 404s that page for users without repo write access.
-const ORCA_GITHUB_URL = 'https://github.com/stablyai/orca'
+const ORCA_GITHUB_URL = COCOS_AGENT_GITHUB_URL
 
 type StarButtonProps = {
   hasRepos: boolean

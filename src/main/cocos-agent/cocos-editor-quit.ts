@@ -1,5 +1,5 @@
 import { app } from 'electron'
-import { cocosEditorService } from './cocos-editor-service'
+import { cocosEditorService } from './cocos-editor-service-instance'
 
 let installed = false
 

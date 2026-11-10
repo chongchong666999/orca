@@ -14,7 +14,7 @@ import {
   reportCocosEditorCloseFailure
 } from './cocos-editor-close'
 import { stopAppStartedEditorsOnQuit } from './cocos-editor-quit'
-import { cocosEditorService, onCocosEditorEvicted } from './cocos-editor-service'
+import { cocosEditorService, onCocosEditorEvicted } from './cocos-editor-service-instance'
 import { detectCocosProject, findCocosEditorForWorkspace } from './cocos-project-detection'
 import { readSidebarTerminalRecord, writeSidebarTerminalRecord } from './sidebar-terminal-store'
 
