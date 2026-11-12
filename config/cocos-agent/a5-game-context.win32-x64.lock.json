@@ -1,7 +1,0 @@
-{
-  "version": "5.0.0",
-  "target": "win32-x64",
-  "file": "a5-game-context-5.0.0-win32-x64.tgz",
-  "sha256": "69ac994cb0abccc38b966cef22994d27824e1808f87f75139471ec3c7fbdaec0",
-  "source": "GitNexus release v5.0.0 (CI-built win32-x64 native engine)"
-}

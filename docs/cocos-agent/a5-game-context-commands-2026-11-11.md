@@ -31,7 +31,11 @@ cocos-agent 自己开的终端早已把 `Resources/bin` 放在 PATH 最前（`sr
 
 ### 一个版本
 
-`config/scripts/import-a5-game-context.mjs` 按平台读取 lock：darwin-arm64 用 `a5-game-context.lock.json`，其他平台用 `a5-game-context.<target>.lock.json`。任何平台的 lock 版本必须与 darwin-arm64 相同，否则导入直接失败。
+2026-11-12 起，`config/cocos-agent/a5-game-context.lock.json` 只锁定一个文件：GitNexus CI 发布流程（`publish.yml` 的 offline-bundle job）产出的全平台离线包，目前是 v5.0.1，sha256 `1111497d…`。`targets` 字段列出这个包服务的平台：darwin-arm64、win32-x64。
+
+导入时，`import-a5-game-context.mjs --target <平台>` 先校验 sha256 和该平台的必需文件，再删掉其他平台的原生包和 resvg 原生模块。每个应用只带自己平台的二进制：mac 约 184 MB，Windows 约 172 MB；整包是 353 MB。两个平台用的是同一个 CI 原件，版本天然一致。
+
+导入脚本仍支持单平台包：lock 里写 `target` 而不是 `targets`，其他平台另建 `a5-game-context.<target>.lock.json`，版本必须与 darwin-arm64 相同。
 
 ## 决策
 
@@ -42,23 +46,17 @@ cocos-agent 自己开的终端早已把 `Resources/bin` 放在 PATH 最前（`sr
 | 不替换别人的命令                            | 用户自己装的同名工具可能有用；挡住内置版本时只在日志里说明。                                                                            |
 | Windows 用单独的 `a5-game-context-bin` 目录 | `resources\bin` 里还有 cocos-agent 自己的 `orca`，整体放进 PATH 会和真正的 Orca 抢 `orca` 命令。                                        |
 | Windows 保留 `Orca.exe` 这个可执行文件名    | `native/windows-cli-launcher` 写死了要找 `Orca.exe`，改名会让 cocos-agent 自带的 `orca` 命令失效。                                      |
+| 锁定 CI 的全平台包，导入时按平台裁剪        | 整包放进每个应用会多出约 170 MB 其他平台的二进制；本地拆开重新打包，sha 就不再是 CI 原件，还要多管一个文件。裁剪只需要改导入脚本。      |
 | 不改 Codex 等工具的配置                     | 那是用户自己的配置；插件和 hook 走 PATH，已经覆盖。Codex 里写死旧路径的，需要用户自己改成 PATH 上的命令。                               |
 
 ## Windows 现状与阻塞
 
-orca 侧的代码、启动脚本、打包配置和卸载清理都已完成。真正产出可用的 Windows 安装包还卡在 GitNexus 和构建环境上：
+orca 侧的代码、启动脚本、打包配置和卸载清理都已完成。v5.0.1 的全平台包里已经有 CI 编译的 win32-x64 原生引擎：含 `a5-game-context 5.0.1` 字样，附带 VC 运行库和 `lbug_shared.dll`。剩下两项：
 
-1. **没有 3.8.285 的 win32-x64 包。** 原生引擎只能在 CI 的 Windows runner 上编译（`.github/workflows/build-native-artifacts.yml`，job “Native binary (win32-x64)”）。本机 `native-engine/bin/win32-x64/a5-game-context.exe` 停在 3.8.0。
-2. **在 mac 上为 Windows 打包时，脚本不校验 exe 的版本。** 打包前需要手动确认 exe 里有 `a5-game-context 3.8.285` 字样。
-3. **GitNexus 编辑器官方只支持 macOS**（产品规格 D-08），Windows 上的 `editor serve/open` 从未测试过。命令行和 MCP 的图谱工具与编辑器无关。
-4. **cocos-agent 的 Windows 安装包从未构建过。** 构建要在 Windows 机器上运行，并依赖 Orca 的 Windows 原生产物。
+1. **GitNexus 编辑器官方只支持 macOS**（产品规格 D-08），Windows 上的 `editor serve/open` 从未测试过。命令行和 MCP 的图谱工具与编辑器无关。
+2. **cocos-agent 的 Windows 安装包从未构建过。** 构建要在 Windows x64 机器上运行，并依赖 Orca 的 Windows 原生产物。
 
-产出 Windows 包的步骤：
-
-1. 在 3.8.285 的 GitNexus 提交上触发 `build-native-artifacts.yml`，下载 `native-engine-win32-x64`，放进 `context-engine/native-engine/bin/win32-x64/`。
-2. 在 `context-engine` 目录运行 `node scripts/prepare-platform-bundle.mjs --target win32-x64`，得到 `release/a5-game-context-3.8.285-win32-x64.tgz` 及 `.sha256`。
-3. 在 orca 新增 `config/cocos-agent/a5-game-context.win32-x64.lock.json`，字段与 mac 的 lock 相同，`target` 为 `win32-x64`，版本必须一致。
-4. 在 Windows 上运行 `node config/scripts/build-cocos-agent-win.mjs --release`，安装后打开一次，再新开一个终端执行 `a5-game-context --version`。
+在 Windows 上的步骤：把 lock 指向的全平台包放到 `..\GitNexus\context-engine\release\`，或设置 `A5_GAME_CONTEXT_TARBALL` 指向它；运行 `node config/scripts/build-cocos-agent-win.mjs --release`；安装后打开一次，再新开一个终端执行 `a5-game-context --version`。
 
 ## 验证
 

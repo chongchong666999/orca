@@ -2,7 +2,6 @@
 const base = require('./electron-builder.config.cjs')
 const { existsSync } = require('node:fs')
 const path = require('node:path')
-const lock = require('./cocos-agent/a5-game-context.lock.json')
 
 const COCOS_AGENT_NAME = 'cocos-agent-beta'
 // The a5-game-context package and the editor's preparation script, at the same place on every platform.
@@ -99,7 +98,7 @@ module.exports = {
         `${context.packager.appInfo.productFilename}.app`,
         'Contents/Resources/a5-game-context'
       ),
-      lock
+      (await import('./scripts/import-a5-game-context.mjs')).readA5GameContextLock('darwin-arm64')
     )
   },
   // Packaged package.json name drives Electron's default userData, keeping the official Orca profile untouched.

@@ -1,6 +1,14 @@
 import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync
+} from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
@@ -99,6 +107,62 @@ describe('readA5GameContextLock', () => {
       )
     } finally {
       rmSync(directory, { recursive: true, force: true })
+    }
+  })
+})
+
+describe('an all-platform package', () => {
+  it("serves every listed target from one pin and keeps only that target's native packages", () => {
+    const work = mkdtempSync(path.join(os.tmpdir(), 'a5-all-platform-'))
+    try {
+      const packageDir = path.join(work, 'src', 'package')
+      const entries = new Set([
+        ...requiredPackageEntries({ target: 'darwin-arm64' }),
+        ...requiredPackageEntries({ target: 'win32-x64' }),
+        'node_modules/@a5labs-prime/a5-game-context-darwin-x64/package.json',
+        'node_modules/@resvg/resvg-js-darwin-x64/package.json'
+      ])
+      for (const entry of entries) {
+        mkdirSync(path.dirname(path.join(packageDir, entry)), { recursive: true })
+        writeFileSync(path.join(packageDir, entry), '')
+      }
+      writeFileSync(path.join(packageDir, 'package.json'), '{"version":"5.0.1"}')
+      const tarball = path.join(work, 'all.tgz')
+      execFileSync('tar', ['-czf', tarball, '-C', path.join(work, 'src'), 'package'])
+      const locks = path.join(work, 'locks')
+      mkdirSync(locks)
+      writeFileSync(
+        path.join(locks, 'a5-game-context.lock.json'),
+        JSON.stringify({
+          version: '5.0.1',
+          targets: ['darwin-arm64', 'win32-x64'],
+          sha256: createHash('sha256').update(readFileSync(tarball)).digest('hex')
+        })
+      )
+      const targetDir = path.join(work, 'installed')
+      const kept = () => [
+        ...readdirSync(path.join(targetDir, 'node_modules/@a5labs-prime')),
+        ...readdirSync(path.join(targetDir, 'node_modules/@resvg'))
+      ]
+      const install = (target) =>
+        importA5GameContext({ lock: readA5GameContextLock(target, locks), tarball, targetDir })
+
+      expect(install('win32-x64')).toBe('imported')
+      expect(kept().sort()).toEqual([
+        'a5-game-context-win32-x64',
+        'cocos-cli',
+        'resvg-js-win32-x64-msvc'
+      ])
+      expect(install('darwin-arm64')).toBe('imported')
+      expect(kept().sort()).toEqual([
+        'a5-game-context-darwin-arm64',
+        'cocos-cli',
+        'resvg-js-darwin-arm64'
+      ])
+      expect(install('darwin-arm64')).toBe('unchanged')
+      expect(() => readA5GameContextLock('darwin-x64', locks)).toThrow(/pins no darwin-x64 package/)
+    } finally {
+      rmSync(work, { recursive: true, force: true })
     }
   })
 })

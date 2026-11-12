@@ -1,6 +1,8 @@
-// Unpacks the a5-game-context package pinned for a target (config/cocos-agent/a5-game-context.lock.json for
-// darwin-arm64, a5-game-context.<target>.lock.json otherwise) into resources/cocos-agent/a5-game-context/ for the
-// cocos-agent build (a local package, never downloaded). Usage: import-a5-game-context.mjs [--target win32-x64]
+// Unpacks the a5-game-context package pinned for a target into resources/cocos-agent/a5-game-context/ for the
+// cocos-agent build (a local package, never downloaded). config/cocos-agent/a5-game-context.lock.json pins either
+// GitNexus CI's all-platform offline bundle for every target it lists (`targets`), cut down to the target's native
+// packages on import, or a single-platform package (`target`, others in a5-game-context.<target>.lock.json).
+// Usage: import-a5-game-context.mjs [--target win32-x64]
 import { createHash } from 'node:crypto'
 import { spawnSync } from 'node:child_process'
 import {
@@ -40,6 +42,15 @@ function readJson(file) {
 /** The lock pinning `target`'s package; every target must pin the version darwin-arm64 does (one version everywhere). */
 export function readA5GameContextLock(target = DEFAULT_TARGET, directory = LOCK_DIR) {
   const primaryPath = path.join(directory, 'a5-game-context.lock.json')
+  const primaryLock = readJson(primaryPath)
+  if (Array.isArray(primaryLock.targets)) {
+    if (!primaryLock.targets.includes(target)) {
+      throw new Error(
+        `${path.relative(repoRoot, primaryPath)} pins no ${target} package (it serves ${primaryLock.targets.join(', ')})`
+      )
+    }
+    return { ...primaryLock, target }
+  }
   const lockPath =
     target === DEFAULT_TARGET
       ? primaryPath
@@ -53,10 +64,9 @@ export function readA5GameContextLock(target = DEFAULT_TARGET, directory = LOCK_
   if (lock.target !== target) {
     throw new Error(`${path.relative(repoRoot, lockPath)} pins ${lock.target}, not ${target}`)
   }
-  const primary = target === DEFAULT_TARGET ? lock : readJson(primaryPath)
-  if (lock.version !== primary.version) {
+  if (lock.version !== primaryLock.version) {
     throw new Error(
-      `a5-game-context ${target} is pinned at ${lock.version} but darwin-arm64 at ${primary.version}; pin the same version on every platform`
+      `a5-game-context ${target} is pinned at ${lock.version} but darwin-arm64 at ${primaryLock.version}; pin the same version on every platform`
     )
   }
   return lock
@@ -177,6 +187,22 @@ function replaceDirectory(source, target) {
   }
 }
 
+/** An all-platform package keeps only `target`'s native packages, as a single-platform one ships. */
+function keepOnlyTargetNatives(dir, target) {
+  for (const [other, resvg] of Object.entries(RESVG_SUFFIX)) {
+    if (other !== target) {
+      rmSync(path.join(dir, 'node_modules/@a5labs-prime', `a5-game-context-${other}`), {
+        recursive: true,
+        force: true
+      })
+      rmSync(path.join(dir, 'node_modules/@resvg', `resvg-js-${resvg}`), {
+        recursive: true,
+        force: true
+      })
+    }
+  }
+}
+
 function installedIntact(targetDir, lock) {
   const installed = readInstalledJson(path.join(targetDir, MARKER))
   return (
@@ -221,9 +247,12 @@ export function importA5GameContext({ lock, tarball, targetDir }) {
       if (problem) {
         throw new Error(`a5-game-context package ${tarball}: ${problem}`)
       }
+      if (Array.isArray(lock.targets)) {
+        keepOnlyTargetNatives(unpacked, lock.target)
+      }
       writeFileSync(
         path.join(unpacked, MARKER),
-        `${JSON.stringify({ version: lock.version, sha256: lock.sha256 }, null, 2)}\n`
+        `${JSON.stringify({ version: lock.version, sha256: lock.sha256, target: lock.target }, null, 2)}\n`
       )
       replaceDirectory(unpacked, targetDir)
     } finally {

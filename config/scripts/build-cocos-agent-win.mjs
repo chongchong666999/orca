@@ -1,5 +1,5 @@
 // Builds the Windows x64 cocos-agent on a Windows host: Orca's Windows build plus the a5-game-context package
-// pinned for win32-x64 (config/cocos-agent/a5-game-context.win32-x64.lock.json) and its launchers, which the app
+// config/cocos-agent/a5-game-context.lock.json pins for win32-x64 and its launchers, which the app
 // puts on the user PATH at launch. Usage: node config/scripts/build-cocos-agent-win.mjs [--skip-typecheck] [--release]
 import { execFileSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
