@@ -3,5 +3,9 @@
   "targets": ["darwin-arm64", "win32-x64"],
   "file": "a5labs-prime-a5-game-context-5.0.1-all-platform-offline-bundled.tgz",
   "sha256": "1111497d8bbe3f32b3ace9ab11bb13d5a1d2e98fc6e51c1e1b043b4d0b403a1c",
+  "release": {
+    "repo": "A5Labs-Prime/a5-game-context-server",
+    "tag": "v5.0.1"
+  },
   "source": "GitNexus v5.0.1 (671408781) all-platform offline bundle from publish.yml's offline-bundle job; each import keeps only its target's native packages"
 }

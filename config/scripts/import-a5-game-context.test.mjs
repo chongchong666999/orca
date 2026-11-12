@@ -13,6 +13,7 @@ import os from 'node:os'
 import path from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import {
+  downloadA5GameContext,
   importA5GameContext,
   readA5GameContextLock,
   requiredPackageEntries
@@ -163,6 +164,43 @@ describe('an all-platform package', () => {
       expect(() => readA5GameContextLock('darwin-x64', locks)).toThrow(/pins no darwin-x64 package/)
     } finally {
       rmSync(work, { recursive: true, force: true })
+    }
+  })
+})
+
+describe('downloadA5GameContext', () => {
+  it("fetches the pinned file from the lock's release with gh and says how to get access when gh fails", () => {
+    const directory = mkdtempSync(path.join(os.tmpdir(), 'a5-download-'))
+    try {
+      const lock = {
+        file: 'a5.tgz',
+        release: { repo: 'A5Labs-Prime/a5-game-context-server', tag: 'v5.0.1' }
+      }
+      const calls = []
+      downloadA5GameContext(lock, directory, (program, args) => {
+        calls.push([program, ...args])
+        return { status: 0 }
+      })
+      expect(calls).toEqual([
+        [
+          'gh',
+          'release',
+          'download',
+          'v5.0.1',
+          '--repo',
+          'A5Labs-Prime/a5-game-context-server',
+          '--pattern',
+          'a5.tgz',
+          '--dir',
+          directory,
+          '--clobber'
+        ]
+      ])
+      expect(() => downloadA5GameContext(lock, directory, () => ({ status: 1 }))).toThrow(
+        'could not download a5.tgz from A5Labs-Prime/a5-game-context-server v5.0.1: run gh auth login with an account that can read A5Labs-Prime/a5-game-context-server, or set A5_GAME_CONTEXT_TARBALL'
+      )
+    } finally {
+      rmSync(directory, { recursive: true, force: true })
     }
   })
 })

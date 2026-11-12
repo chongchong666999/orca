@@ -1,8 +1,9 @@
 // Unpacks the a5-game-context package pinned for a target into resources/cocos-agent/a5-game-context/ for the
-// cocos-agent build (a local package, never downloaded). config/cocos-agent/a5-game-context.lock.json pins either
+// cocos-agent build. config/cocos-agent/a5-game-context.lock.json pins either
 // GitNexus CI's all-platform offline bundle for every target it lists (`targets`), cut down to the target's native
 // packages on import, or a single-platform package (`target`, others in a5-game-context.<target>.lock.json).
-// Usage: import-a5-game-context.mjs [--target win32-x64]
+// The package is internal: it is never committed (this fork is public). Without a local copy the import downloads it
+// from the lock's private GitHub release with gh. Usage: import-a5-game-context.mjs [--target win32-x64]
 import { createHash } from 'node:crypto'
 import { spawnSync } from 'node:child_process'
 import {
@@ -23,12 +24,50 @@ const DEFAULT_TARGET = 'darwin-arm64'
 export const TARGET_DIR = path.join(repoRoot, 'resources/cocos-agent/a5-game-context')
 const MARKER = '.cocos-agent-package.json'
 
-/** `A5_GAME_CONTEXT_TARBALL`, else GitNexus's `npm run pack:platform` output beside this checkout. */
+/** Git-ignored home of a package downloaded from the lock's release. */
+export const DOWNLOAD_DIR = 'resources/cocos-agent/a5-game-context-tarballs'
+
+/** `A5_GAME_CONTEXT_TARBALL`, else GitNexus's release output beside this checkout, else the download folder. */
 export function defaultTarballPath(lock, env = process.env, root = repoRoot) {
-  return (
-    env.A5_GAME_CONTEXT_TARBALL ||
-    path.resolve(root, '..', 'GitNexus', 'context-engine', 'release', lock.file)
+  if (env.A5_GAME_CONTEXT_TARBALL) {
+    return env.A5_GAME_CONTEXT_TARBALL
+  }
+  const gitNexusRelease = path.resolve(
+    root,
+    '..',
+    'GitNexus',
+    'context-engine',
+    'release',
+    lock.file
   )
+  return existsSync(gitNexusRelease) ? gitNexusRelease : path.join(root, DOWNLOAD_DIR, lock.file)
+}
+
+/** Fetches the pinned package from the lock's private GitHub release into `directory` (gh with access to the repo). */
+export function downloadA5GameContext(lock, directory, run = spawnSync) {
+  const { repo, tag } = lock.release ?? {}
+  if (!repo || !tag) {
+    throw new Error(`${lock.file} is not here and the lock names no release to download it from`)
+  }
+  mkdirSync(directory, { recursive: true })
+  const args = [
+    'release',
+    'download',
+    tag,
+    '--repo',
+    repo,
+    '--pattern',
+    lock.file,
+    '--dir',
+    directory,
+    '--clobber'
+  ]
+  const result = run('gh', args, { stdio: 'inherit' })
+  if (result.status !== 0) {
+    throw new Error(
+      `could not download ${lock.file} from ${repo} ${tag}: run gh auth login with an account that can read ${repo}, or set A5_GAME_CONTEXT_TARBALL`
+    )
+  }
 }
 
 function sha256File(file) {
@@ -265,11 +304,15 @@ export function importA5GameContext({ lock, tarball, targetDir }) {
 if (process.argv[1] && path.resolve(process.argv[1]) === import.meta.filename) {
   const targetFlag = process.argv.indexOf('--target')
   const lock = readA5GameContextLock(targetFlag > 0 ? process.argv[targetFlag + 1] : DEFAULT_TARGET)
-  const status = importA5GameContext({
-    lock,
-    tarball: defaultTarballPath(lock),
-    targetDir: TARGET_DIR
-  })
+  const tarball = defaultTarballPath(lock)
+  if (
+    !installedIntact(TARGET_DIR, lock) &&
+    !existsSync(tarball) &&
+    !process.env.A5_GAME_CONTEXT_TARBALL
+  ) {
+    downloadA5GameContext(lock, path.dirname(tarball))
+  }
+  const status = importA5GameContext({ lock, tarball, targetDir: TARGET_DIR })
   console.log(
     `[a5-game-context] ${status === 'unchanged' ? 'already imported' : 'imported'} ${lock.version} (${lock.target}) into ${path.relative(repoRoot, TARGET_DIR)}`
   )

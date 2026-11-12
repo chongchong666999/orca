@@ -1,5 +1,6 @@
-# Unpacked by config/scripts/import-a5-game-context.mjs from the package pinned in config/cocos-agent/a5-game-context.lock.json.
+# Unpacked (and, without a local copy, downloaded) by config/scripts/import-a5-game-context.mjs for the lock in config/cocos-agent.
 a5-game-context/
 a5-game-context.previous-*/
 a5-game-context.lock/
 .a5-game-context-*/
+a5-game-context-tarballs/

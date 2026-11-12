@@ -35,6 +35,12 @@ cocos-agent 自己开的终端早已把 `Resources/bin` 放在 PATH 最前（`sr
 
 导入时，`import-a5-game-context.mjs --target <平台>` 先校验 sha256 和该平台的必需文件，再删掉其他平台的原生包和 resvg 原生模块。每个应用只带自己平台的二进制：mac 约 184 MB，Windows 约 172 MB；整包是 353 MB。两个平台用的是同一个 CI 原件，版本天然一致。
 
+这个包是 A5Labs-Prime 的内部包，不提交进 orca 仓库，因为这个 fork 是公开的。2026-11-12 曾尝试用 Git LFS 提交，GitHub 拒绝了：公开 fork 不能上传新的 LFS 对象。即使能上传，也会让任何人都能下载到这个包。
+
+包按以下顺序查找：环境变量 `A5_GAME_CONTEXT_TARBALL`，旁边 GitNexus 的 `context-engine/release/`，被 git 忽略的 `resources/cocos-agent/a5-game-context-tarballs/`。三处都没有时，导入会用 `gh release download` 从 lock 里 `release` 指定的私有仓库和 tag 下载到最后这个文件夹，再校验 sha256。下载需要先 `gh auth login`，账号要能读 A5Labs-Prime/a5-game-context-server。这个私有 Release 上要有这个文件。
+
+升级版本的做法：把新的全平台包上传到对应 tag 的 Release，然后更新 lock 里的 `version`、`file`、`sha256` 和 `release.tag`。
+
 导入脚本仍支持单平台包：lock 里写 `target` 而不是 `targets`，其他平台另建 `a5-game-context.<target>.lock.json`，版本必须与 darwin-arm64 相同。
 
 ## 决策
@@ -56,7 +62,7 @@ orca 侧的代码、启动脚本、打包配置和卸载清理都已完成。v5.
 1. **GitNexus 编辑器官方只支持 macOS**（产品规格 D-08），Windows 上的 `editor serve/open` 从未测试过。命令行和 MCP 的图谱工具与编辑器无关。
 2. **cocos-agent 的 Windows 安装包从未构建过。** 构建要在 Windows x64 机器上运行，并依赖 Orca 的 Windows 原生产物。
 
-在 Windows 上的步骤：把 lock 指向的全平台包放到 `..\GitNexus\context-engine\release\`，或设置 `A5_GAME_CONTEXT_TARBALL` 指向它；运行 `node config/scripts/build-cocos-agent-win.mjs --release`；安装后打开一次，再新开一个终端执行 `a5-game-context --version`。
+在 Windows 上的步骤：先 `gh auth login`，账号要能读 A5 私有仓库，导入时会自动下载这个包；然后运行 `node config/scripts/build-cocos-agent-win.mjs --release`；安装后打开一次，再新开一个终端执行 `a5-game-context --version`。
 
 ## 验证
 
