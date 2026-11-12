@@ -1,7 +1,7 @@
 {
-  "version": "3.8.285",
+  "version": "5.0.0",
   "target": "darwin-arm64",
-  "file": "a5-game-context-3.8.285-darwin-arm64.tgz",
-  "sha256": "663e34a187918f0fe9218c931608ef6a4b697fe4a453f637d280f20fa0d7feff",
-  "source": "GitNexus feature/node-editor-view 66728f428 local 3.8.285 macOS arm64 release: the footer shows the last sync time on every page load"
+  "file": "a5-game-context-5.0.0-darwin-arm64.tgz",
+  "sha256": "e409ac76e275b7f9c6a96cfde46c2ab1c704ef59ef4c4ad1ad85db892532ed4e",
+  "source": "GitNexus release v5.0.0 (CI-built darwin-arm64 native engine)"
 }
