@@ -17,6 +17,17 @@ export type CocosEditorBinding = {
 
 const notifiedLegacyProjects = new Set<string>()
 
+/** GitNexus reports Windows roots in their `\\?\` form, which Node's realpath never returns. */
+function isSameProjectRoot(reported: string, projectRoot: string): boolean {
+  if (process.platform !== 'win32') {
+    return reported === projectRoot
+  }
+  return (
+    path.win32.toNamespacedPath(reported).toLowerCase() ===
+    path.win32.toNamespacedPath(projectRoot).toLowerCase()
+  )
+}
+
 export function registerCocosEditorBinding(
   file: string,
   binding: CocosEditorBinding,
@@ -103,7 +114,7 @@ export async function readCocosEditorBinding(
   if (
     bindingError ||
     !parsed.success ||
-    parsed.data.projectRoot !== editor.projectRoot ||
+    !isSameProjectRoot(parsed.data.projectRoot, editor.projectRoot) ||
     !parsed.data.capabilities.includes('editor-context-v1')
   ) {
     const detail = bindingError ?? '版本不匹配'
