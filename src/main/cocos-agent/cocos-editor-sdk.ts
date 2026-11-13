@@ -1,11 +1,12 @@
 import path from 'node:path'
 import { runProcess } from '@orca/process-host'
+import { bundledA5GameContextLauncher } from './a5-game-context-binary'
 
 let preparation: Promise<void> | undefined
 
 export function prepareBundledCocosSdk(binary: string): Promise<void> {
   const resources = process.resourcesPath
-  if (!resources || binary !== path.join(resources, 'bin', 'a5-game-context')) {
+  if (!resources || binary !== bundledA5GameContextLauncher(resources)) {
     return Promise.resolve()
   }
   preparation ??= runProcess({

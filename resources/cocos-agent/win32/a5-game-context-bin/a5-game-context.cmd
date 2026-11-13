@@ -16,5 +16,7 @@ set "A5_NODE_BINARY=%ELECTRON%"
 set "A5_GAME_CONTEXT_PACKAGE_ROOT=%PACKAGE_ROOT%"
 REM Why: options set for the user's own Node may not be valid for Electron's.
 set "NODE_OPTIONS="
+REM Why: the native preview compiler finds its SDK cache under HOME, which Windows does not set.
+if not defined HOME set "HOME=%USERPROFILE%"
 "%ELECTRON%" "%PACKAGE_ROOT%\dist\cli\index.js" %*
 exit /b %ERRORLEVEL%

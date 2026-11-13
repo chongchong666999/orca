@@ -20,6 +20,7 @@ import type { TerminalColdActivationController } from './terminal-cold-activatio
 import { selectParkedEquivalentMountTabIds } from './terminal/startup-terminal-tab-hold'
 import { ORCA_LAYOUT_OWNER_IS_MAIN } from '../../../shared/layout-owner-switch'
 import { createInitialTerminalThroughLayoutOwner } from '@/store/terminals/terminal-tab-create-through-layout-owner'
+import { openCocosEditorInEmptyWorkspace } from '@/cocos-agent/cocos-editor-workspace-surface'
 
 // Why shared: surfaces without watchable live tabs need no per-pass allocation.
 const NO_PARKED_TAB_IDS: ReadonlySet<string> = new Set()
@@ -255,10 +256,11 @@ export function useTerminalWatcherEffects(controller: TerminalWatcherController)
       )
       if (shouldAutoCreateInitialTerminal(renderableTabCount, activeWorktreeHasTerminalState)) {
         if (
-          ORCA_LAYOUT_OWNER_IS_MAIN &&
-          createInitialTerminalThroughLayoutOwner(useAppStore.getState, activeWorktreeId, () =>
-            createTab(activeWorktreeId, undefined, undefined, { pendingActivationSpawn: true })
-          )
+          openCocosEditorInEmptyWorkspace(activeWorktreeId, undefined, false) ||
+          (ORCA_LAYOUT_OWNER_IS_MAIN &&
+            createInitialTerminalThroughLayoutOwner(useAppStore.getState, activeWorktreeId, () =>
+              createTab(activeWorktreeId, undefined, undefined, { pendingActivationSpawn: true })
+            ))
         ) {
           return
         }
