@@ -77,6 +77,7 @@ export type BrowserTabPageState = {
 
 export type SetBrowserPageUrlOptions = {
   preserveLoadError?: boolean
+  preserveLoading?: boolean
 }
 
 export type ClosedBrowserWorkspaceSnapshot = {

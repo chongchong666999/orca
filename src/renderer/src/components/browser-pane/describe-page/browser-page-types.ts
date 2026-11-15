@@ -21,7 +21,7 @@ export type BrowserTabPageState = Partial<
 export type BrowserPageUrlSetter = (
   tabId: string,
   url: string,
-  options?: { preserveLoadError?: boolean }
+  options?: { preserveLoadError?: boolean; preserveLoading?: boolean }
 ) => void
 
 /** 'owned-target' panes answer only chords from their own overlay; '-focused' marks the one in the focused split. */

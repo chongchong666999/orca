@@ -129,7 +129,7 @@ export function createBrowserPageWebviewNavigationHandlers({
   const handleDidNavigate = (
     event: { url?: string; isMainFrame?: boolean },
     persistUrl = true,
-    preserveLoadError = false
+    options?: Parameters<BrowserPageUrlSetter>[2]
   ): void => {
     if (event.isMainFrame === false) {
       return
@@ -152,7 +152,7 @@ export function createBrowserPageWebviewNavigationHandlers({
       setAddressBarValue(toDisplayUrl(browserModelUrl))
     }
     if (persistUrl) {
-      onSetUrlRef.current(browserTabId, browserModelUrl, { preserveLoadError })
+      onSetUrlRef.current(browserTabId, browserModelUrl, options)
     }
     onUpdatePageStateRef.current(browserTabId, {
       title: webview.getTitle() || browserModelUrl,
@@ -189,13 +189,13 @@ export function createBrowserPageWebviewNavigationHandlers({
     }
     const preserveRecoveryError =
       activeLoadFailureRef.current?.code === BROWSER_GUEST_RECOVERY_ERROR_CODE
-    handleDidNavigate(event, true, preserveRecoveryError)
+    handleDidNavigate(event, true, { preserveLoadError: preserveRecoveryError })
   }
 
   const handleDidNavigateInPage = (event: { url?: string; isMainFrame?: boolean }): void => {
     const preserveRecoveryError =
       activeLoadFailureRef.current?.code === BROWSER_GUEST_RECOVERY_ERROR_CODE
-    handleDidNavigate(event, !preserveRecoveryError)
+    handleDidNavigate(event, !preserveRecoveryError, { preserveLoading: true })
   }
 
   const handleTitleUpdate = (event: { title?: string }): void => {

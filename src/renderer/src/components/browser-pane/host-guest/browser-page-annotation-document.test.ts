@@ -8,6 +8,7 @@ import { createTestStoreDrawnFromMain } from '@/store/slices/browser-slice-drawn
 import { makeAnnotation } from '@/store/slices/browser-annotation-test-fixture'
 import { syncGuestAnnotationViewportBridge } from '../annotate/guest-annotation-viewport-bridge'
 import { createBrowserPageWebviewNavigationHandlers } from './browser-page-webview-navigation-handlers'
+import type { BrowserPageUrlSetter } from '../describe-page/browser-page-types'
 
 vi.mock('@/runtime/runtime-rpc-client', async (importOriginal) =>
   (
@@ -83,8 +84,8 @@ async function createHarness() {
     recoveryNavigationValidationRef: ref(null),
     invalidateBrowserAnnotationDocumentRef,
     onUpdatePageStateRef: ref(vi.fn()),
-    onSetUrlRef: ref((id: string, nextUrl: string) =>
-      store.getState().setBrowserPageUrl(id, nextUrl)
+    onSetUrlRef: ref<BrowserPageUrlSetter>((id, nextUrl, options) =>
+      store.getState().setBrowserPageUrl(id, nextUrl, options)
     ),
     setBrowserOverlayViewport,
     setAddressBarValue: vi.fn(),
@@ -116,6 +117,22 @@ function navigationEvent(
 }
 
 describe('browser annotation document boundaries', () => {
+  it('keeps a loaded page ready when its document URL changes in place', async () => {
+    const h = await createHarness()
+    h.store.getState().updateBrowserPageState(h.pageId, { loading: false })
+    h.navigation.handleDidNavigateInPage({
+      url: 'https://example.com/?doc=assets%2FB.prefab',
+      isMainFrame: true
+    })
+    expect(Object.values(h.store.getState().browserPagesByWorkspace).flat()).toEqual([
+      expect.objectContaining({
+        id: h.pageId,
+        url: 'https://example.com/?doc=assets%2FB.prefab',
+        loading: false
+      })
+    ])
+  })
+
   it('still accepts token-authenticated live target reports', async () => {
     const h = await createHarness()
     const report = JSON.stringify({

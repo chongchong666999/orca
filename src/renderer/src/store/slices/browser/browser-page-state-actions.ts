@@ -192,7 +192,7 @@ export function createBrowserPageStateActions(
                 url: nextPageUrl,
                 title: normalizeBrowserTitle(entry.title, nextPageUrl, entry.docLocation),
                 // Document guests are inert; loading=true would never clear.
-                loading: !entry.docLocation,
+                loading: !entry.docLocation && (options?.preserveLoading ? entry.loading : true),
                 loadError: options?.preserveLoadError ? entry.loadError : null
               }
             : entry
