@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo } from 'react'
+import { CocosEditorStartingView } from '@/cocos-agent/CocosEditorStartingView'
 import { CocosEditorSuspendedView } from '@/cocos-agent/CocosEditorSuspendedView'
-import { useCocosEditorSuspended } from '@/cocos-agent/cocos-editor-suspension'
+import { useCocosEditorTabView } from '@/cocos-agent/cocos-editor-tab-state'
 import { useAppStore } from '@/store'
 import { runtimeEnvironmentIdOrLocalUnlessTwin } from '@/lib/worktree-runtime-owner'
 import { isClientHostedBrowserPageHandle } from '@/store/slices/browser'
@@ -45,7 +46,6 @@ export default function BrowserPane({
   isWorktreeActive?: boolean
   chromeShortcutScope?: BrowserChromeShortcutScope
 }): React.JSX.Element {
-  const cocosSuspended = useCocosEditorSuspended(browserTab.id)
   const resolvedChromeShortcutScope = chromeShortcutScope ?? (isActive ? 'focused' : 'inactive')
   const activeRuntimeEnvironmentId = useAppStore((s) =>
     runtimeEnvironmentIdOrLocalUnlessTwin(s, browserTab.worktreeId)
@@ -55,6 +55,11 @@ export default function BrowserPane({
   )
   const activeBrowserPage =
     browserPages.find((page) => page.id === browserTab.activePageId) ?? browserPages[0] ?? null
+  const cocosView = useCocosEditorTabView(
+    browserTab.id,
+    browserTab.worktreeId,
+    activeBrowserPage?.url ?? null
+  )
   const updateBrowserPageState = useAppStore((s) => s.updateBrowserPageState)
   const setBrowserPageUrl = useAppStore((s) => s.setBrowserPageUrl)
   const activeBrowserRuntimeEnvironmentId = activeBrowserPage
@@ -116,8 +121,17 @@ export default function BrowserPane({
     }
   }, [activeBrowserPageId])
 
-  if (cocosSuspended) {
-    return <CocosEditorSuspendedView worktreeId={browserTab.worktreeId} />
+  // Why: a restored editor tab's address is dead until its editor opens; loading it would show a connection error.
+  if (cocosView === 'starting') {
+    return <CocosEditorStartingView />
+  }
+  if (cocosView !== 'page') {
+    return (
+      <CocosEditorSuspendedView
+        worktreeId={browserTab.worktreeId}
+        stopped={cocosView === 'stopped'}
+      />
+    )
   }
 
   if (activeBrowserRuntimeEnvironmentId) {

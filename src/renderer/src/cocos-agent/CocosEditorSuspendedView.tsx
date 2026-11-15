@@ -6,10 +6,13 @@ import { useAppStore } from '@/store'
 import { localCocosWorkspacePath } from './cocos-workspace-project'
 import { openCocosEditorTab } from './cocos-editor-tabs'
 
+/** `stopped`: a tab restored from an earlier session whose editor this session could not open. */
 export function CocosEditorSuspendedView({
-  worktreeId
+  worktreeId,
+  stopped = false
 }: {
   worktreeId: string
+  stopped?: boolean
 }): React.JSX.Element {
   const [pending, setPending] = useState(false)
   const resume = async (): Promise<void> => {
@@ -30,7 +33,9 @@ export function CocosEditorSuspendedView({
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col items-center justify-center gap-3 bg-background text-foreground">
       <p className="text-sm text-muted-foreground">
-        {cocosText('editor.suspended', 'This editor was paused to free memory.')}
+        {stopped
+          ? cocosText('editor.notRunning', 'The Cocos Creator editor is not running.')
+          : cocosText('editor.suspended', 'This editor was paused to free memory.')}
       </p>
       <Button variant="outline" disabled={pending} onClick={() => void resume()}>
         {pending

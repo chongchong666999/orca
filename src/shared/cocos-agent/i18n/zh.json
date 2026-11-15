@@ -10,6 +10,8 @@
       "open": "无法打开 Cocos Creator 编辑器",
       "unsupportedVersion": "cocos-agent 的编辑器只支持 Cocos Creator 2.4 项目，此项目使用 {{version}}。"
     },
+    "starting": "正在加载 Cocos Creator",
+    "notRunning": "Cocos Creator 编辑器没有在运行。",
     "suspended": "此编辑器已暂停以释放内存。",
     "resuming": "正在恢复编辑器…",
     "resume": "恢复 Cocos Creator",

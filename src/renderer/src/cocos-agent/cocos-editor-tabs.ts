@@ -1,11 +1,13 @@
 import type { CocosEditorRecord } from '../../../shared/cocos-agent/cocos-editor-types'
 import { destroyWorkspaceWebviews } from '@/store/slices/browser-webview-cleanup'
 import {
+  beginCocosEditorStart,
   isCocosEditorSuspended,
+  markCocosEditorLive,
   setCocosEditorSuspended,
   markCocosEditorEvicted,
   wasCocosEditorEvicted
-} from './cocos-editor-suspension'
+} from './cocos-editor-tab-state'
 import { refreshCocosEditorTabBindings } from './cocos-editor-binding-refresh'
 import { toast } from 'sonner'
 import type { ExecutionHostId } from '../../../shared/execution-host'
@@ -111,9 +113,11 @@ export function openCocosEditorTab(
   if (pending) {
     return pending
   }
-  const opening = startEditorTab(worktreeId, projectPath, options).finally(() =>
+  const ended = beginCocosEditorStart(worktreeId)
+  const opening = startEditorTab(worktreeId, projectPath, options).finally(() => {
     openingByWorkspace.delete(key)
-  )
+    ended()
+  })
   openingByWorkspace.set(key, opening)
   return opening
 }
@@ -173,8 +177,12 @@ async function startEditorTab(
   if (state.activeWorktreeId === worktreeId) {
     void api.activateEditor(projectPath).catch(() => undefined)
   }
-  if (wasCocosEditorEvicted(editorIdentity(result.url, false) ?? '')) {
+  const identity = editorIdentity(result.url, false)
+  if (identity && wasCocosEditorEvicted(identity)) {
     return { kind: 'abandoned' }
+  }
+  if (identity) {
+    markCocosEditorLive(identity)
   }
   if (retainedTabs.length > 0) {
     let resumed = false
@@ -219,7 +227,7 @@ async function startEditorTab(
   if (options.replacing && restoredTabs.length === 0) {
     return { kind: 'abandoned' }
   }
-  const liveTab = restoredTabs.find((tab) => tab.identity === editorIdentity(result.url, false))
+  const liveTab = restoredTabs.find((tab) => tab.identity === identity)
   if (liveTab) {
     editorTabIdByWorkspace.set(worktreeId, liveTab.tabId)
     return { kind: 'opened' }

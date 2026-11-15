@@ -104,7 +104,7 @@ afterEach(async () => {
 describe('Cocos editor budget lifecycle', () => {
   it('releases evicted guests while preserving tabs and reopens only after selecting the suspended workspace', async () => {
     const { installRestoredEditorTabRefresh } = await import('./cocos-editor-tab-refresh')
-    const { isCocosEditorSuspended } = await import('./cocos-editor-suspension')
+    const { isCocosEditorSuspended } = await import('./cocos-editor-tab-state')
     installRestoredEditorTabRefresh()
     const evict = mocks.onEditorEvicted.mock.calls[0][0]
     evict(record)
@@ -141,7 +141,7 @@ describe('Cocos editor budget lifecycle', () => {
   it('reopens the editor on screen as soon as its service is reported gone', async () => {
     mocks.state = { ...mocks.state, activeWorktreeId: 'a', activeBrowserTabId: 'editor' }
     const { installRestoredEditorTabRefresh } = await import('./cocos-editor-tab-refresh')
-    const { isCocosEditorSuspended } = await import('./cocos-editor-suspension')
+    const { isCocosEditorSuspended } = await import('./cocos-editor-tab-state')
     installRestoredEditorTabRefresh()
     await vi.waitFor(() =>
       expect(mocks.state.browserPagesByWorkspace.editor[0].url).toContain('token=new&')
@@ -166,6 +166,34 @@ describe('Cocos editor budget lifecycle', () => {
     expect(mocks.createTab).not.toHaveBeenCalled()
   })
 
+  it('holds a restored editor tab on the launch screen until its editor opens, and offers a resume when it cannot', async () => {
+    const { cocosEditorTabView } = await import('./cocos-editor-tab-state')
+    const restored = mocks.state.browserPagesByWorkspace.editor[0].url
+    expect(cocosEditorTabView('editor', 'a', restored)).toBe('starting')
+    mocks.state = { ...mocks.state, activeWorktreeId: 'a', activeBrowserTabId: 'editor' }
+    const { installRestoredEditorTabRefresh } = await import('./cocos-editor-tab-refresh')
+    installRestoredEditorTabRefresh()
+    await vi.waitFor(() =>
+      expect(mocks.state.browserPagesByWorkspace.editor[0].url).toContain('token=new&')
+    )
+    expect(
+      cocosEditorTabView('editor', 'a', mocks.state.browserPagesByWorkspace.editor[0].url)
+    ).toBe('page')
+    const stale = 'http://127.0.0.1:41000/?token=gone&cocos-agent=editor&cocos-workspace=b'
+    expect(cocosEditorTabView('restored', 'b', stale)).toBe('starting')
+    mocks.openEditor.mockResolvedValue({
+      ok: false,
+      code: 'capacity',
+      message: 'capacity protected'
+    })
+    const { openCocosEditorTab } = await import('./cocos-editor-tabs')
+    await expect(openCocosEditorTab('b', '/projects/b')).resolves.toEqual({
+      kind: 'failed',
+      message: 'capacity protected'
+    })
+    expect(cocosEditorTabView('restored', 'b', stale)).toBe('stopped')
+  })
+
   it('keeps a failed resume suspended without retrying on background store notifications', async () => {
     mocks.openEditor.mockResolvedValue({
       ok: false,
@@ -173,7 +201,7 @@ describe('Cocos editor budget lifecycle', () => {
       message: 'capacity protected'
     })
     const { installRestoredEditorTabRefresh } = await import('./cocos-editor-tab-refresh')
-    const { isCocosEditorSuspended } = await import('./cocos-editor-suspension')
+    const { isCocosEditorSuspended } = await import('./cocos-editor-tab-state')
     installRestoredEditorTabRefresh()
     mocks.onEditorEvicted.mock.calls[0][0](record)
     const changed = mocks.subscribe.mock.calls[0][0]

@@ -8,7 +8,7 @@ import {
   isSupportedCreatorVersion,
   localCocosWorkspacePath
 } from './cocos-workspace-project'
-import { isCocosEditorSuspended } from './cocos-editor-suspension'
+import { beginCocosEditorStart, isCocosEditorSuspended } from './cocos-editor-tab-state'
 import {
   findCocosEditorTabId,
   findEditorPageTabs,
@@ -36,8 +36,9 @@ function refreshRestoredEditorTabs(state: AppState): void {
     return
   }
   restorationAttempts.set(worktreeId, 'pending')
+  const ended = beginCocosEditorStart(worktreeId)
   const replacing = findEditorPageTabs(state, worktreeId).map((tab) => tab.tabId)
-  void detectCocosProject(projectPath).then(async (detection) => {
+  const restoring = detectCocosProject(projectPath).then(async (detection) => {
     if (detection.kind !== 'cocos' || !isSupportedCreatorVersion(detection.creatorVersion)) {
       restorationAttempts.set(worktreeId, 'failed')
       return
@@ -64,6 +65,7 @@ function refreshRestoredEditorTabs(state: AppState): void {
       })
     }
   })
+  void restoring.finally(ended)
 }
 
 /** Failed restorations retry on explicit selection, never on background store notifications. */

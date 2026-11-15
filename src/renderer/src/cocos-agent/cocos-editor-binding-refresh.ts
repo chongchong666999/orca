@@ -3,7 +3,7 @@ import { cocosText } from './cocos-text'
 import { useAppStore } from '@/store'
 import { cocosAgentApi, localCocosWorkspacePath } from './cocos-workspace-project'
 import { editorIdentity } from './cocos-editor-page-identity'
-import { isCocosEditorSuspended, wasCocosEditorEvicted } from './cocos-editor-suspension'
+import { isCocosEditorSuspended, wasCocosEditorEvicted } from './cocos-editor-tab-state'
 
 const refreshingBindings = new Map<string, Promise<void>>()
 
