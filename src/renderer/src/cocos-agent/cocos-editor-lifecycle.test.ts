@@ -169,18 +169,18 @@ describe('Cocos editor budget lifecycle', () => {
   it('holds a restored editor tab on the launch screen until its editor opens, and offers a resume when it cannot', async () => {
     const { cocosEditorTabView } = await import('./cocos-editor-tab-state')
     const restored = mocks.state.browserPagesByWorkspace.editor[0].url
-    expect(cocosEditorTabView('editor', 'a', restored)).toBe('starting')
+    expect(cocosEditorTabView('editor', 'a', { url: restored, loading: false })).toBe('starting')
     mocks.state = { ...mocks.state, activeWorktreeId: 'a', activeBrowserTabId: 'editor' }
     const { installRestoredEditorTabRefresh } = await import('./cocos-editor-tab-refresh')
     installRestoredEditorTabRefresh()
     await vi.waitFor(() =>
       expect(mocks.state.browserPagesByWorkspace.editor[0].url).toContain('token=new&')
     )
-    expect(
-      cocosEditorTabView('editor', 'a', mocks.state.browserPagesByWorkspace.editor[0].url)
-    ).toBe('page')
+    const reopened = mocks.state.browserPagesByWorkspace.editor[0].url
+    expect(cocosEditorTabView('editor', 'a', { url: reopened, loading: true })).toBe('loading')
+    expect(cocosEditorTabView('editor', 'a', { url: reopened, loading: false })).toBe('page')
     const stale = 'http://127.0.0.1:41000/?token=gone&cocos-agent=editor&cocos-workspace=b'
-    expect(cocosEditorTabView('restored', 'b', stale)).toBe('starting')
+    expect(cocosEditorTabView('restored', 'b', { url: stale, loading: false })).toBe('starting')
     mocks.openEditor.mockResolvedValue({
       ok: false,
       code: 'capacity',
@@ -191,7 +191,7 @@ describe('Cocos editor budget lifecycle', () => {
       kind: 'failed',
       message: 'capacity protected'
     })
-    expect(cocosEditorTabView('restored', 'b', stale)).toBe('stopped')
+    expect(cocosEditorTabView('restored', 'b', { url: stale, loading: false })).toBe('stopped')
   })
 
   it('keeps a failed resume suspended without retrying on background store notifications', async () => {

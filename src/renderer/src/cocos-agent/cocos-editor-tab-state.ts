@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from 'react'
+import { useEffect, useState, useSyncExternalStore } from 'react'
 import { editorIdentity } from './cocos-editor-page-identity'
 import { cocosAgentApi } from './cocos-workspace-project'
 
@@ -79,23 +79,27 @@ export function beginCocosEditorStart(worktreeId: string): () => void {
 
 /**
  * What an editor tab shows. `starting`: its editor is being opened, or a tab restored from an earlier session waits
- * for its first open (its address is dead until then). `stopped`/`suspended`: nothing is opening it.
+ * for its first open (its address is dead until then). `loading`: its live page loads under the starting screen.
+ * `stopped`/`suspended`: nothing is opening it.
  */
-export type CocosEditorTabView = 'page' | 'starting' | 'stopped' | 'suspended'
+export type CocosEditorTabView = 'page' | 'loading' | 'starting' | 'stopped' | 'suspended'
 
 export function cocosEditorTabView(
   tabId: string,
   worktreeId: string,
-  pageUrl: string | null
+  page: { url: string; loading: boolean } | null
 ): CocosEditorTabView {
   const starting = startsByWorktree.has(worktreeId)
   if (suspendedTabs.has(tabId)) {
     return starting ? 'starting' : 'suspended'
   }
-  const identity = pageUrl ? editorIdentity(pageUrl, true) : null
+  const identity = page ? editorIdentity(page.url, true) : null
   // Why: without cocos-agent in this window nothing would ever open the editor, so the page stays as it is.
-  if (!identity || liveIdentities.has(identity) || !cocosAgentApi()) {
+  if (!identity || !cocosAgentApi()) {
     return 'page'
+  }
+  if (liveIdentities.has(identity)) {
+    return page?.loading ? 'loading' : 'page'
   }
   return starting || !settledWorktrees.has(worktreeId) ? 'starting' : 'stopped'
 }
@@ -103,11 +107,29 @@ export function cocosEditorTabView(
 export function useCocosEditorTabView(
   tabId: string,
   worktreeId: string,
-  pageUrl: string | null
+  page: { url: string; loading: boolean } | null
 ): CocosEditorTabView {
+  const url = page?.url ?? null
+  const loading = page?.loading ?? false
   return useSyncExternalStore(
     subscribe,
-    () => cocosEditorTabView(tabId, worktreeId, pageUrl),
+    () => cocosEditorTabView(tabId, worktreeId, url === null ? null : { url, loading }),
     () => 'page'
   )
+}
+
+/** Holds the cover a moment past the page's load, until the guest has presented the page's own first frame. */
+const COVER_HOLD_MS = 150
+
+export function useCocosEditorCover(loading: boolean): boolean {
+  const [held, setHeld] = useState(loading)
+  useEffect(() => {
+    if (loading) {
+      setHeld(true)
+      return
+    }
+    const timer = window.setTimeout(() => setHeld(false), COVER_HOLD_MS)
+    return () => window.clearTimeout(timer)
+  }, [loading])
+  return loading || held
 }

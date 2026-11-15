@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo } from 'react'
 import { CocosEditorStartingView } from '@/cocos-agent/CocosEditorStartingView'
 import { CocosEditorSuspendedView } from '@/cocos-agent/CocosEditorSuspendedView'
-import { useCocosEditorTabView } from '@/cocos-agent/cocos-editor-tab-state'
+import { useCocosEditorCover, useCocosEditorTabView } from '@/cocos-agent/cocos-editor-tab-state'
 import { useAppStore } from '@/store'
 import { runtimeEnvironmentIdOrLocalUnlessTwin } from '@/lib/worktree-runtime-owner'
 import { isClientHostedBrowserPageHandle } from '@/store/slices/browser'
@@ -55,11 +55,8 @@ export default function BrowserPane({
   )
   const activeBrowserPage =
     browserPages.find((page) => page.id === browserTab.activePageId) ?? browserPages[0] ?? null
-  const cocosView = useCocosEditorTabView(
-    browserTab.id,
-    browserTab.worktreeId,
-    activeBrowserPage?.url ?? null
-  )
+  const cocosView = useCocosEditorTabView(browserTab.id, browserTab.worktreeId, activeBrowserPage)
+  const cocosCovered = useCocosEditorCover(cocosView === 'loading')
   const updateBrowserPageState = useAppStore((s) => s.updateBrowserPageState)
   const setBrowserPageUrl = useAppStore((s) => s.setBrowserPageUrl)
   const activeBrowserRuntimeEnvironmentId = activeBrowserPage
@@ -125,7 +122,7 @@ export default function BrowserPane({
   if (cocosView === 'starting') {
     return <CocosEditorStartingView />
   }
-  if (cocosView !== 'page') {
+  if (cocosView === 'stopped' || cocosView === 'suspended') {
     return (
       <CocosEditorSuspendedView
         worktreeId={browserTab.worktreeId}
@@ -239,6 +236,7 @@ export default function BrowserPane({
           )}
         </SshRoutedBrowserPageGate>
       ) : null}
+      {cocosCovered ? <CocosEditorStartingView className="absolute inset-0 z-10" /> : null}
     </div>
   )
 }
