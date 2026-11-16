@@ -78,6 +78,9 @@ cocos-agent 基于 [Orca](https://github.com/stablyai/orca)（MIT 协议，保�
 | `src/renderer/src/assets/main.css` | 待回馈上游 | 展开的标题栏跟随侧栏宽度，窄栏内省略过长名称 | 保留上游改动，重新约束标题栏宽度并保留名称省略 |
 | `src/renderer/src/components/browser-pane/assemble-chrome/browser-page-chrome-header.tsx` | 挂点 | import + const Toolbar 组件替换：Cocos 编辑器页不渲染浏览器工具栏（4 行） | 保留上游改动，重新加上 Toolbar 常量并把标签改回 <Toolbar |
 | `src/renderer/src/components/browser-pane/assemble-chrome/browser-workspace-pane.tsx` | 挂点 | import + useCocosEditorSuspended：暂停的编辑器显示恢复视图（7 行） | 保留上游改动，重新加上 hook 与早退 |
+| `src/renderer/src/components/browser-pane/describe-page/browser-page-types.ts` | 待回馈上游 | BrowserPageUrlSetter 的选项加 preserveLoading（1 行） | 随 browser-page-webview-navigation-handlers.ts 处理 |
+| `src/renderer/src/components/browser-pane/host-guest/browser-page-annotation-document.test.ts` | 待回馈上游 | 随 preserveLoading：页内换 URL 时已加载的页面保持非 loading 的用例 | 随 browser-page-webview-navigation-handlers.ts 处理 |
+| `src/renderer/src/components/browser-pane/host-guest/browser-page-webview-navigation-handlers.ts` | 待回馈上游 | 页内导航传 preserveLoading，切换 Prefab（?doc=）不再闪加载画面（4 行） | 上游若页内导航已不重置 loading 则取上游；否则保留 preserveLoading |
 | `src/renderer/src/components/Landing.tsx` | 品牌 | import + ORCA_GITHUB_URL 改为 COCOS_AGENT_GITHUB_URL（2 行） | 保留上游改动，常量改回 COCOS_AGENT_GITHUB_URL 并加 import |
 | `src/renderer/src/components/right-sidebar/right-sidebar-panel-content.tsx` | 挂点 | lazy import + effectiveTab === 'terminal' 渲染 SidebarTerminalPanel（2 行） | 保留上游改动，重新加上这 2 行 |
 | `src/renderer/src/components/right-sidebar/use-right-sidebar-activity-items.ts` | 挂点 | import + 活动栏增加 terminal 项（8 行） | 保留上游改动，重新加上这一项 |
@@ -99,6 +102,8 @@ cocos-agent 基于 [Orca](https://github.com/stablyai/orca)（MIT 协议，保�
 | `src/renderer/src/runtime/web-runtime-terminal-create-operation.ts` | 挂点 | 抽出 createWebRuntimeTerminalForHost（显式 environmentId），上游函数改为委托；纯插入 7 行 | 保留上游改动，重新插入这个导出函数并让上游函数委托给它；侧栏终端必须走它，否则 focus-read ratchet 会把侧栏启动算作读取默认主机 |
 | `src/renderer/src/store/index.ts` | 挂点 | import + ...createSidebarTerminalSlice(...a)（2 行） | 保留上游改动，重新加上这 2 行 |
 | `src/renderer/src/store/right-sidebar-route.ts` | 枚举 | normalizeRightSidebarRoute 接受 'terminal'（1 行） | 保留上游改动，重新加上这一行 |
+| `src/renderer/src/store/slices/browser/browser-page-state-actions.ts` | 待回馈上游 | setBrowserPageUrl 在 preserveLoading 时保留原 loading（1 行） | 随 browser-page-webview-navigation-handlers.ts 处理 |
+| `src/renderer/src/store/slices/browser/browser-slice-contract.ts` | 待回馈上游 | SetBrowserPageUrlOptions 加 preserveLoading（1 行） | 随 browser-page-webview-navigation-handlers.ts 处理 |
 | `src/renderer/src/store/slices/store-test-helpers.ts` | 挂点 | import + ...createSidebarTerminalSlice(...a)（2 行） | 保留上游改动，重新加上这 2 行 |
 | `src/renderer/src/store/slices/tabs/tabs-focus-actions.ts` | 挂点 | import + routeTerminalTabToSidebarState 早退（5 行） | 保留上游改动，重新加上 found 之后的早退 |
 | `src/renderer/src/store/slices/worktrees/session/worktree-identity-rename-state.ts` | 挂点 | WORKTREE_ID_KEYED_MAP_KEYS 加 sidebarTerminalSessionsByWorktree（1 行） | 保留上游改动，重新加上这一行 |
@@ -110,7 +115,7 @@ cocos-agent 基于 [Orca](https://github.com/stablyai/orca)（MIT 协议，保�
 | `src/shared/rpc-contract/client-ui-params.ts` | 枚举 | STATIC_RIGHT_SIDEBAR_TABS 加 'terminal'（1 行） | 保留上游改动，重新加上这一行 |
 | `src/shared/ui-chrome-types.ts` | 枚举 | RightSidebarTab 加 'terminal'（1 行） | 保留上游改动，重新加上这一行 |
 
-共 66 个上游文件。由 `node config/scripts/cocos-agent/check-upstream-touch-points.mjs --write-doc` 生成，请改 `config/cocos-agent/upstream-touch-points.json`。
+共 71 个上游文件。由 `node config/scripts/cocos-agent/check-upstream-touch-points.mjs --write-doc` 生成，请改 `config/cocos-agent/upstream-touch-points.json`。
 
 自有文件中复制自上游的逻辑（上游改了来源时要对比）：
 

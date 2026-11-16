@@ -230,6 +230,24 @@
       "onConflict": "保留上游改动，重新加上 hook 与早退"
     },
     {
+      "path": "src/renderer/src/components/browser-pane/describe-page/browser-page-types.ts",
+      "kind": "upstream-candidate",
+      "change": "BrowserPageUrlSetter 的选项加 preserveLoading（1 行）",
+      "onConflict": "随 browser-page-webview-navigation-handlers.ts 处理"
+    },
+    {
+      "path": "src/renderer/src/components/browser-pane/host-guest/browser-page-annotation-document.test.ts",
+      "kind": "upstream-candidate",
+      "change": "随 preserveLoading：页内换 URL 时已加载的页面保持非 loading 的用例",
+      "onConflict": "随 browser-page-webview-navigation-handlers.ts 处理"
+    },
+    {
+      "path": "src/renderer/src/components/browser-pane/host-guest/browser-page-webview-navigation-handlers.ts",
+      "kind": "upstream-candidate",
+      "change": "页内导航传 preserveLoading，切换 Prefab（?doc=）不再闪加载画面（4 行）",
+      "onConflict": "上游若页内导航已不重置 loading 则取上游；否则保留 preserveLoading"
+    },
+    {
       "path": "src/renderer/src/components/right-sidebar/right-sidebar-panel-content.tsx",
       "kind": "hook",
       "change": "lazy import + effectiveTab === 'terminal' 渲染 SidebarTerminalPanel（2 行）",
@@ -336,6 +354,18 @@
       "kind": "enum",
       "change": "normalizeRightSidebarRoute 接受 'terminal'（1 行）",
       "onConflict": "保留上游改动，重新加上这一行"
+    },
+    {
+      "path": "src/renderer/src/store/slices/browser/browser-page-state-actions.ts",
+      "kind": "upstream-candidate",
+      "change": "setBrowserPageUrl 在 preserveLoading 时保留原 loading（1 行）",
+      "onConflict": "随 browser-page-webview-navigation-handlers.ts 处理"
+    },
+    {
+      "path": "src/renderer/src/store/slices/browser/browser-slice-contract.ts",
+      "kind": "upstream-candidate",
+      "change": "SetBrowserPageUrlOptions 加 preserveLoading（1 行）",
+      "onConflict": "随 browser-page-webview-navigation-handlers.ts 处理"
     },
     {
       "path": "src/renderer/src/store/slices/store-test-helpers.ts",
