@@ -1,7 +1,7 @@
 {
-  "version": "5.0.11",
+  "version": "5.0.12",
   "target": "darwin-arm64",
-  "file": "a5-game-context-5.0.11-darwin-arm64.tgz",
-  "sha256": "b6036ddfda9d98c2658abefac3e6055e620f8a49da30ebd6e82c73e05bc32059",
-  "source": "Local test build, not released: GitNexus feature/editor-open-progress with complete scene preview engine modules; npm run pack:platform darwin-arm64, in ../GitNexus/context-engine/release"
+  "file": "a5-game-context-5.0.12-darwin-arm64.tgz",
+  "sha256": "ec73b4596d8393d1536b61def8d71d0c966756aca120a7957ed899325a10386e",
+  "source": "Local test build, not released: GitNexus feature/editor-open-progress (SWC export * of an undefined module as TypeScript 4.1), npm run pack:platform darwin-arm64, in ../GitNexus/context-engine/release"
 }
