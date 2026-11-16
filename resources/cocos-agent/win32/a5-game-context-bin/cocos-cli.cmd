@@ -3,11 +3,10 @@ setlocal
 REM The cocos-cli cocos-agent bundles, run by the app's Electron as Node. Git Bash uses the script beside it.
 for %%I in ("%~dp0..") do set "RESOURCES=%%~fI"
 for %%I in ("%RESOURCES%\..") do set "APP_DIR=%%~fI"
-REM Why Orca.exe: the Windows build keeps Orca's executable name, which native\windows-cli-launcher also expects.
-set "ELECTRON=%APP_DIR%\Orca.exe"
+set "ELECTRON=%APP_DIR%\cocos-agent-beta.exe"
 set "PACKAGE_ROOT=%RESOURCES%\a5-game-context"
 if not exist "%ELECTRON%" (
-  echo Unable to find cocos-agent's Orca.exe next to "%RESOURCES%" 1>&2
+  echo Unable to find cocos-agent-beta.exe next to "%RESOURCES%" 1>&2
   exit /b 1
 )
 set "ELECTRON_RUN_AS_NODE=1"

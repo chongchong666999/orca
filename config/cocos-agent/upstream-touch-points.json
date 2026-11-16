@@ -4,7 +4,7 @@
     {
       "path": ".gitattributes",
       "kind": "brand",
-      "change": "品牌二进制文件与 logo.svg merge=ours，共 7 行追加",
+      "change": "品牌二进制文件与 logo.svg merge=ours，共 8 行追加",
       "onConflict": "保留上游改动，重新追加这几行"
     },
     {
@@ -50,9 +50,21 @@
       "onConflict": "保留上游改动，重新加上这 4 行"
     },
     {
+      "path": "native/windows-cli-launcher/src/main.rs",
+      "kind": "upstream-candidate",
+      "change": "没有 Orca.exe 时改用应用目录里唯一的主程序（cocos-agent-beta.exe）",
+      "onConflict": "保留 find_electron_executable 的查找"
+    },
+    {
       "path": "resources/build/icon.icns",
       "kind": "brand",
       "change": "cocos-agent 图标",
+      "onConflict": "merge=ours 自动取我方；否则 git checkout --ours"
+    },
+    {
+      "path": "resources/build/icon.ico",
+      "kind": "brand",
+      "change": "cocos-agent 图标（trim-windows-icon-source.mjs 由 icon.png 生成）",
       "onConflict": "merge=ours 自动取我方；否则 git checkout --ours"
     },
     {
@@ -288,6 +300,12 @@
       "kind": "hook",
       "change": "import + 两处 currentTabs 改用 selectCentralTerminalTabs（3 行）",
       "onConflict": "保留上游改动，重新换成 selectCentralTerminalTabs"
+    },
+    {
+      "path": "src/renderer/src/components/use-terminal-watcher-effects.ts",
+      "kind": "hook",
+      "change": "import + 启动时空工作区先由 openCocosEditorInEmptyWorkspace 打开 Cocos 编辑器（2 行）",
+      "onConflict": "保留上游改动，重新在自动建终端的条件前加上这次调用"
     },
     {
       "path": "src/renderer/src/lib/worktree-initial-terminal-seeding.ts",

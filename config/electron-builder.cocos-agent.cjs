@@ -62,6 +62,7 @@ module.exports = {
   // Why a folder of its own: it goes on the user PATH, and cocos-agent's `orca` in resources\bin must not.
   win: {
     ...base.win,
+    executableName: COCOS_AGENT_NAME,
     extraResources: [
       ...base.win.extraResources,
       ...a5GameContextResources,

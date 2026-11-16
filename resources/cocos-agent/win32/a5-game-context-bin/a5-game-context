@@ -1,9 +1,9 @@
 #!/bin/sh
 # Git Bash entry for the a5-game-context cocos-agent bundles; cmd and PowerShell use a5-game-context.cmd beside it.
 resources=$(cd "$(dirname "$0")/.." && pwd)
-electron="$(cd "$resources/.." && pwd)/Orca.exe"
+electron="$(cd "$resources/.." && pwd)/cocos-agent-beta.exe"
 if [ ! -f "$electron" ]; then
-	echo "Unable to find cocos-agent's Orca.exe next to $resources" >&2
+	echo "Unable to find cocos-agent-beta.exe next to $resources" >&2
 	exit 1
 fi
 windows_path() { cygpath -w "$1" 2>/dev/null || printf '%s\n' "$1"; }

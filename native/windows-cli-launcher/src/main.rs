@@ -51,13 +51,12 @@ fn main() {
         ))
     };
 
-    let electron_path = app_directory.join("Orca.exe");
-    if !electron_path.is_file() {
+    let Some(electron_path) = find_electron_executable(app_directory) else {
         fail(&format!(
             "Unable to locate Orca.exe next to \"{}\"",
             resources_directory.display()
-        ));
-    }
+        ))
+    };
 
     let cli_path: PathBuf = resources_directory
         .join("app.asar.unpacked")
@@ -90,6 +89,23 @@ fn main() {
     );
 
     run_cli(&electron_path, &cli_path)
+}
+
+/// Orca.exe, else the one executable a build renamed through electron-builder's `executableName`
+/// ships; its installer adds only an `Uninstall …` executable beside it.
+fn find_electron_executable(app_directory: &Path) -> Option<PathBuf> {
+    let orca = app_directory.join("Orca.exe");
+    if orca.is_file() {
+        return Some(orca);
+    }
+    let mut executables = fs::read_dir(app_directory).ok()?.filter_map(|entry| {
+        let path = entry.ok()?.path();
+        let name = path.file_name()?.to_str()?;
+        let is_app = name.to_ascii_lowercase().ends_with(".exe") && !name.starts_with("Uninstall ");
+        (is_app && path.is_file()).then_some(path)
+    });
+    let executable = executables.next()?;
+    executables.next().is_none().then_some(executable)
 }
 
 /// The server mode: the pinned Node runs the active slot's CLI under the

@@ -43,7 +43,7 @@ cocos-agent 基于 [Orca](https://github.com/stablyai/orca)（MIT 协议，保�
 <!-- prettier-ignore-start -->
 | 文件 | 类型 | 改动 | 冲突时 |
 | --- | --- | --- | --- |
-| `.gitattributes` | 品牌 | 品牌二进制文件与 logo.svg merge=ours，共 7 行追加 | 保留上游改动，重新追加这几行 |
+| `.gitattributes` | 品牌 | 品牌二进制文件与 logo.svg merge=ours，共 8 行追加 | 保留上游改动，重新追加这几行 |
 | `.gitignore` | 品牌 | 忽略 /.context-engine/；docs/cocos-agent、docs/specs 白名单，共 5 行追加 | 保留上游改动，重新追加这几行 |
 | `config/nsis/orca-installer-hooks.nsh` | 挂点 | 卸载时移除 cocos-agent 的 a5-game-context 命令目录（resources\a5-game-context-bin）的用户 PATH 条目，共 2 行追加 | 保留上游改动，重新追加这两行 |
 | `config/packaged-runtime-node-modules.cjs` | 待回馈上游 | 用 Node 的 isBuiltin 识别 node:sqlite 等内置模块 | 上游若已改用 isBuiltin 则取上游版本 |
@@ -51,7 +51,9 @@ cocos-agent 基于 [Orca](https://github.com/stablyai/orca)（MIT 协议，保�
 | `config/scripts/check-changed.mjs` | 待回馈上游 | --maxWorkers 限制并发（3 行） | 保留上游改动，重新加上并发上限；上游若已支持则取上游 |
 | `config/scripts/electron-builder-runtime-resources.test.mjs` | 待回馈上游 | 随 isBuiltin 修复：断言 node:sqlite 不被当成缺失依赖 | 随 packaged-runtime-node-modules.cjs 处理 |
 | `config/scripts/install-dev-cli.mjs` | 待回馈上游 | ORCA_SKIP_DEV_CLI_INSTALL=1 时跳过（4 行） | 保留上游改动，重新加上这 4 行 |
+| `native/windows-cli-launcher/src/main.rs` | 待回馈上游 | 没有 Orca.exe 时改用应用目录里唯一的主程序（cocos-agent-beta.exe） | 保留 find_electron_executable 的查找 |
 | `resources/build/icon.icns` | 品牌 | cocos-agent 图标 | merge=ours 自动取我方；否则 git checkout --ours |
+| `resources/build/icon.ico` | 品牌 | cocos-agent 图标（trim-windows-icon-source.mjs 由 icon.png 生成） | merge=ours 自动取我方；否则 git checkout --ours |
 | `resources/build/icon.png` | 品牌 | cocos-agent 图标 | merge=ours 自动取我方；否则 git checkout --ours |
 | `resources/darwin/bin/orca` | 待回馈上游 | ELECTRON= 从 Info.plist 读可执行文件名（1 行） | 保留读取 Info.plist 的写法 |
 | `resources/icon-dev.png` | 品牌 | cocos-agent 图标 | merge=ours 自动取我方；否则 git checkout --ours |
@@ -91,6 +93,7 @@ cocos-agent 基于 [Orca](https://github.com/stablyai/orca)（MIT 协议，保�
 | `src/renderer/src/components/terminal-pane/TerminalPaneOverlayLayer.tsx` | 挂点 | import + useCentralTerminalTabs：冷停与渲染只看中央终端（4 行） | 保留上游改动，重新加上 hook 并把两处 terminalTabs 换成 centralTerminalTabs |
 | `src/renderer/src/components/terminal/terminal-tab-bulk-actions.ts` | 挂点 | import + 两处 currentTabs 改用 selectCentralTerminalTabs（3 行） | 保留上游改动，重新换成 selectCentralTerminalTabs |
 | `src/renderer/src/components/TerminalLegacyTerminalPanes.tsx` | 挂点 | import + useLegacyPaneSidebarState()：侧栏持有的 tab 不渲染，侧栏聚焦时中央不 active | 保留上游改动，重新加上 hook 调用、map 内的早退和 isActive 包装 |
+| `src/renderer/src/components/use-terminal-watcher-effects.ts` | 挂点 | import + 启动时空工作区先由 openCocosEditorInEmptyWorkspace 打开 Cocos 编辑器（2 行） | 保留上游改动，重新在自动建终端的条件前加上这次调用 |
 | `src/renderer/src/lib/worktree-initial-terminal-seeding.ts` | 挂点 | import + 默认 agent 聊天之前 3 行判断 openCocosEditorInEmptyWorkspace | 保留上游改动，重新加上这 4 行；位置在 applyDefaultTerminalTabs 之后、默认 agent 聊天之前 |
 | `src/renderer/src/main.tsx` | 挂点 | import + installCocosAgentRenderer()（2 行） | 保留上游改动，重新加上这 2 行 |
 | `src/renderer/src/runtime/web-runtime-terminal-create-operation.ts` | 挂点 | 抽出 createWebRuntimeTerminalForHost（显式 environmentId），上游函数改为委托；纯插入 7 行 | 保留上游改动，重新插入这个导出函数并让上游函数委托给它；侧栏终端必须走它，否则 focus-read ratchet 会把侧栏启动算作读取默认主机 |
@@ -107,7 +110,7 @@ cocos-agent 基于 [Orca](https://github.com/stablyai/orca)（MIT 协议，保�
 | `src/shared/rpc-contract/client-ui-params.ts` | 枚举 | STATIC_RIGHT_SIDEBAR_TABS 加 'terminal'（1 行） | 保留上游改动，重新加上这一行 |
 | `src/shared/ui-chrome-types.ts` | 枚举 | RightSidebarTab 加 'terminal'（1 行） | 保留上游改动，重新加上这一行 |
 
-共 63 个上游文件。由 `node config/scripts/cocos-agent/check-upstream-touch-points.mjs --write-doc` 生成，请改 `config/cocos-agent/upstream-touch-points.json`。
+共 66 个上游文件。由 `node config/scripts/cocos-agent/check-upstream-touch-points.mjs --write-doc` 生成，请改 `config/cocos-agent/upstream-touch-points.json`。
 
 自有文件中复制自上游的逻辑（上游改了来源时要对比）：
 
