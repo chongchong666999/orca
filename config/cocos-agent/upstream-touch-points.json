@@ -4,7 +4,7 @@
     {
       "path": ".gitattributes",
       "kind": "brand",
-      "change": "品牌二进制文件与 logo.svg merge=ours，共 8 行追加",
+      "change": "品牌二进制文件与 logo.svg merge=ours，共 7 行追加",
       "onConflict": "保留上游改动，重新追加这几行"
     },
     {
@@ -226,26 +226,26 @@
     {
       "path": "src/renderer/src/components/browser-pane/assemble-chrome/browser-workspace-pane.tsx",
       "kind": "hook",
-      "change": "import + useCocosEditorSuspended：暂停的编辑器显示恢复视图（7 行）",
-      "onConflict": "保留上游改动，重新加上 hook 与早退"
+      "change": "import + useCocosEditorTabView/useCocosEditorCover：编辑器启动中显示 Creator 灰屏、暂停或未运行时显示恢复视图、页面加载完成前用灰屏盖住（19 行）",
+      "onConflict": "保留上游改动，重新加上两个 hook、两处早退和末尾的覆盖层"
     },
     {
       "path": "src/renderer/src/components/browser-pane/describe-page/browser-page-types.ts",
       "kind": "upstream-candidate",
-      "change": "BrowserPageUrlSetter 的选项加 preserveLoading（1 行）",
-      "onConflict": "随 browser-page-webview-navigation-handlers.ts 处理"
+      "change": "BrowserPageUrlSetter 的 options 增加 preserveLoading（1 行）",
+      "onConflict": "保留上游改动，重新加上 preserveLoading"
     },
     {
       "path": "src/renderer/src/components/browser-pane/host-guest/browser-page-annotation-document.test.ts",
       "kind": "upstream-candidate",
-      "change": "随 preserveLoading：页内换 URL 时已加载的页面保持非 loading 的用例",
-      "onConflict": "随 browser-page-webview-navigation-handlers.ts 处理"
+      "change": "页内导航（pushState 改 URL）不把已加载的页面标回 loading 的测试，harness 透传 options",
+      "onConflict": "保留上游改动，重新加上这个用例和 options 透传"
     },
     {
       "path": "src/renderer/src/components/browser-pane/host-guest/browser-page-webview-navigation-handlers.ts",
       "kind": "upstream-candidate",
-      "change": "页内导航传 preserveLoading，切换 Prefab（?doc=）不再闪加载画面（4 行）",
-      "onConflict": "上游若页内导航已不重置 loading 则取上游；否则保留 preserveLoading"
+      "change": "页内导航调用 setUrl 时带 preserveLoading，不再把已加载的页面标回 loading（4 行）",
+      "onConflict": "保留上游改动，重新让 handleDidNavigateInPage 传 { preserveLoading: true }"
     },
     {
       "path": "src/renderer/src/components/right-sidebar/right-sidebar-panel-content.tsx",
@@ -322,8 +322,8 @@
     {
       "path": "src/renderer/src/components/use-terminal-watcher-effects.ts",
       "kind": "hook",
-      "change": "import + 启动时空工作区先由 openCocosEditorInEmptyWorkspace 打开 Cocos 编辑器（2 行）",
-      "onConflict": "保留上游改动，重新在自动建终端的条件前加上这次调用"
+      "change": "空工作区先尝试打开 Cocos 编辑器（openCocosEditorInEmptyWorkspace），否则照常创建初始终端（import + 1 处条件）",
+      "onConflict": "保留上游改动，重新在自动创建初始终端的条件前加上这一项"
     },
     {
       "path": "src/renderer/src/lib/worktree-initial-terminal-seeding.ts",
@@ -359,13 +359,13 @@
       "path": "src/renderer/src/store/slices/browser/browser-page-state-actions.ts",
       "kind": "upstream-candidate",
       "change": "setBrowserPageUrl 在 preserveLoading 时保留原 loading（1 行）",
-      "onConflict": "随 browser-page-webview-navigation-handlers.ts 处理"
+      "onConflict": "保留上游改动，重新加上 preserveLoading 分支"
     },
     {
       "path": "src/renderer/src/store/slices/browser/browser-slice-contract.ts",
       "kind": "upstream-candidate",
-      "change": "SetBrowserPageUrlOptions 加 preserveLoading（1 行）",
-      "onConflict": "随 browser-page-webview-navigation-handlers.ts 处理"
+      "change": "SetBrowserPageUrlOptions 增加 preserveLoading（1 行）",
+      "onConflict": "保留上游改动，重新加上该字段"
     },
     {
       "path": "src/renderer/src/store/slices/store-test-helpers.ts",

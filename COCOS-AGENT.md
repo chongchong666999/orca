@@ -43,7 +43,7 @@ cocos-agent 基于 [Orca](https://github.com/stablyai/orca)（MIT 协议，保�
 <!-- prettier-ignore-start -->
 | 文件 | 类型 | 改动 | 冲突时 |
 | --- | --- | --- | --- |
-| `.gitattributes` | 品牌 | 品牌二进制文件与 logo.svg merge=ours，共 8 行追加 | 保留上游改动，重新追加这几行 |
+| `.gitattributes` | 品牌 | 品牌二进制文件与 logo.svg merge=ours，共 7 行追加 | 保留上游改动，重新追加这几行 |
 | `.gitignore` | 品牌 | 忽略 /.context-engine/；docs/cocos-agent、docs/specs 白名单，共 5 行追加 | 保留上游改动，重新追加这几行 |
 | `config/nsis/orca-installer-hooks.nsh` | 挂点 | 卸载时移除 cocos-agent 的 a5-game-context 命令目录（resources\a5-game-context-bin）的用户 PATH 条目，共 2 行追加 | 保留上游改动，重新追加这两行 |
 | `config/packaged-runtime-node-modules.cjs` | 待回馈上游 | 用 Node 的 isBuiltin 识别 node:sqlite 等内置模块 | 上游若已改用 isBuiltin 则取上游版本 |
@@ -77,10 +77,10 @@ cocos-agent 基于 [Orca](https://github.com/stablyai/orca)（MIT 协议，保�
 | `src/renderer/src/app-shell/use-onboarding-and-feature-tips.ts` | 挂点 | 有 cocos-agent preload 时跳过全局 CLI 安装探测与引导 | 保留上游改动，重新加上条件 |
 | `src/renderer/src/assets/main.css` | 待回馈上游 | 展开的标题栏跟随侧栏宽度，窄栏内省略过长名称 | 保留上游改动，重新约束标题栏宽度并保留名称省略 |
 | `src/renderer/src/components/browser-pane/assemble-chrome/browser-page-chrome-header.tsx` | 挂点 | import + const Toolbar 组件替换：Cocos 编辑器页不渲染浏览器工具栏（4 行） | 保留上游改动，重新加上 Toolbar 常量并把标签改回 <Toolbar |
-| `src/renderer/src/components/browser-pane/assemble-chrome/browser-workspace-pane.tsx` | 挂点 | import + useCocosEditorSuspended：暂停的编辑器显示恢复视图（7 行） | 保留上游改动，重新加上 hook 与早退 |
-| `src/renderer/src/components/browser-pane/describe-page/browser-page-types.ts` | 待回馈上游 | BrowserPageUrlSetter 的选项加 preserveLoading（1 行） | 随 browser-page-webview-navigation-handlers.ts 处理 |
-| `src/renderer/src/components/browser-pane/host-guest/browser-page-annotation-document.test.ts` | 待回馈上游 | 随 preserveLoading：页内换 URL 时已加载的页面保持非 loading 的用例 | 随 browser-page-webview-navigation-handlers.ts 处理 |
-| `src/renderer/src/components/browser-pane/host-guest/browser-page-webview-navigation-handlers.ts` | 待回馈上游 | 页内导航传 preserveLoading，切换 Prefab（?doc=）不再闪加载画面（4 行） | 上游若页内导航已不重置 loading 则取上游；否则保留 preserveLoading |
+| `src/renderer/src/components/browser-pane/assemble-chrome/browser-workspace-pane.tsx` | 挂点 | import + useCocosEditorTabView/useCocosEditorCover：编辑器启动中显示 Creator 灰屏、暂停或未运行时显示恢复视图、页面加载完成前用灰屏盖住（19 行） | 保留上游改动，重新加上两个 hook、两处早退和末尾的覆盖层 |
+| `src/renderer/src/components/browser-pane/describe-page/browser-page-types.ts` | 待回馈上游 | BrowserPageUrlSetter 的 options 增加 preserveLoading（1 行） | 保留上游改动，重新加上 preserveLoading |
+| `src/renderer/src/components/browser-pane/host-guest/browser-page-annotation-document.test.ts` | 待回馈上游 | 页内导航（pushState 改 URL）不把已加载的页面标回 loading 的测试，harness 透传 options | 保留上游改动，重新加上这个用例和 options 透传 |
+| `src/renderer/src/components/browser-pane/host-guest/browser-page-webview-navigation-handlers.ts` | 待回馈上游 | 页内导航调用 setUrl 时带 preserveLoading，不再把已加载的页面标回 loading（4 行） | 保留上游改动，重新让 handleDidNavigateInPage 传 { preserveLoading: true } |
 | `src/renderer/src/components/Landing.tsx` | 品牌 | import + ORCA_GITHUB_URL 改为 COCOS_AGENT_GITHUB_URL（2 行） | 保留上游改动，常量改回 COCOS_AGENT_GITHUB_URL 并加 import |
 | `src/renderer/src/components/right-sidebar/right-sidebar-panel-content.tsx` | 挂点 | lazy import + effectiveTab === 'terminal' 渲染 SidebarTerminalPanel（2 行） | 保留上游改动，重新加上这 2 行 |
 | `src/renderer/src/components/right-sidebar/use-right-sidebar-activity-items.ts` | 挂点 | import + 活动栏增加 terminal 项（8 行） | 保留上游改动，重新加上这一项 |
@@ -96,14 +96,14 @@ cocos-agent 基于 [Orca](https://github.com/stablyai/orca)（MIT 协议，保�
 | `src/renderer/src/components/terminal-pane/TerminalPaneOverlayLayer.tsx` | 挂点 | import + useCentralTerminalTabs：冷停与渲染只看中央终端（4 行） | 保留上游改动，重新加上 hook 并把两处 terminalTabs 换成 centralTerminalTabs |
 | `src/renderer/src/components/terminal/terminal-tab-bulk-actions.ts` | 挂点 | import + 两处 currentTabs 改用 selectCentralTerminalTabs（3 行） | 保留上游改动，重新换成 selectCentralTerminalTabs |
 | `src/renderer/src/components/TerminalLegacyTerminalPanes.tsx` | 挂点 | import + useLegacyPaneSidebarState()：侧栏持有的 tab 不渲染，侧栏聚焦时中央不 active | 保留上游改动，重新加上 hook 调用、map 内的早退和 isActive 包装 |
-| `src/renderer/src/components/use-terminal-watcher-effects.ts` | 挂点 | import + 启动时空工作区先由 openCocosEditorInEmptyWorkspace 打开 Cocos 编辑器（2 行） | 保留上游改动，重新在自动建终端的条件前加上这次调用 |
+| `src/renderer/src/components/use-terminal-watcher-effects.ts` | 挂点 | 空工作区先尝试打开 Cocos 编辑器（openCocosEditorInEmptyWorkspace），否则照常创建初始终端（import + 1 处条件） | 保留上游改动，重新在自动创建初始终端的条件前加上这一项 |
 | `src/renderer/src/lib/worktree-initial-terminal-seeding.ts` | 挂点 | import + 默认 agent 聊天之前 3 行判断 openCocosEditorInEmptyWorkspace | 保留上游改动，重新加上这 4 行；位置在 applyDefaultTerminalTabs 之后、默认 agent 聊天之前 |
 | `src/renderer/src/main.tsx` | 挂点 | import + installCocosAgentRenderer()（2 行） | 保留上游改动，重新加上这 2 行 |
 | `src/renderer/src/runtime/web-runtime-terminal-create-operation.ts` | 挂点 | 抽出 createWebRuntimeTerminalForHost（显式 environmentId），上游函数改为委托；纯插入 7 行 | 保留上游改动，重新插入这个导出函数并让上游函数委托给它；侧栏终端必须走它，否则 focus-read ratchet 会把侧栏启动算作读取默认主机 |
 | `src/renderer/src/store/index.ts` | 挂点 | import + ...createSidebarTerminalSlice(...a)（2 行） | 保留上游改动，重新加上这 2 行 |
 | `src/renderer/src/store/right-sidebar-route.ts` | 枚举 | normalizeRightSidebarRoute 接受 'terminal'（1 行） | 保留上游改动，重新加上这一行 |
-| `src/renderer/src/store/slices/browser/browser-page-state-actions.ts` | 待回馈上游 | setBrowserPageUrl 在 preserveLoading 时保留原 loading（1 行） | 随 browser-page-webview-navigation-handlers.ts 处理 |
-| `src/renderer/src/store/slices/browser/browser-slice-contract.ts` | 待回馈上游 | SetBrowserPageUrlOptions 加 preserveLoading（1 行） | 随 browser-page-webview-navigation-handlers.ts 处理 |
+| `src/renderer/src/store/slices/browser/browser-page-state-actions.ts` | 待回馈上游 | setBrowserPageUrl 在 preserveLoading 时保留原 loading（1 行） | 保留上游改动，重新加上 preserveLoading 分支 |
+| `src/renderer/src/store/slices/browser/browser-slice-contract.ts` | 待回馈上游 | SetBrowserPageUrlOptions 增加 preserveLoading（1 行） | 保留上游改动，重新加上该字段 |
 | `src/renderer/src/store/slices/store-test-helpers.ts` | 挂点 | import + ...createSidebarTerminalSlice(...a)（2 行） | 保留上游改动，重新加上这 2 行 |
 | `src/renderer/src/store/slices/tabs/tabs-focus-actions.ts` | 挂点 | import + routeTerminalTabToSidebarState 早退（5 行） | 保留上游改动，重新加上 found 之后的早退 |
 | `src/renderer/src/store/slices/worktrees/session/worktree-identity-rename-state.ts` | 挂点 | WORKTREE_ID_KEYED_MAP_KEYS 加 sidebarTerminalSessionsByWorktree（1 行） | 保留上游改动，重新加上这一行 |
