@@ -1,7 +1,7 @@
 {
-  "version": "5.0.12",
+  "version": "5.0.13",
   "target": "darwin-arm64",
-  "file": "a5-game-context-5.0.12-darwin-arm64.tgz",
-  "sha256": "ec73b4596d8393d1536b61def8d71d0c966756aca120a7957ed899325a10386e",
-  "source": "Local test build, not released: GitNexus feature/editor-open-progress (SWC export * of an undefined module as TypeScript 4.1), npm run pack:platform darwin-arm64, in ../GitNexus/context-engine/release"
+  "file": "a5-game-context-5.0.13-darwin-arm64.tgz",
+  "sha256": "cb97aeb20a4b93c5155f1e689c91b4fdf43c8d31502918da28f588b395d771f8",
+  "source": "Local test build, not released: GitNexus bugfix/swc-typescript-parity 4c5dc265f (SWC output as TypeScript 4.1 runs it, projects open without a document, editor logs, errors on TypeScript lines), npm run pack:platform -- --target darwin-arm64"
 }
