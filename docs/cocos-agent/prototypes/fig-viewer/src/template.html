@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fig 渲染查看器</title>
+    <style>
+      :root {
+        --bg: #090a0d;
+        --panel: #10131a;
+        --raised: #161a23;
+        --line: #1e2330;
+        --input: #212836;
+        --text: #dee4e9;
+        --muted: #9eaaba;
+        --accent: #4a7cff;
+        --primary: #2948d6;
+        --warn: #f6c033;
+        --sel: #192138;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font:
+          13px/18px Inter,
+          'PingFang SC',
+          'Noto Sans SC',
+          system-ui,
+          sans-serif;
+      }
+      button,
+      input,
+      select {
+        font: inherit;
+        color: inherit;
+      }
+      header {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px 14px;
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--line);
+        background: var(--panel);
+      }
+      h1 {
+        margin: 0;
+        font-size: 15px;
+        font-weight: 600;
+      }
+      .file {
+        display: inline-flex;
+        align-items: center;
+        height: 30px;
+        padding: 0 12px;
+        border-radius: 6px;
+        background: var(--primary);
+        color: #fff;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .file input {
+        display: none;
+      }
+      #docinfo {
+        color: var(--muted);
+      }
+      #steps {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .chip {
+        padding: 2px 8px;
+        border-radius: 10px;
+        background: var(--raised);
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .chip b {
+        color: var(--text);
+        font-weight: 600;
+      }
+      .chip.strong {
+        background: var(--sel);
+      }
+      #status {
+        margin-left: auto;
+        font-size: 12px;
+        color: var(--muted);
+      }
+      #status[data-kind='ok'] {
+        color: #7fb3ff;
+      }
+      #status[data-kind='error'] {
+        color: var(--warn);
+      }
+      main {
+        display: flex;
+        flex-wrap: wrap;
+        height: calc(100% - 52px);
+        min-height: 520px;
+      }
+      aside {
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        background: var(--panel);
+      }
+      #left {
+        flex: 1 1 280px;
+        max-width: 340px;
+        border-right: 1px solid var(--line);
+      }
+      #right {
+        flex: 1 1 300px;
+        max-width: 360px;
+        border-left: 1px solid var(--line);
+        overflow: auto;
+        padding: 12px;
+        gap: 14px;
+      }
+      .pad {
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        border-bottom: 1px solid var(--line);
+      }
+      select,
+      input[type='search'],
+      input[type='number'] {
+        height: 28px;
+        padding: 0 8px;
+        border: 1px solid var(--input);
+        border-radius: 6px;
+        background: var(--bg);
+      }
+      #tree {
+        flex: 1 1 auto;
+        overflow: auto;
+        padding: 4px 0 12px;
+      }
+      .line {
+        display: flex;
+        align-items: center;
+      }
+      .caret {
+        width: 18px;
+        height: 22px;
+        flex: 0 0 18px;
+        border: 0;
+        background: none;
+        color: var(--muted);
+        cursor: pointer;
+        padding: 0;
+      }
+      .label {
+        flex: 1 1 auto;
+        min-width: 0;
+        height: 22px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        border: 0;
+        background: none;
+        text-align: left;
+        cursor: pointer;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        border-radius: 4px;
+      }
+      .label:hover {
+        background: var(--raised);
+      }
+      .label.sel {
+        background: var(--sel);
+        color: #fff;
+      }
+      .label.hidden {
+        color: var(--muted);
+      }
+      .tag {
+        display: inline-block;
+        width: 14px;
+        text-align: center;
+        color: var(--muted);
+        font-size: 11px;
+      }
+      .more {
+        padding: 6px 16px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      #center {
+        flex: 999 1 480px;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+      }
+      .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px 12px;
+        padding: 8px 12px;
+        border-bottom: 1px solid var(--line);
+        background: var(--panel);
+      }
+      .toolbar label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--muted);
+      }
+      .btn {
+        height: 28px;
+        padding: 0 10px;
+        border: 1px solid var(--input);
+        border-radius: 6px;
+        background: var(--raised);
+        cursor: pointer;
+      }
+      .btn[aria-pressed='true'] {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: #fff;
+      }
+      #viewport {
+        flex: 1 1 auto;
+        min-height: 320px;
+        overflow: auto;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        padding: 20px;
+      }
+      #stage {
+        display: inline-block;
+        line-height: 0;
+        box-shadow: 0 0 0 1px var(--line);
+      }
+      #stage[data-bg='checker'] {
+        background: repeating-conic-gradient(#2a2f3a 0% 25%, #1d212b 0% 50%) 0 0/16px 16px;
+      }
+      #stage[data-bg='dark'] {
+        background: #000;
+      }
+      #stage[data-bg='light'] {
+        background: #fff;
+      }
+      #empty {
+        color: var(--muted);
+        text-align: center;
+        margin-top: 80px;
+        line-height: 24px;
+      }
+      h2 {
+        margin: 0 0 6px;
+        font-size: 13px;
+        font-weight: 600;
+      }
+      section {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .kv {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        font-size: 12px;
+      }
+      .kv span:first-child {
+        color: var(--muted);
+        flex: 0 0 auto;
+      }
+      .kv span:last-child {
+        text-align: right;
+        word-break: break-all;
+      }
+      .note {
+        font-size: 12px;
+        line-height: 17px;
+        color: var(--muted);
+        margin: 0;
+      }
+      .warn {
+        font-size: 12px;
+        color: var(--warn);
+      }
+      pre.err {
+        white-space: pre-wrap;
+        font-size: 11px;
+        color: var(--warn);
+        background: var(--raised);
+        padding: 8px;
+        border-radius: 6px;
+        max-height: 200px;
+        overflow: auto;
+      }
+      #drop {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(9, 10, 13, 0.82);
+        font-size: 18px;
+        border: 3px dashed var(--accent);
+      }
+      #drop[hidden] {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Fig 渲染查看器</h1>
+      <label class="file">打开 .fig 文件<input id="file" type="file" accept=".fig" /></label>
+      <span id="docinfo">也可以直接把 .fig 拖进窗口</span>
+      <div id="steps"></div>
+      <span id="status" role="status"></span>
+    </header>
+    <main>
+      <aside id="left" aria-label="页面与图层">
+        <div class="pad">
+          <label for="pages" class="note">页面</label>
+          <select id="pages"></select>
+          <input
+            id="search"
+            type="search"
+            placeholder="在这一页搜索图层名"
+            aria-label="在这一页搜索图层名"
+          />
+        </div>
+        <div id="tree"></div>
+      </aside>
+      <section id="center" aria-label="渲染结果">
+        <div class="toolbar">
+          <label
+            >倍率
+            <select id="scale">
+              <option value="0.5">0.5x</option>
+              <option value="1" selected>1x</option>
+              <option value="2">2x</option>
+              <option value="3">3x</option>
+            </select></label
+          >
+          <label
+            >显示
+            <select id="zoom">
+              <option value="fit" selected>适应窗口</option>
+              <option value="0.5">50%</option>
+              <option value="1">100%</option>
+              <option value="2">200%</option>
+              <option value="4">400%</option>
+            </select></label
+          >
+          <label
+            >背景
+            <select id="bg">
+              <option value="checker" selected>透明格</option>
+              <option value="dark">黑色</option>
+              <option value="light">白色</option>
+            </select></label
+          >
+          <button class="btn" data-view="render" aria-pressed="true">渲染结果</button>
+          <button class="btn" data-view="figma" aria-pressed="false">Figma 导出</button>
+          <button class="btn" data-view="diff" aria-pressed="false">差异</button>
+          <button class="btn" id="download">下载 PNG</button>
+        </div>
+        <div id="viewport">
+          <div id="stage" data-bg="checker">
+            <p id="empty">
+              打开 .fig 后，在左边点一个 frame 或组件来渲染。<br />文件只在本机浏览器里读取，不会上传。
+            </p>
+          </div>
+        </div>
+      </section>
+      <aside id="right" aria-label="信息与对比">
+        <section>
+          <h2>图层</h2>
+          <div id="info"><p class="note">还没有选中图层</p></div>
+        </section>
+        <section>
+          <h2>渲染统计</h2>
+          <div id="stats"><p class="note">—</p></div>
+        </section>
+        <section>
+          <h2>渲染参数</h2>
+          <label class="kv" for="aa"
+            ><span>边缘抗锯齿</span
+            ><select id="aa">
+              <option value="figma" selected>Figma（每像素 4 采样点）</option>
+              <option value="canvas">浏览器自带</option>
+            </select></label
+          >
+          <label class="kv" for="imgq"
+            ><span>图片采样</span
+            ><select id="imgq">
+              <option value="pyramid" selected>Figma（逐级减半 + 双线性）</option>
+              <option value="bicubic">Figma 双三次（导出设置 useBicubicSampler）</option>
+              <option value="canvas">浏览器自带</option>
+            </select></label
+          >
+          <p class="note">
+            默认值按 Figma 原生导出逐像素校准过。若导出设置开了
+            useBicubicSampler，图片改选「双三次」更接近。
+          </p>
+          <label class="kv" for="blurk"
+            ><span>模糊核系数</span
+            ><input id="blurk" type="number" min="0.1" max="3" step="0.05" value="1"
+          /></label>
+          <p class="note">
+            三角核半宽 = 系数 × 面板模糊值 × 倍率。逆向出的代码是「0.5 × 渲染树模糊值」，和 Figma
+            原生导出对比时最佳值是 1.0。
+          </p>
+        </section>
+        <section>
+          <h2>和 Figma 原生导出对比</h2>
+          <p class="note">在 Figma 里用相同倍率导出同一个图层的 PNG，选到这里或拖进窗口。</p>
+          <label class="btn" style="display: inline-flex; align-items: center; width: max-content"
+            >选择导出的 PNG<input id="figma" type="file" accept="image/png" hidden
+          /></label>
+          <span id="figname" class="note"></span>
+          <div id="metrics"></div>
+        </section>
+      </aside>
+    </main>
+    <div id="drop" hidden>松开以打开（.fig 打开设计稿；PNG 用来和渲染结果对比）</div>
+    <!--SCRIPTS-->
+  </body>
+</html>

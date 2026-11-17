@@ -1,0 +1,4038 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fig 渲染查看器</title>
+    <style>
+      :root {
+        --bg: #090a0d;
+        --panel: #10131a;
+        --raised: #161a23;
+        --line: #1e2330;
+        --input: #212836;
+        --text: #dee4e9;
+        --muted: #9eaaba;
+        --accent: #4a7cff;
+        --primary: #2948d6;
+        --warn: #f6c033;
+        --sel: #192138;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font:
+          13px/18px Inter,
+          'PingFang SC',
+          'Noto Sans SC',
+          system-ui,
+          sans-serif;
+      }
+      button,
+      input,
+      select {
+        font: inherit;
+        color: inherit;
+      }
+      header {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px 14px;
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--line);
+        background: var(--panel);
+      }
+      h1 {
+        margin: 0;
+        font-size: 15px;
+        font-weight: 600;
+      }
+      .file {
+        display: inline-flex;
+        align-items: center;
+        height: 30px;
+        padding: 0 12px;
+        border-radius: 6px;
+        background: var(--primary);
+        color: #fff;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .file input {
+        display: none;
+      }
+      #docinfo {
+        color: var(--muted);
+      }
+      #steps {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .chip {
+        padding: 2px 8px;
+        border-radius: 10px;
+        background: var(--raised);
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .chip b {
+        color: var(--text);
+        font-weight: 600;
+      }
+      .chip.strong {
+        background: var(--sel);
+      }
+      #status {
+        margin-left: auto;
+        font-size: 12px;
+        color: var(--muted);
+      }
+      #status[data-kind='ok'] {
+        color: #7fb3ff;
+      }
+      #status[data-kind='error'] {
+        color: var(--warn);
+      }
+      main {
+        display: flex;
+        flex-wrap: wrap;
+        height: calc(100% - 52px);
+        min-height: 520px;
+      }
+      aside {
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        background: var(--panel);
+      }
+      #left {
+        flex: 1 1 280px;
+        max-width: 340px;
+        border-right: 1px solid var(--line);
+      }
+      #right {
+        flex: 1 1 300px;
+        max-width: 360px;
+        border-left: 1px solid var(--line);
+        overflow: auto;
+        padding: 12px;
+        gap: 14px;
+      }
+      .pad {
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        border-bottom: 1px solid var(--line);
+      }
+      select,
+      input[type='search'],
+      input[type='number'] {
+        height: 28px;
+        padding: 0 8px;
+        border: 1px solid var(--input);
+        border-radius: 6px;
+        background: var(--bg);
+      }
+      #tree {
+        flex: 1 1 auto;
+        overflow: auto;
+        padding: 4px 0 12px;
+      }
+      .line {
+        display: flex;
+        align-items: center;
+      }
+      .caret {
+        width: 18px;
+        height: 22px;
+        flex: 0 0 18px;
+        border: 0;
+        background: none;
+        color: var(--muted);
+        cursor: pointer;
+        padding: 0;
+      }
+      .label {
+        flex: 1 1 auto;
+        min-width: 0;
+        height: 22px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        border: 0;
+        background: none;
+        text-align: left;
+        cursor: pointer;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        border-radius: 4px;
+      }
+      .label:hover {
+        background: var(--raised);
+      }
+      .label.sel {
+        background: var(--sel);
+        color: #fff;
+      }
+      .label.hidden {
+        color: var(--muted);
+      }
+      .tag {
+        display: inline-block;
+        width: 14px;
+        text-align: center;
+        color: var(--muted);
+        font-size: 11px;
+      }
+      .more {
+        padding: 6px 16px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      #center {
+        flex: 999 1 480px;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+      }
+      .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px 12px;
+        padding: 8px 12px;
+        border-bottom: 1px solid var(--line);
+        background: var(--panel);
+      }
+      .toolbar label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--muted);
+      }
+      .btn {
+        height: 28px;
+        padding: 0 10px;
+        border: 1px solid var(--input);
+        border-radius: 6px;
+        background: var(--raised);
+        cursor: pointer;
+      }
+      .btn[aria-pressed='true'] {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: #fff;
+      }
+      #viewport {
+        flex: 1 1 auto;
+        min-height: 320px;
+        overflow: auto;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        padding: 20px;
+      }
+      #stage {
+        display: inline-block;
+        line-height: 0;
+        box-shadow: 0 0 0 1px var(--line);
+      }
+      #stage[data-bg='checker'] {
+        background: repeating-conic-gradient(#2a2f3a 0% 25%, #1d212b 0% 50%) 0 0/16px 16px;
+      }
+      #stage[data-bg='dark'] {
+        background: #000;
+      }
+      #stage[data-bg='light'] {
+        background: #fff;
+      }
+      #empty {
+        color: var(--muted);
+        text-align: center;
+        margin-top: 80px;
+        line-height: 24px;
+      }
+      h2 {
+        margin: 0 0 6px;
+        font-size: 13px;
+        font-weight: 600;
+      }
+      section {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .kv {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        font-size: 12px;
+      }
+      .kv span:first-child {
+        color: var(--muted);
+        flex: 0 0 auto;
+      }
+      .kv span:last-child {
+        text-align: right;
+        word-break: break-all;
+      }
+      .note {
+        font-size: 12px;
+        line-height: 17px;
+        color: var(--muted);
+        margin: 0;
+      }
+      .warn {
+        font-size: 12px;
+        color: var(--warn);
+      }
+      pre.err {
+        white-space: pre-wrap;
+        font-size: 11px;
+        color: var(--warn);
+        background: var(--raised);
+        padding: 8px;
+        border-radius: 6px;
+        max-height: 200px;
+        overflow: auto;
+      }
+      #drop {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(9, 10, 13, 0.82);
+        font-size: 18px;
+        border: 3px dashed var(--accent);
+      }
+      #drop[hidden] {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Fig 渲染查看器</h1>
+      <label class="file">打开 .fig 文件<input id="file" type="file" accept=".fig" /></label>
+      <span id="docinfo">也可以直接把 .fig 拖进窗口</span>
+      <div id="steps"></div>
+      <span id="status" role="status"></span>
+    </header>
+    <main>
+      <aside id="left" aria-label="页面与图层">
+        <div class="pad">
+          <label for="pages" class="note">页面</label>
+          <select id="pages"></select>
+          <input
+            id="search"
+            type="search"
+            placeholder="在这一页搜索图层名"
+            aria-label="在这一页搜索图层名"
+          />
+        </div>
+        <div id="tree"></div>
+      </aside>
+      <section id="center" aria-label="渲染结果">
+        <div class="toolbar">
+          <label
+            >倍率
+            <select id="scale">
+              <option value="0.5">0.5x</option>
+              <option value="1" selected>1x</option>
+              <option value="2">2x</option>
+              <option value="3">3x</option>
+            </select></label
+          >
+          <label
+            >显示
+            <select id="zoom">
+              <option value="fit" selected>适应窗口</option>
+              <option value="0.5">50%</option>
+              <option value="1">100%</option>
+              <option value="2">200%</option>
+              <option value="4">400%</option>
+            </select></label
+          >
+          <label
+            >背景
+            <select id="bg">
+              <option value="checker" selected>透明格</option>
+              <option value="dark">黑色</option>
+              <option value="light">白色</option>
+            </select></label
+          >
+          <button class="btn" data-view="render" aria-pressed="true">渲染结果</button>
+          <button class="btn" data-view="figma" aria-pressed="false">Figma 导出</button>
+          <button class="btn" data-view="diff" aria-pressed="false">差异</button>
+          <button class="btn" id="download">下载 PNG</button>
+        </div>
+        <div id="viewport">
+          <div id="stage" data-bg="checker">
+            <p id="empty">
+              打开 .fig 后，在左边点一个 frame 或组件来渲染。<br />文件只在本机浏览器里读取，不会上传。
+            </p>
+          </div>
+        </div>
+      </section>
+      <aside id="right" aria-label="信息与对比">
+        <section>
+          <h2>图层</h2>
+          <div id="info"><p class="note">还没有选中图层</p></div>
+        </section>
+        <section>
+          <h2>渲染统计</h2>
+          <div id="stats"><p class="note">—</p></div>
+        </section>
+        <section>
+          <h2>渲染参数</h2>
+          <label class="kv" for="aa"
+            ><span>边缘抗锯齿</span
+            ><select id="aa">
+              <option value="figma" selected>Figma（每像素 4 采样点）</option>
+              <option value="canvas">浏览器自带</option>
+            </select></label
+          >
+          <label class="kv" for="imgq"
+            ><span>图片采样</span
+            ><select id="imgq">
+              <option value="pyramid" selected>Figma（逐级减半 + 双线性）</option>
+              <option value="bicubic">Figma 双三次（导出设置 useBicubicSampler）</option>
+              <option value="canvas">浏览器自带</option>
+            </select></label
+          >
+          <p class="note">
+            默认值按 Figma 原生导出逐像素校准过。若导出设置开了
+            useBicubicSampler，图片改选「双三次」更接近。
+          </p>
+          <label class="kv" for="blurk"
+            ><span>模糊核系数</span
+            ><input id="blurk" type="number" min="0.1" max="3" step="0.05" value="1"
+          /></label>
+          <p class="note">
+            三角核半宽 = 系数 × 面板模糊值 × 倍率。逆向出的代码是「0.5 × 渲染树模糊值」，和 Figma
+            原生导出对比时最佳值是 1.0。
+          </p>
+        </section>
+        <section>
+          <h2>和 Figma 原生导出对比</h2>
+          <p class="note">在 Figma 里用相同倍率导出同一个图层的 PNG，选到这里或拖进窗口。</p>
+          <label class="btn" style="display: inline-flex; align-items: center; width: max-content"
+            >选择导出的 PNG<input id="figma" type="file" accept="image/png" hidden
+          /></label>
+          <span id="figname" class="note"></span>
+          <div id="metrics"></div>
+        </section>
+      </aside>
+    </main>
+    <div id="drop" hidden>松开以打开（.fig 打开设计稿；PNG 用来和渲染结果对比）</div>
+    <script>
+      /* oxlint-disable eslint/curly, eslint/no-else-return, eslint/no-unused-expressions, eslint/no-unused-vars -- vendored browser decoder */
+      /*! fzstd (https://github.com/101arrowz/fzstd)
+       * MIT License
+       *
+       * Copyright (c) 2020 Arjun Barrett
+       *
+       * Permission is hereby granted, free of charge, to any person obtaining a copy
+       * of this software and associated documentation files (the "Software"), to deal
+       * in the Software without restriction, including without limitation the rights
+       * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+       * copies of the Software, and to permit persons to whom the Software is
+       * furnished to do so, subject to the following conditions:
+       *
+       * The above copyright notice and this permission notice shall be included in all
+       * copies or substantial portions of the Software.
+       *
+       * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+       * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+       * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+       * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+       * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+       * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+       * SOFTWARE.
+       */
+      var fzstd = (function () {
+        // Some numerical data is initialized as -1 even when it doesn't need initialization to help the JIT infer types
+
+        // aliases for shorter compressed code (most minifers don't do this)
+        const ab = ArrayBuffer,
+          u8 = Uint8Array,
+          u16 = Uint16Array,
+          i16 = Int16Array,
+          u32 = Uint32Array,
+          i32 = Int32Array
+
+        // Huffman decoding table
+
+        // FSE decoding table
+
+        // decompress Zstandard state
+
+        const slc = (v, s, e) => {
+          if (u8.prototype.slice) return u8.prototype.slice.call(v, s, e)
+          if (s == null || s < 0) s = 0
+          if (e == null || e > v.length) e = v.length
+          const n = new u8(e - s)
+          n.set(v.subarray(s, e))
+          return n
+        }
+
+        const fill = (v, n, s, e) => {
+          if (u8.prototype.fill) return u8.prototype.fill.call(v, n, s, e)
+          if (s == null || s < 0) s = 0
+          if (e == null || e > v.length) e = v.length
+          for (; s < e; ++s) v[s] = n
+          return v
+        }
+
+        const cpw = (v, t, s, e) => {
+          if (u8.prototype.copyWithin) return u8.prototype.copyWithin.call(v, t, s, e)
+          if (s == null || s < 0) s = 0
+          if (e == null || e > v.length) e = v.length
+          while (s < e) {
+            v[t++] = v[s++]
+          }
+        }
+
+        /**
+         * Codes for errors generated within this library
+         */
+        const ZstdErrorCode = {
+          InvalidData: 0,
+          WindowSizeTooLarge: 1,
+          InvalidBlockType: 2,
+          FSEAccuracyTooHigh: 3,
+          DistanceTooFarBack: 4,
+          UnexpectedEOF: 5
+        }
+
+        // error codes
+        const ec = [
+          'invalid zstd data',
+          'window size too large (>2046MB)',
+          'invalid block type',
+          'FSE accuracy too high',
+          'match distance too far back',
+          'unexpected EOF'
+        ]
+
+        /**
+         * An error generated within this library
+         */
+
+        const err = (ind, msg, nt) => {
+          const e = new Error(msg || ec[ind])
+          e.code = ind
+          if (Error.captureStackTrace) Error.captureStackTrace(e, err)
+          if (!nt) throw e
+          return e
+        }
+
+        const rb = (d, b, n) => {
+          let i = 0,
+            o = 0
+          for (; i < n; ++i) o |= d[b++] << (i << 3)
+          return o
+        }
+
+        const b4 = (d, b) => (d[b] | (d[b + 1] << 8) | (d[b + 2] << 16) | (d[b + 3] << 24)) >>> 0
+
+        // read Zstandard frame header
+        const rzfh = (dat, w) => {
+          const n3 = dat[0] | (dat[1] << 8) | (dat[2] << 16)
+          if (n3 == 0x2fb528 && dat[3] == 253) {
+            // Zstandard
+            const flg = dat[4]
+            //    single segment       checksum             dict flag     frame content flag
+            const ss = (flg >> 5) & 1,
+              cc = (flg >> 2) & 1,
+              df = flg & 3,
+              fcf = flg >> 6
+            if (flg & 8) err(0)
+            // byte
+            let bt = 6 - ss
+            // dict bytes
+            const db = df == 3 ? 4 : df
+            // dictionary id
+            const di = rb(dat, bt, db)
+            bt += db
+            // frame size bytes
+            const fsb = fcf ? 1 << fcf : ss
+            // frame source size
+            const fss = rb(dat, bt, fsb) + (fcf == 1 && 256)
+            // window size
+            let ws = fss
+            if (!ss) {
+              // window descriptor
+              const wb = 1 << (10 + (dat[5] >> 3))
+              ws = wb + (wb >> 3) * (dat[5] & 7)
+            }
+            if (ws > 2145386496) err(1)
+            const buf = new u8((w == 1 ? fss || ws : w ? 0 : ws) + 12)
+            ;((buf[0] = 1), (buf[4] = 4), (buf[8] = 8))
+            return {
+              b: bt + fsb,
+              y: 0,
+              l: 0,
+              d: di,
+              w: w && w != 1 ? w : buf.subarray(12),
+              e: ws,
+              o: new i32(buf.buffer, 0, 3),
+              u: fss,
+              c: cc,
+              m: Math.min(131072, ws)
+            }
+          } else if (((n3 >> 4) | (dat[3] << 20)) == 0x184d2a5) {
+            // skippable
+            return b4(dat, 4) + 8
+          }
+          err(0)
+        }
+
+        // most significant bit for nonzero
+        const msb = (val) => {
+          let bits = 0
+          for (; 1 << bits <= val; ++bits);
+          return bits - 1
+        }
+
+        // read finite state entropy
+        const rfse = (dat, bt, mal) => {
+          // table pos
+          let tpos = (bt << 3) + 4
+          // accuracy log
+          const al = (dat[bt] & 15) + 5
+          if (al > mal) err(3)
+          // size
+          const sz = 1 << al
+          // probabilities symbols  repeat   index   high threshold
+          let probs = sz,
+            sym = -1,
+            re = -1,
+            i = -1,
+            ht = sz
+          // optimization: single allocation is much faster
+          const buf = new ab(512 + (sz << 2))
+          const freq = new i16(buf, 0, 256)
+          // same view as freq
+          const dstate = new u16(buf, 0, 256)
+          const nstate = new u16(buf, 512, sz)
+          const bb1 = 512 + (sz << 1)
+          const syms = new u8(buf, bb1, sz)
+          const nbits = new u8(buf, bb1 + sz)
+          while (sym < 255 && probs > 0) {
+            const bits = msb(probs + 1)
+            const cbt = tpos >> 3
+            // mask
+            const msk = (1 << (bits + 1)) - 1
+            let val = ((dat[cbt] | (dat[cbt + 1] << 8) | (dat[cbt + 2] << 16)) >> (tpos & 7)) & msk
+            // mask (1 fewer bit)
+            const msk1fb = (1 << bits) - 1
+            // max small value
+            const msv = msk - probs - 1
+            // small value
+            const sval = val & msk1fb
+            if (sval < msv) ((tpos += bits), (val = sval))
+            else {
+              tpos += bits + 1
+              if (val > msk1fb) val -= msv
+            }
+            freq[++sym] = --val
+            if (val == -1) {
+              probs += val
+              syms[--ht] = sym
+            } else probs -= val
+            if (!val) {
+              do {
+                // repeat byte
+                const rbt = tpos >> 3
+                re = ((dat[rbt] | (dat[rbt + 1] << 8)) >> (tpos & 7)) & 3
+                tpos += 2
+                sym += re
+              } while (re == 3)
+            }
+          }
+          if (sym > 255 || probs) err(0)
+          let sympos = 0
+          // sym step (coprime with sz - formula from zstd source)
+          const sstep = (sz >> 1) + (sz >> 3) + 3
+          // sym mask
+          const smask = sz - 1
+          for (let s = 0; s <= sym; ++s) {
+            const sf = freq[s]
+            if (sf < 1) {
+              dstate[s] = -sf
+              continue
+            }
+            // This is split into two loops in zstd to avoid branching, but as JS is higher-level that is unnecessary
+            for (i = 0; i < sf; ++i) {
+              syms[sympos] = s
+              do {
+                sympos = (sympos + sstep) & smask
+              } while (sympos >= ht)
+            }
+          }
+          // After spreading symbols, should be zero again
+          if (sympos) err(0)
+          for (i = 0; i < sz; ++i) {
+            // next state
+            const ns = dstate[syms[i]]++
+            // num bits
+            const nb = (nbits[i] = al - msb(ns))
+            nstate[i] = (ns << nb) - sz
+          }
+          return [
+            (tpos + 7) >> 3,
+            {
+              b: al,
+              s: syms,
+              n: nbits,
+              t: nstate
+            }
+          ]
+        }
+
+        // read huffman
+        const rhu = (dat, bt) => {
+          //  index  weight count
+          let i = 0,
+            wc = -1
+          //    buffer             header byte
+          const buf = new u8(292),
+            hb = dat[bt]
+          // huffman weights
+          const hw = buf.subarray(0, 256)
+          // rank count
+          const rc = buf.subarray(256, 268)
+          // rank index
+          const ri = new u16(buf.buffer, 268)
+          // NOTE: at this point bt is 1 less than expected
+          if (hb < 128) {
+            // end byte, fse decode table
+            const [ebt, fdt] = rfse(dat, bt + 1, 6)
+            bt += hb
+            const epos = ebt << 3
+            // last byte
+            const lb = dat[bt]
+            if (!lb) err(0)
+            //  state1   state2   state1 bits   state2 bits
+            let st1 = 0,
+              st2 = 0,
+              btr1 = fdt.b,
+              btr2 = btr1
+            // fse pos
+            // pre-increment to account for original deficit of 1
+            let fpos = (++bt << 3) - 8 + msb(lb)
+            for (;;) {
+              fpos -= btr1
+              if (fpos < epos) break
+              let cbt = fpos >> 3
+              st1 += ((dat[cbt] | (dat[cbt + 1] << 8)) >> (fpos & 7)) & ((1 << btr1) - 1)
+              hw[++wc] = fdt.s[st1]
+              fpos -= btr2
+              if (fpos < epos) break
+              cbt = fpos >> 3
+              st2 += ((dat[cbt] | (dat[cbt + 1] << 8)) >> (fpos & 7)) & ((1 << btr2) - 1)
+              hw[++wc] = fdt.s[st2]
+              btr1 = fdt.n[st1]
+              st1 = fdt.t[st1]
+              btr2 = fdt.n[st2]
+              st2 = fdt.t[st2]
+            }
+            if (++wc > 255) err(0)
+          } else {
+            wc = hb - 127
+            for (; i < wc; i += 2) {
+              const byte = dat[++bt]
+              hw[i] = byte >> 4
+              hw[i + 1] = byte & 15
+            }
+            ++bt
+          }
+          // weight exponential sum
+          let wes = 0
+          for (i = 0; i < wc; ++i) {
+            const wt = hw[i]
+            // bits must be at most 11, same as weight
+            if (wt > 11) err(0)
+            wes += wt && 1 << (wt - 1)
+          }
+          // max bits
+          const mb = msb(wes) + 1
+          // table size
+          const ts = 1 << mb
+          // remaining sum
+          const rem = ts - wes
+          // must be power of 2
+          if (rem & (rem - 1)) err(0)
+          hw[wc++] = msb(rem) + 1
+          for (i = 0; i < wc; ++i) {
+            const wt = hw[i]
+            ++rc[(hw[i] = wt && mb + 1 - wt)]
+          }
+          // huf buf
+          const hbuf = new u8(ts << 1)
+          //    symbols                      num bits
+          const syms = hbuf.subarray(0, ts),
+            nb = hbuf.subarray(ts)
+          ri[mb] = 0
+          for (i = mb; i > 0; --i) {
+            const pv = ri[i]
+            fill(nb, i, pv, (ri[i - 1] = pv + rc[i] * (1 << (mb - i))))
+          }
+          if (ri[0] != ts) err(0)
+          for (i = 0; i < wc; ++i) {
+            const bits = hw[i]
+            if (bits) {
+              const code = ri[bits]
+              fill(syms, i, code, (ri[bits] = code + (1 << (mb - bits))))
+            }
+          }
+          return [
+            bt,
+            {
+              n: nb,
+              b: mb,
+              s: syms
+            }
+          ]
+        }
+
+        // Tables generated using this:
+        // https://gist.github.com/101arrowz/a979452d4355992cbf8f257cbffc9edd
+
+        // default literal length table
+        const dllt = /*#__PURE__*/ rfse(
+          /*#__PURE__*/ new u8([
+            81, 16, 99, 140, 49, 198, 24, 99, 12, 33, 196, 24, 99, 102, 102, 134, 70, 146, 4
+          ]),
+          0,
+          6
+        )[1]
+
+        // default match length table
+        const dmlt = /*#__PURE__*/ rfse(
+          /*#__PURE__*/ new u8([
+            33, 20, 196, 24, 99, 140, 33, 132, 16, 66, 8, 33, 132, 16, 66, 8, 33, 68, 68, 68, 68,
+            68, 68, 68, 68, 36, 9
+          ]),
+          0,
+          6
+        )[1]
+
+        // default offset code table
+        const doct = /*#__PURE__ */ rfse(
+          /*#__PURE__*/ new u8([32, 132, 16, 66, 102, 70, 68, 68, 68, 68, 36, 73, 2]),
+          0,
+          5
+        )[1]
+
+        // bits to baseline
+        const b2bl = (b, s) => {
+          const len = b.length,
+            bl = new i32(len)
+          for (let i = 0; i < len; ++i) {
+            bl[i] = s
+            s += 1 << b[i]
+          }
+          return bl
+        }
+
+        // literal length bits
+        const llb = /*#__PURE__ */ new u8(
+          /*#__PURE__ */ new i32([0, 0, 0, 0, 16843009, 50528770, 134678020, 202050057, 269422093])
+            .buffer,
+          0,
+          36
+        )
+
+        // literal length baseline
+        const llbl = /*#__PURE__ */ b2bl(llb, 0)
+
+        // match length bits
+        const mlb = /*#__PURE__ */ new u8(
+          /*#__PURE__ */ new i32([
+            0, 0, 0, 0, 0, 0, 0, 0, 16843009, 50528770, 117769220, 185207048, 252579084, 16
+          ]).buffer,
+          0,
+          53
+        )
+
+        // match length baseline
+        const mlbl = /*#__PURE__ */ b2bl(mlb, 3)
+
+        // decode huffman stream
+        const dhu = (dat, out, hu) => {
+          const len = dat.length,
+            ss = out.length,
+            lb = dat[len - 1],
+            msk = (1 << hu.b) - 1,
+            eb = -hu.b
+          if (!lb) err(0)
+          let st = 0,
+            btr = hu.b,
+            pos = (len << 3) - 8 + msb(lb) - btr,
+            i = -1
+          for (; pos > eb && i < ss;) {
+            const cbt = pos >> 3
+            const val = (dat[cbt] | (dat[cbt + 1] << 8) | (dat[cbt + 2] << 16)) >> (pos & 7)
+            st = ((st << btr) | val) & msk
+            out[++i] = hu.s[st]
+            pos -= btr = hu.n[st]
+          }
+          if (pos != eb || i + 1 != ss) err(0)
+        }
+
+        // decode huffman stream 4x
+        // TODO: use workers to parallelize
+        const dhu4 = (dat, out, hu) => {
+          let bt = 6
+          const ss = out.length,
+            sz1 = (ss + 3) >> 2,
+            sz2 = sz1 << 1,
+            sz3 = sz1 + sz2
+          dhu(dat.subarray(bt, (bt += dat[0] | (dat[1] << 8))), out.subarray(0, sz1), hu)
+          dhu(dat.subarray(bt, (bt += dat[2] | (dat[3] << 8))), out.subarray(sz1, sz2), hu)
+          dhu(dat.subarray(bt, (bt += dat[4] | (dat[5] << 8))), out.subarray(sz2, sz3), hu)
+          dhu(dat.subarray(bt), out.subarray(sz3), hu)
+        }
+
+        // read Zstandard block
+        const rzb = (dat, st, out) => {
+          let bt = st.b
+          //    byte 0        block type
+          const b0 = dat[bt],
+            btype = (b0 >> 1) & 3
+          st.l = b0 & 1
+          const sz = (b0 >> 3) | (dat[bt + 1] << 5) | (dat[bt + 2] << 13)
+          // end byte for block
+          const ebt = (bt += 3) + sz
+          if (btype == 1) {
+            if (bt >= dat.length) return
+            st.b = bt + 1
+            if (out) {
+              fill(out, dat[bt], st.y, (st.y += sz))
+              return out
+            }
+            return fill(new u8(sz), dat[bt])
+          }
+          if (ebt > dat.length) return
+          if (btype == 0) {
+            st.b = ebt
+            if (out) {
+              out.set(dat.subarray(bt, ebt), st.y)
+              st.y += sz
+              return out
+            }
+            return slc(dat, bt, ebt)
+          }
+          if (btype == 2) {
+            //    byte 3        lit btype     size format
+            const b3 = dat[bt],
+              lbt = b3 & 3,
+              sf = (b3 >> 2) & 3
+            // lit src size  lit cmp sz 4 streams
+            let lss = b3 >> 4,
+              lcs = 0,
+              s4 = 0
+            if (lbt < 2) {
+              if (sf & 1) lss |= (dat[++bt] << 4) | (sf & 2 && dat[++bt] << 12)
+              else lss = b3 >> 3
+            } else {
+              s4 = sf
+              if (sf < 2)
+                ((lss |= (dat[++bt] & 63) << 4), (lcs = (dat[bt] >> 6) | (dat[++bt] << 2)))
+              else if (sf == 2)
+                ((lss |= (dat[++bt] << 4) | ((dat[++bt] & 3) << 12)),
+                  (lcs = (dat[bt] >> 2) | (dat[++bt] << 6)))
+              else
+                ((lss |= (dat[++bt] << 4) | ((dat[++bt] & 63) << 12)),
+                  (lcs = (dat[bt] >> 6) | (dat[++bt] << 2) | (dat[++bt] << 10)))
+            }
+            ++bt
+            // add literals to end - can never overlap with backreferences because unused literals always appended
+            let buf = out ? out.subarray(st.y, st.y + st.m) : new u8(st.m)
+            // starting point for literals
+            let spl = buf.length - lss
+            if (lbt == 0) buf.set(dat.subarray(bt, (bt += lss)), spl)
+            else if (lbt == 1) fill(buf, dat[bt++], spl)
+            else {
+              // huffman table
+              let hu = st.h
+              if (lbt == 2) {
+                const hud = rhu(dat, bt)
+                // subtract description length
+                lcs += bt - (bt = hud[0])
+                st.h = hu = hud[1]
+              } else if (!hu) err(0)
+              ;(s4 ? dhu4 : dhu)(dat.subarray(bt, (bt += lcs)), buf.subarray(spl), hu)
+            }
+            // num sequences
+            let ns = dat[bt++]
+            if (ns) {
+              if (ns == 255) ns = (dat[bt++] | (dat[bt++] << 8)) + 0x7f00
+              else if (ns > 127) ns = ((ns - 128) << 8) | dat[bt++]
+              // symbol compression modes
+              const scm = dat[bt++]
+              if (scm & 3) err(0)
+              const dts = [dmlt, doct, dllt]
+              for (let i = 2; i > -1; --i) {
+                const md = (scm >> ((i << 1) + 2)) & 3
+                if (md == 1) {
+                  // rle buf
+                  const rbuf = new u8([0, 0, dat[bt++]])
+                  dts[i] = {
+                    s: rbuf.subarray(2, 3),
+                    n: rbuf.subarray(0, 1),
+                    t: new u16(rbuf.buffer, 0, 1),
+                    b: 0
+                  }
+                } else if (md == 2) {
+                  // accuracy log 8 for offsets, 9 for others
+                  ;[bt, dts[i]] = rfse(dat, bt, 9 - (i & 1))
+                } else if (md == 3) {
+                  if (!st.t) err(0)
+                  dts[i] = st.t[i]
+                }
+              }
+              const [mlt, oct, llt] = (st.t = dts)
+              const lb = dat[ebt - 1]
+              if (!lb) err(0)
+              let spos = (ebt << 3) - 8 + msb(lb) - llt.b,
+                cbt = spos >> 3,
+                oubt = 0
+              let lst = ((dat[cbt] | (dat[cbt + 1] << 8)) >> (spos & 7)) & ((1 << llt.b) - 1)
+              cbt = (spos -= oct.b) >> 3
+              let ost = ((dat[cbt] | (dat[cbt + 1] << 8)) >> (spos & 7)) & ((1 << oct.b) - 1)
+              cbt = (spos -= mlt.b) >> 3
+              let mst = ((dat[cbt] | (dat[cbt + 1] << 8)) >> (spos & 7)) & ((1 << mlt.b) - 1)
+              for (++ns; --ns;) {
+                const llc = llt.s[lst]
+                const lbtr = llt.n[lst]
+                const mlc = mlt.s[mst]
+                const mbtr = mlt.n[mst]
+                const ofc = oct.s[ost]
+                const obtr = oct.n[ost]
+
+                cbt = (spos -= ofc) >> 3
+                const ofp = 1 << ofc
+                let off =
+                  ofp +
+                  (((dat[cbt] |
+                    (dat[cbt + 1] << 8) |
+                    (dat[cbt + 2] << 16) |
+                    (dat[cbt + 3] << 24)) >>>
+                    (spos & 7)) &
+                    (ofp - 1))
+                cbt = (spos -= mlb[mlc]) >> 3
+                let ml =
+                  mlbl[mlc] +
+                  (((dat[cbt] | (dat[cbt + 1] << 8) | (dat[cbt + 2] << 16)) >> (spos & 7)) &
+                    ((1 << mlb[mlc]) - 1))
+                cbt = (spos -= llb[llc]) >> 3
+                const ll =
+                  llbl[llc] +
+                  (((dat[cbt] | (dat[cbt + 1] << 8) | (dat[cbt + 2] << 16)) >> (spos & 7)) &
+                    ((1 << llb[llc]) - 1))
+
+                cbt = (spos -= lbtr) >> 3
+                lst =
+                  llt.t[lst] +
+                  (((dat[cbt] | (dat[cbt + 1] << 8)) >> (spos & 7)) & ((1 << lbtr) - 1))
+                cbt = (spos -= mbtr) >> 3
+                mst =
+                  mlt.t[mst] +
+                  (((dat[cbt] | (dat[cbt + 1] << 8)) >> (spos & 7)) & ((1 << mbtr) - 1))
+                cbt = (spos -= obtr) >> 3
+                ost =
+                  oct.t[ost] +
+                  (((dat[cbt] | (dat[cbt + 1] << 8)) >> (spos & 7)) & ((1 << obtr) - 1))
+
+                if (off > 3) {
+                  st.o[2] = st.o[1]
+                  st.o[1] = st.o[0]
+                  st.o[0] = off -= 3
+                } else {
+                  const idx = off - (ll != 0)
+                  if (idx) {
+                    off = idx == 3 ? st.o[0] - 1 : st.o[idx]
+                    if (idx > 1) st.o[2] = st.o[1]
+                    st.o[1] = st.o[0]
+                    st.o[0] = off
+                  } else off = st.o[0]
+                }
+                for (let i = 0; i < ll; ++i) {
+                  buf[oubt + i] = buf[spl + i]
+                }
+                ;((oubt += ll), (spl += ll))
+                let stin = oubt - off
+                if (stin < 0) {
+                  let len = -stin
+                  const bs = st.e + stin
+                  if (len > ml) len = ml
+                  for (let i = 0; i < len; ++i) {
+                    buf[oubt + i] = st.w[bs + i]
+                  }
+                  ;((oubt += len), (ml -= len), (stin = 0))
+                }
+                for (let i = 0; i < ml; ++i) {
+                  buf[oubt + i] = buf[stin + i]
+                }
+                oubt += ml
+              }
+              if (oubt != spl) {
+                while (spl < buf.length) {
+                  buf[oubt++] = buf[spl++]
+                }
+              } else oubt = buf.length
+              if (out) st.y += oubt
+              else buf = slc(buf, 0, oubt)
+            } else if (out) {
+              st.y += lss
+              if (spl) {
+                for (let i = 0; i < lss; ++i) {
+                  buf[i] = buf[spl + i]
+                }
+              }
+            } else if (spl) buf = slc(buf, spl)
+            st.b = ebt
+            return buf
+          }
+          err(2)
+        }
+
+        // concat
+        const cct = (bufs, ol) => {
+          if (bufs.length == 1) return bufs[0]
+          const buf = new u8(ol)
+          for (let i = 0, b = 0; i < bufs.length; ++i) {
+            const chk = bufs[i]
+            buf.set(chk, b)
+            b += chk.length
+          }
+          return buf
+        }
+
+        /**
+         * Decompresses Zstandard data
+         * @param dat The input data
+         * @param buf The output buffer. If unspecified, the function will allocate
+         *            exactly enough memory to fit the decompressed data. If your
+         *            data has multiple frames and you know the output size, specifying
+         *            it will yield better performance.
+         * @returns The decompressed data
+         */
+        function decompress(dat, buf) {
+          const bufs = [],
+            nb = +!buf
+          let bt = 0,
+            ol = 0
+          for (; dat.length;) {
+            const st = rzfh(dat, nb || buf)
+            if (typeof st == 'object') {
+              if (nb) {
+                buf = null
+                if (st.w.length == st.u) {
+                  bufs.push((buf = st.w))
+                  ol += st.u
+                }
+              } else {
+                bufs.push(buf)
+                st.e = 0
+              }
+              for (; !st.l;) {
+                const blk = rzb(dat, st, buf)
+                if (!blk) err(5)
+                if (buf) st.e = st.y
+                else {
+                  bufs.push(blk)
+                  ol += blk.length
+                  cpw(st.w, 0, blk.length)
+                  st.w.set(blk, st.w.length - blk.length)
+                }
+              }
+              bt = st.b + st.c * 4
+            } else bt = st
+            dat = dat.subarray(bt)
+          }
+          return cct(bufs, ol)
+        }
+
+        /**
+         * Callback to handle data in Zstandard streams
+         * @param data The data that was (de)compressed
+         * @param final Whether this is the last chunk in the stream
+         */
+
+        /**
+         * Decompressor for Zstandard streamed data
+         */
+        class Decompress {
+          s
+          c
+          l
+          z
+          /**
+           * Creates a Zstandard decompressor
+           * @param ondata The handler for stream data
+           */
+          constructor(ondata) {
+            this.ondata = ondata
+            this.c = []
+            this.l = 0
+            this.z = 0
+          }
+
+          /**
+           * Pushes data to be decompressed
+           * @param chunk The chunk of data to push
+           * @param final Whether or not this is the last chunk in the stream
+           */
+          push(chunk, final) {
+            if (typeof this.s == 'number') {
+              const sub = Math.min(chunk.length, this.s)
+              chunk = chunk.subarray(sub)
+              this.s -= sub
+            }
+            const sl = chunk.length
+            const ncs = sl + this.l
+            if (!this.s) {
+              if (final) {
+                if (!ncs) {
+                  this.ondata(new u8(0), true)
+                  return
+                }
+                // min for frame + one block
+                if (ncs < 5) err(5)
+              } else if (ncs < 18) {
+                this.c.push(chunk)
+                this.l = ncs
+                return
+              }
+              if (this.l) {
+                this.c.push(chunk)
+                chunk = cct(this.c, ncs)
+                this.c = []
+                this.l = 0
+              }
+              if (typeof (this.s = rzfh(chunk)) == 'number') return this.push(chunk, final)
+            }
+            if (typeof this.s != 'number') {
+              if (ncs < (this.z || 3)) {
+                if (final) err(5)
+                this.c.push(chunk)
+                this.l = ncs
+                return
+              }
+              if (this.l) {
+                this.c.push(chunk)
+                chunk = cct(this.c, ncs)
+                this.c = []
+                this.l = 0
+              }
+              if (
+                !this.z &&
+                ncs <
+                  (this.z =
+                    chunk[this.s.b] & 2
+                      ? 4
+                      : 3 +
+                        ((chunk[this.s.b] >> 3) |
+                          (chunk[this.s.b + 1] << 5) |
+                          (chunk[this.s.b + 2] << 13)))
+              ) {
+                if (final) err(5)
+                this.c.push(chunk)
+                this.l = ncs
+                return
+              } else this.z = 0
+              for (;;) {
+                const blk = rzb(chunk, this.s)
+                if (!blk) {
+                  if (final) err(5)
+                  const adc = chunk.subarray(this.s.b)
+                  this.s.b = 0
+                  ;(this.c.push(adc), (this.l += adc.length))
+                  return
+                } else {
+                  this.ondata(blk, false)
+                  cpw(this.s.w, 0, blk.length)
+                  this.s.w.set(blk, this.s.w.length - blk.length)
+                }
+                if (this.s.l) {
+                  const rest = chunk.subarray(this.s.b)
+                  this.s = this.s.c * 4
+                  this.push(rest, final)
+                  return
+                }
+              }
+            } else if (final) err(5)
+          }
+
+          /**
+           * Handler called whenever data is decompressed
+           */
+          ondata
+        }
+        return { decompress: decompress, Decompress: Decompress }
+      })()
+      if (typeof module !== 'undefined') module.exports = fzstd
+    </script>
+    <script>
+      /* oxlint-disable eslint/curly, eslint/no-unused-vars, eslint/prefer-template, unicorn/no-new-array -- browser and Node compatibility decoder */
+      /* fig-core.js — reads a saved Figma file (.fig ZIP or bare fig-kiwi): container, the kiwi schema embedded in the
+       * file, a node index built in one pass, and on-demand decoding of single nodes. Runs in browsers and in Node. */
+      ;(function (root, factory) {
+        const api = factory()
+        if (typeof module !== 'undefined' && module.exports) module.exports = api
+        else root.FigCore = api
+      })(typeof self !== 'undefined' ? self : this, function () {
+        'use strict'
+        const u16 = (b, o) => b[o] | (b[o + 1] << 8)
+        const u32 = (b, o) => (b[o] | (b[o + 1] << 8) | (b[o + 2] << 16) | (b[o + 3] << 24)) >>> 0
+        const td = new TextDecoder()
+        const now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now())
+        const gk = (g) => g.sessionID + ':' + g.localID
+
+        // ZIP central directory (stored or deflated entries; files under 4 GB).
+        async function openZip(reader) {
+          const tailLen = Math.min(reader.size, 65557)
+          const tail = await reader.read(reader.size - tailLen, tailLen)
+          let e = -1
+          for (let i = tail.length - 22; i >= 0; i--)
+            if (u32(tail, i) === 0x06054b50) {
+              e = i
+              break
+            }
+          if (e < 0) throw new Error('不是有效的 ZIP：找不到目录记录')
+          const count = u16(tail, e + 10),
+            cdSize = u32(tail, e + 12),
+            cdOff = u32(tail, e + 16)
+          const cd = await reader.read(cdOff, cdSize)
+          const entries = new Map()
+          for (
+            let p = 0, k = 0;
+            k < count && p + 46 <= cd.length && u32(cd, p) === 0x02014b50;
+            k++
+          ) {
+            const nlen = u16(cd, p + 28),
+              xlen = u16(cd, p + 30),
+              clen = u16(cd, p + 32)
+            entries.set(td.decode(cd.subarray(p + 46, p + 46 + nlen)), {
+              method: u16(cd, p + 10),
+              csize: u32(cd, p + 20),
+              usize: u32(cd, p + 24),
+              lho: u32(cd, p + 42)
+            })
+            p += 46 + nlen + xlen + clen
+          }
+          return entries
+        }
+
+        async function entryRange(reader, ent) {
+          const lh = await reader.read(ent.lho, 30)
+          if (u32(lh, 0) !== 0x04034b50) throw new Error('ZIP 文件头损坏')
+          return {
+            start: ent.lho + 30 + u16(lh, 26) + u16(lh, 28),
+            size: ent.csize,
+            method: ent.method
+          }
+        }
+
+        // Binary kiwi schema → definitions with field-id lookups.
+        const PRIM = {
+          '-1': 'bool',
+          '-2': 'byte',
+          '-3': 'int',
+          '-4': 'uint',
+          '-5': 'float',
+          '-6': 'string',
+          '-7': 'int64',
+          '-8': 'uint64'
+        }
+        function parseSchema(d) {
+          let i = 0
+          const vu = () => {
+            let v = 0,
+              s = 0,
+              b
+            do {
+              b = d[i++]
+              v |= (b & 127) << s
+              s += 7
+            } while (b & 128)
+            return v >>> 0
+          }
+          const vi = () => {
+            const v = vu()
+            return v & 1 ? ~(v >>> 1) : v >>> 1
+          }
+          const str = () => {
+            const st = i
+            while (d[i] !== 0) i++
+            const s = td.decode(d.subarray(st, i))
+            i++
+            return s
+          }
+          const raw = []
+          for (let k = vu(); k > 0; k--) {
+            const name = str(),
+              kind = d[i++],
+              fields = []
+            for (let j = vu(); j > 0; j--)
+              fields.push({ name: str(), type: vi(), isArray: d[i++] === 1, value: vu() })
+            raw.push({ name, kind, fields })
+          }
+          const KIND = ['ENUM', 'STRUCT', 'MESSAGE']
+          const defs = new Map()
+          for (const r of raw) {
+            const fields = r.fields.map((f) => ({
+              name: f.name,
+              isArray: f.isArray,
+              value: f.value,
+              type: r.kind === 0 ? null : f.type < 0 ? PRIM[f.type] : raw[f.type].name
+            }))
+            const def = {
+              name: r.name,
+              kind: KIND[r.kind],
+              fields,
+              byId: new Map(fields.map((f) => [f.value, f]))
+            }
+            if (def.kind === 'ENUM') def.enumNames = new Map(fields.map((f) => [f.value, f.name]))
+            defs.set(r.name, def)
+          }
+          return defs
+        }
+
+        // Decoder positioned anywhere in the message buffer; also skips values without allocating.
+        function makeDecoder(defs, B) {
+          let p = 0
+          const f32 = new Float32Array(1),
+            u32a = new Uint32Array(f32.buffer)
+          const vu = () => {
+            let v = 0,
+              s = 0,
+              b
+            do {
+              b = B[p++]
+              v |= (b & 127) << s
+              s += 7
+            } while (b & 128 && s < 35)
+            return v >>> 0
+          }
+          const vi = () => {
+            const v = vu()
+            return v & 1 ? ~(v >>> 1) : v >>> 1
+          }
+          const v64 = () => {
+            let v = 0,
+              s = 0,
+              b
+            while ((b = B[p++]) & 128 && s < 56) {
+              v += (b & 127) * 2 ** s
+              s += 7
+            }
+            return v + b * 2 ** s
+          }
+          const skip64 = () => {
+            let s = 0
+            while (B[p++] & 128 && s < 56) s += 7
+          }
+          const str = () => {
+            const st = p
+            let ascii = true
+            while (B[p] !== 0) {
+              if (B[p] & 0x80) ascii = false
+              p++
+            }
+            let s
+            if (ascii && p - st < 48) {
+              s = ''
+              for (let k = st; k < p; k++) s += String.fromCharCode(B[k])
+            } else s = td.decode(B.subarray(st, p))
+            p++
+            return s
+          }
+          const fl = () => {
+            const a = B[p++]
+            if (a === 0) return 0
+            const bits = a | (B[p++] << 8) | (B[p++] << 16) | (B[p++] << 24)
+            u32a[0] = (bits << 23) | (bits >>> 9)
+            return f32[0]
+          }
+          function one(type) {
+            switch (type) {
+              case 'bool':
+                return B[p++] !== 0
+              case 'byte':
+                return B[p++]
+              case 'int':
+                return vi()
+              case 'uint':
+                return vu()
+              case 'float':
+                return fl()
+              case 'string':
+                return str()
+              case 'int64': {
+                const v = v64()
+                return v % 2 ? -(v + 1) / 2 : v / 2
+              }
+              case 'uint64':
+                return v64()
+            }
+            const d = defs.get(type)
+            if (d.kind === 'ENUM') {
+              const v = vu()
+              const nm = d.enumNames.get(v)
+              return nm === undefined ? v : nm
+            }
+            if (d.kind === 'STRUCT') {
+              const o = {}
+              for (const f of d.fields) o[f.name] = field(f)
+              return o
+            }
+            const o = {}
+            for (;;) {
+              const id = vu()
+              if (id === 0) return o
+              const f = d.byId.get(id)
+              if (!f) throw new Error('未知字段 ' + id + '（' + type + '）')
+              o[f.name] = field(f)
+            }
+          }
+          function field(f) {
+            if (f.isArray) {
+              if (f.type === 'byte') {
+                const n = vu()
+                const o = B.subarray(p, p + n)
+                p += n
+                return o
+              }
+              const n = vu(),
+                a = new Array(n)
+              for (let k = 0; k < n; k++) a[k] = one(f.type)
+              return a
+            }
+            return one(f.type)
+          }
+          function skipOne(type) {
+            switch (type) {
+              case 'bool':
+              case 'byte':
+                p++
+                return
+              case 'int':
+              case 'uint':
+                while (B[p++] & 128);
+                return
+              case 'float':
+                if (B[p++] !== 0) p += 3
+                return
+              case 'string':
+                while (B[p] !== 0) p++
+                p++
+                return
+              case 'int64':
+              case 'uint64':
+                skip64()
+                return
+            }
+            const d = defs.get(type)
+            if (d.kind === 'ENUM') {
+              while (B[p++] & 128);
+              return
+            }
+            if (d.kind === 'STRUCT') {
+              for (const f of d.fields) skipField(f)
+              return
+            }
+            for (;;) {
+              const id = vu()
+              if (id === 0) return
+              skipField(d.byId.get(id))
+            }
+          }
+          function skipField(f) {
+            if (f.isArray) {
+              const n = vu()
+              if (f.type === 'byte') {
+                p += n
+                return
+              }
+              for (let k = 0; k < n; k++) skipOne(f.type)
+              return
+            }
+            skipOne(f.type)
+          }
+          return {
+            get p() {
+              return p
+            },
+            set p(v) {
+              p = v
+            },
+            vu,
+            one,
+            field,
+            skipField
+          }
+        }
+
+        // One pass over the message: per node only guid, parent, order, type, name and visibility, plus byte offsets for
+        // decoding later; blobs are recorded as offsets into the same buffer, never copied.
+        function buildIndex(defs, msg) {
+          const D = makeDecoder(defs, msg)
+          const mDef = defs.get('Message'),
+            ncDef = defs.get('NodeChange')
+          let keys = [],
+            parents = [],
+            positions = [],
+            types = [],
+            names = [],
+            hidden = [],
+            offsets = new Uint32Array(0)
+          let blobOff = new Uint32Array(0),
+            blobLen = new Uint32Array(0),
+            n = 0
+          D.p = 0
+          for (;;) {
+            const id = D.vu()
+            if (id === 0) break
+            const f = mDef.byId.get(id)
+            if (f.name === 'nodeChanges') {
+              n = D.vu()
+              offsets = new Uint32Array(n)
+              keys = new Array(n)
+              parents = new Array(n)
+              positions = new Array(n)
+              types = new Array(n)
+              names = new Array(n)
+              hidden = new Uint8Array(n)
+              for (let k = 0; k < n; k++) {
+                offsets[k] = D.p
+                let key = '',
+                  pkey = '',
+                  pos = '',
+                  type = '',
+                  name = '',
+                  vis = true
+                for (;;) {
+                  const fid = D.vu()
+                  if (fid === 0) break
+                  const ff = ncDef.byId.get(fid)
+                  switch (ff.name) {
+                    case 'guid':
+                      key = gk(D.one('GUID'))
+                      break
+                    case 'parentIndex': {
+                      const pi = D.one('ParentIndex')
+                      if (pi.guid) pkey = gk(pi.guid)
+                      pos = pi.position || ''
+                      break
+                    }
+                    case 'type':
+                      type = D.field(ff)
+                      break
+                    case 'name':
+                      name = D.field(ff)
+                      break
+                    case 'visible':
+                      vis = D.field(ff)
+                      break
+                    default:
+                      D.skipField(ff)
+                  }
+                }
+                keys[k] = key
+                parents[k] = pkey
+                positions[k] = pos
+                types[k] = type
+                names[k] = name
+                hidden[k] = vis === false ? 1 : 0
+              }
+            } else if (f.name === 'blobs') {
+              const count = D.vu()
+              blobOff = new Uint32Array(count)
+              blobLen = new Uint32Array(count)
+              const bdef = defs.get(f.type)
+              for (let k = 0; k < count; k++) {
+                if (bdef.kind === 'STRUCT') {
+                  const len = D.vu()
+                  blobOff[k] = D.p
+                  blobLen[k] = len
+                  D.p = D.p + len
+                  continue
+                }
+                for (;;) {
+                  const fid = D.vu()
+                  if (fid === 0) break
+                  const ff = bdef.byId.get(fid)
+                  if (ff.name === 'bytes') {
+                    const len = D.vu()
+                    blobOff[k] = D.p
+                    blobLen[k] = len
+                    D.p = D.p + len
+                  } else D.skipField(ff)
+                }
+              }
+            } else D.skipField(f)
+          }
+          const idxOf = new Map()
+          for (let i = 0; i < n; i++) idxOf.set(keys[i], i)
+          const parentIdx = new Int32Array(n).fill(-1),
+            kids = new Array(n)
+          for (let i = 0; i < n; i++) {
+            const pi = idxOf.get(parents[i])
+            if (pi !== undefined && pi !== i) {
+              parentIdx[i] = pi
+              ;(kids[pi] || (kids[pi] = [])).push(i)
+            }
+          }
+          // Siblings sorted by fractional-index position: back to front, the order they are drawn in.
+          for (const a of kids)
+            if (a && a.length > 1)
+              a.sort((x, y) =>
+                positions[x] < positions[y] ? -1 : positions[x] > positions[y] ? 1 : 0
+              )
+          return {
+            n,
+            keys,
+            names,
+            types,
+            hidden,
+            positions,
+            parentIdx,
+            kids,
+            idxOf,
+            offsets,
+            blobOff,
+            blobLen
+          }
+        }
+
+        class FigDoc {
+          constructor(o) {
+            Object.assign(this, o)
+            this.D = makeDecoder(this.defs, this.msg)
+            this.cache = new Map()
+          }
+          node(i) {
+            let n = this.cache.get(i)
+            if (n) return n
+            this.D.p = this.index.offsets[i]
+            n = this.D.one('NodeChange')
+            this.cache.set(i, n)
+            return n
+          }
+          children(i) {
+            return this.index.kids[i] || []
+          }
+          idx(key) {
+            return this.index.idxOf.get(key)
+          }
+          blob(k) {
+            if (k == null || k >= this.index.blobOff.length) return null
+            const o = this.index.blobOff[k]
+            return this.msg.subarray(o, o + this.index.blobLen[k])
+          }
+          documentIdx() {
+            return this.index.types.indexOf('DOCUMENT')
+          }
+          pages() {
+            return this.children(this.documentIdx()).filter((i) => this.index.types[i] === 'CANVAS')
+          }
+          pageOf(i) {
+            const t = this.index.types,
+              p = this.index.parentIdx
+            while (i >= 0 && t[i] !== 'CANVAS') i = p[i]
+            return i
+          }
+          // Bytes (or a Blob slice in browsers) of images/<sha1> from the ZIP; null when the saved copy left it out.
+          async imageSource(hex) {
+            if (!this.entries) return null
+            const ent = this.entries.get('images/' + hex)
+            if (!ent) return null
+            const r = await entryRange(this.reader, ent)
+            if (r.method === 0 && this.reader.slice) return this.reader.slice(r.start, r.size)
+            let bytes = await this.reader.read(r.start, r.size)
+            if (r.method === 8) bytes = await this.codecs.inflateRaw(bytes)
+            return bytes
+          }
+        }
+
+        async function openFig(reader, codecs, onStep) {
+          const steps = []
+          const mark = (name, t0, extra) => {
+            steps.push(Object.assign({ name, ms: Math.round(now() - t0) }, extra || {}))
+            if (onStep) onStep(steps.slice())
+          }
+          let t = now()
+          const head = await reader.read(0, 8)
+          let entries = null,
+            meta = null,
+            canvas
+          if (u32(head, 0) === 0x04034b50) {
+            entries = await openZip(reader)
+            const ent = entries.get('canvas.fig')
+            if (!ent) throw new Error('ZIP 里没有 canvas.fig')
+            const r = await entryRange(reader, ent)
+            canvas = await reader.read(r.start, r.size)
+            if (r.method === 8) canvas = await codecs.inflateRaw(canvas)
+            const me = entries.get('meta.json')
+            if (me) {
+              try {
+                const mr = await entryRange(reader, me)
+                let mb = await reader.read(mr.start, mr.size)
+                if (mr.method === 8) mb = await codecs.inflateRaw(mb)
+                meta = JSON.parse(td.decode(mb))
+              } catch (e) {
+                meta = null
+              }
+            }
+          } else canvas = await reader.read(0, reader.size)
+          mark('读取 canvas.fig', t, { bytes: canvas.length })
+          if (td.decode(canvas.subarray(0, 8)) !== 'fig-kiwi') throw new Error('不是 fig-kiwi 文件')
+          const version = u32(canvas, 8),
+            chunks = []
+          for (let off = 12; off + 4 <= canvas.length;) {
+            const n = u32(canvas, off)
+            chunks.push(canvas.subarray(off + 4, off + 4 + n))
+            off += 4 + n
+          }
+          const unpack = (c) =>
+            c.length >= 4 && u32(c, 0) === 0xfd2fb528 ? codecs.zstd(c) : codecs.inflateRaw(c)
+          t = now()
+          const defs = parseSchema(await unpack(chunks[0]))
+          mark('读取文件自带的格式说明', t, { definitions: defs.size })
+          t = now()
+          const msg = await unpack(chunks[1])
+          mark('解压', t, { bytes: msg.length })
+          t = now()
+          const index = buildIndex(defs, msg)
+          mark('建目录', t, { nodes: index.n, blobs: index.blobOff.length })
+          return new FigDoc({ defs, msg, index, entries, reader, codecs, version, meta, steps })
+        }
+
+        return { openFig, parseSchema, makeDecoder, buildIndex, gk }
+      })
+    </script>
+    <script>
+      /* oxlint-disable eslint/curly, unicorn/prefer-number-properties -- browser raster math keeps compact hot loops */
+      /* fig-raster.js — pixel rules of Figma's renderer that Canvas 2D does not reproduce, measured against Figma's own PNG
+       * export (Design Preview - Rankings @1x) and the shaders in compiled.wasm.
+       * Paths: stencil-then-cover into a 4x multisampled target. Each edge pixel takes one of five levels decided by four point
+       *   samples at the standard positions; vertices snap to 1/256 px; curves are flattened by halving until each piece
+       *   deviates at most 1/4 px. coverage() returns per-pixel sample masks so clips intersect sample sets like a stencil.
+       * Images: bilinearResize() builds the pyramid (see the renderer); resample() is the useBicubicSampler shader
+       *   (compiled.wasm offset 49701955) on the CPU. */
+      ;(function (root, factory) {
+        const api = factory()
+        if (typeof module !== 'undefined' && module.exports) module.exports = api
+        else root.FigRaster = api
+      })(typeof self !== 'undefined' ? self : this, function () {
+        'use strict'
+
+        // Standard 4x sample offsets inside a pixel, sorted by y (y down).
+        const SAMPLES = [
+          [0.375, 0.125],
+          [0.875, 0.375],
+          [0.125, 0.625],
+          [0.625, 0.875]
+        ]
+        const SNAP = 256
+        const snap = (v) => Math.round(v * SNAP) / SNAP
+        const POP = [0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4]
+
+        // Device-space edges, y0 < y1, with the winding direction of the original segment.
+        class Edges {
+          constructor() {
+            this.d = new Float64Array(4096)
+            this.n = 0
+            this.x0 = Infinity
+            this.y0 = Infinity
+            this.x1 = -Infinity
+            this.y1 = -Infinity
+          }
+          line(ax, ay, bx, by) {
+            if (!isFinite(ax + ay + bx + by)) return
+            ax = snap(ax)
+            ay = snap(ay)
+            bx = snap(bx)
+            by = snap(by)
+            this.x0 = Math.min(this.x0, ax, bx)
+            this.x1 = Math.max(this.x1, ax, bx)
+            this.y0 = Math.min(this.y0, ay, by)
+            this.y1 = Math.max(this.y1, ay, by)
+            if (ay === by) return
+            if (this.n * 5 + 5 > this.d.length) {
+              const g = new Float64Array(this.d.length * 2)
+              g.set(this.d)
+              this.d = g
+            }
+            const o = this.n * 5,
+              down = ay < by
+            this.d[o] = down ? ax : bx
+            this.d[o + 1] = down ? ay : by
+            this.d[o + 2] = down ? bx : ax
+            this.d[o + 3] = down ? by : ay
+            this.d[o + 4] = down ? 1 : -1
+            this.n++
+          }
+        }
+
+        // Segments: the smallest power of two that brings the control polygon's second difference to ≤ 1 px per piece
+        // (chord error ≤ ¼ px); the cubic bound adds Wang's ¾ factor.
+        const pieces = (need) => {
+          let n = 1
+          while (n < need && n < 256) n *= 2
+          return n
+        }
+        function quad(E, x0, y0, x1, y1, x2, y2) {
+          const n = pieces(Math.sqrt(Math.hypot(x0 - 2 * x1 + x2, y0 - 2 * y1 + y2)))
+          let px = x0,
+            py = y0
+          for (let i = 1; i <= n; i++) {
+            const t = i / n,
+              u = 1 - t,
+              x = u * u * x0 + 2 * u * t * x1 + t * t * x2,
+              y = u * u * y0 + 2 * u * t * y1 + t * t * y2
+            E.line(px, py, x, y)
+            px = x
+            py = y
+          }
+        }
+        function cubic(E, x0, y0, x1, y1, x2, y2, x3, y3) {
+          const dd = Math.max(
+            Math.hypot(x0 - 2 * x1 + x2, y0 - 2 * y1 + y2),
+            Math.hypot(x1 - 2 * x2 + x3, y1 - 2 * y2 + y3)
+          )
+          const n = pieces(Math.sqrt(3 * dd))
+          let px = x0,
+            py = y0
+          for (let i = 1; i <= n; i++) {
+            const t = i / n,
+              u = 1 - t
+            const x = u * u * u * x0 + 3 * u * u * t * x1 + 3 * u * t * t * x2 + t * t * t * x3
+            const y = u * u * u * y0 + 3 * u * u * t * y1 + 3 * u * t * t * y2 + t * t * t * y3
+            E.line(px, py, x, y)
+            px = x
+            py = y
+          }
+        }
+        // Walks Figma's path blob (0 close, 1 move, 2 line, 3 quad, 4 cubic; float32 LE) under matrix m = [a b c d e f].
+        function addBlob(E, b, m) {
+          const dv = new DataView(b.buffer, b.byteOffset, b.byteLength)
+          const f = (o) => dv.getFloat32(o, true)
+          const X = (x, y) => m[0] * x + m[2] * y + m[4],
+            Y = (x, y) => m[1] * x + m[3] * y + m[5]
+          let sx = 0,
+            sy = 0,
+            cx = 0,
+            cy = 0,
+            open = false,
+            o = 0
+          const close = () => {
+            if (open && (cx !== sx || cy !== sy)) E.line(cx, cy, sx, sy)
+            open = false
+          }
+          while (o < b.length) {
+            const c = b[o++]
+            if (c === 0) {
+              close()
+              cx = sx
+              cy = sy
+            } else if (c === 1) {
+              close()
+              const x = f(o),
+                y = f(o + 4)
+              o += 8
+              sx = cx = X(x, y)
+              sy = cy = Y(x, y)
+              open = true
+            } else if (c === 2) {
+              const x = f(o),
+                y = f(o + 4)
+              o += 8
+              const nx = X(x, y),
+                ny = Y(x, y)
+              E.line(cx, cy, nx, ny)
+              cx = nx
+              cy = ny
+              open = true
+            } else if (c === 3) {
+              const x1 = X(f(o), f(o + 4)),
+                y1 = Y(f(o), f(o + 4)),
+                x2 = X(f(o + 8), f(o + 12)),
+                y2 = Y(f(o + 8), f(o + 12))
+              o += 16
+              quad(E, cx, cy, x1, y1, x2, y2)
+              cx = x2
+              cy = y2
+              open = true
+            } else if (c === 4) {
+              const x1 = X(f(o), f(o + 4)),
+                y1 = Y(f(o), f(o + 4)),
+                x2 = X(f(o + 8), f(o + 12)),
+                y2 = Y(f(o + 8), f(o + 12)),
+                x3 = X(f(o + 16), f(o + 20)),
+                y3 = Y(f(o + 16), f(o + 20))
+              o += 24
+              cubic(E, cx, cy, x1, y1, x2, y2, x3, y3)
+              cx = x3
+              cy = y3
+              open = true
+            } else break
+          }
+          close()
+        }
+        // Rounded rectangle in node space (radii tl, tr, br, bl), arcs as the usual 0.5523 cubic approximation.
+        function addRoundRect(E, w, h, r, m) {
+          const X = (x, y) => m[0] * x + m[2] * y + m[4],
+            Y = (x, y) => m[1] * x + m[3] * y + m[5]
+          const k = 0.5522847498
+          const [tl, tr, br, bl] = r.map((v) => Math.max(0, Math.min(v || 0, w / 2, h / 2)))
+          const pts = []
+          const L = (x, y) => pts.push(['L', x, y])
+          const C = (x1, y1, x2, y2, x, y) => pts.push(['C', x1, y1, x2, y2, x, y])
+          L(tl, 0)
+          L(w - tr, 0)
+          if (tr) C(w - tr + tr * k, 0, w, tr - tr * k, w, tr)
+          L(w, h - br)
+          if (br) C(w, h - br + br * k, w - br + br * k, h, w - br, h)
+          L(bl, h)
+          if (bl) C(bl - bl * k, h, 0, h - bl + bl * k, 0, h - bl)
+          L(0, tl)
+          if (tl) C(0, tl - tl * k, tl - tl * k, 0, tl, 0)
+          let cx = X(tl, 0),
+            cy = Y(tl, 0)
+          for (const p of pts) {
+            if (p[0] === 'L') {
+              const nx = X(p[1], p[2]),
+                ny = Y(p[1], p[2])
+              E.line(cx, cy, nx, ny)
+              cx = nx
+              cy = ny
+            } else {
+              const x3 = X(p[5], p[6]),
+                y3 = Y(p[5], p[6])
+              cubic(E, cx, cy, X(p[1], p[2]), Y(p[1], p[2]), X(p[3], p[4]), Y(p[3], p[4]), x3, y3)
+              cx = x3
+              cy = y3
+            }
+          }
+        }
+
+        // Per pixel, a 4-bit mask of the samples inside the path, within the integer box [bx0, bx1) × [by0, by1).
+        // Samples on an edge follow the top-left rule (spans are [left, right), edges are [top, bottom)).
+        function coverage(E, evenOdd, bx0, by0, bx1, by1) {
+          const x0 = Math.max(bx0, Math.floor(E.x0)),
+            y0 = Math.max(by0, Math.floor(E.y0))
+          const x1 = Math.min(bx1, Math.ceil(E.x1) + 1),
+            y1 = Math.min(by1, Math.ceil(E.y1) + 1)
+          if (x1 <= x0 || y1 <= y0 || !E.n) return null
+          const w = x1 - x0,
+            h = y1 - y0,
+            bits = new Uint8Array(w * h),
+            d = E.d
+          const order = new Uint32Array(E.n)
+          for (let i = 0; i < E.n; i++) order[i] = i
+          order.sort((a, b) => d[a * 5 + 1] - d[b * 5 + 1])
+          let next = 0,
+            act = []
+          const xs = new Float64Array(E.n),
+            ws = new Int8Array(E.n)
+          for (let py = y0; py < y1; py++) {
+            for (let s = 0; s < 4; s++) {
+              const sy = py + SAMPLES[s][1],
+                sxo = SAMPLES[s][0],
+                bit = 1 << s
+              while (next < E.n && d[order[next] * 5 + 1] <= sy) act.push(order[next++])
+              let m = 0,
+                keep = 0
+              for (let i = 0; i < act.length; i++) {
+                const e = act[i] * 5
+                if (d[e + 3] <= sy) continue
+                act[keep++] = act[i]
+                const x = d[e] + ((sy - d[e + 1]) * (d[e + 2] - d[e])) / (d[e + 3] - d[e + 1])
+                let j = m++
+                while (j > 0 && xs[j - 1] > x) {
+                  xs[j] = xs[j - 1]
+                  ws[j] = ws[j - 1]
+                  j--
+                }
+                xs[j] = x
+                ws[j] = d[e + 4]
+              }
+              act.length = keep
+              if (!m) continue
+              const row = (py - y0) * w
+              let wind = 0
+              for (let i = 0; i < m - 1; i++) {
+                wind += ws[i]
+                if (evenOdd ? (wind & 1) === 0 : wind === 0) continue
+                let a = Math.ceil(xs[i] - sxo),
+                  z = Math.ceil(xs[i + 1] - sxo)
+                if (a < x0) a = x0
+                if (z > x1) z = x1
+                for (let px = a; px < z; px++) bits[row + px - x0] |= bit
+              }
+            }
+          }
+          return { x: x0, y: y0, w, h, bits }
+        }
+        // Keeps only the samples also inside clip (same pixel grid); null when nothing is left.
+        function intersect(cov, clip) {
+          if (!cov || !clip) return clip ? null : cov
+          const x0 = Math.max(cov.x, clip.x),
+            y0 = Math.max(cov.y, clip.y),
+            x1 = Math.min(cov.x + cov.w, clip.x + clip.w),
+            y1 = Math.min(cov.y + cov.h, clip.y + clip.h)
+          if (x1 <= x0 || y1 <= y0) return null
+          const w = x1 - x0,
+            h = y1 - y0,
+            bits = new Uint8Array(w * h)
+          let any = 0
+          for (let y = 0; y < h; y++)
+            for (let x = 0; x < w; x++)
+              any |= bits[y * w + x] =
+                cov.bits[(y + y0 - cov.y) * cov.w + x + x0 - cov.x] &
+                clip.bits[(y + y0 - clip.y) * clip.w + x + x0 - clip.x]
+          return any ? { x: x0, y: y0, w, h, bits } : null
+        }
+
+        // ---- bicubic resample (shader @49701955) ----
+        // Keys cubic with a = c; c = -clamp(inH / outH, 1, 2.5). Downscaling widens the support to k + 2 texels per side,
+        // k = min(10, ceil(ratio - 1)), and both axes use the height ratio. Taps outside the image are dropped from the sum.
+        const keys = (x, c) => {
+          x = Math.abs(x)
+          if (x <= 1) return (c + 2) * x * x * x - (c + 3) * x * x + 1
+          if (x < 2) return c * x * x * x - 5 * c * x * x + 8 * c * x - 4 * c
+          return 0
+        }
+        // src: premultiplied RGBA floats 0..1 (iw × ih). Returns premultiplied 8-bit RGBA (ow × oh).
+        function resample(src, iw, ih, ow, oh) {
+          const j = ih / oh,
+            c = -Math.min(Math.max(j, 1), 2.5),
+            k = j > 1 ? Math.min(10, Math.ceil(j - 1)) : 0
+          const lo = -1 - k,
+            hi = k + 2,
+            span = k + 2,
+            taps = hi - lo + 1
+          const out = new Uint8ClampedArray(ow * oh * 4)
+          const wx = new Float64Array(taps * ow),
+            ix = new Int32Array(ow),
+            wy = new Float64Array(taps),
+            acc = new Float64Array(4)
+          for (let x = 0; x < ow; x++) {
+            const e = ((x + 0.5) / ow) * iw - 0.5,
+              f = Math.floor(e)
+            ix[x] = f
+            for (let p = lo; p <= hi; p++)
+              wx[x * taps + p - lo] = keys((2 * (p - (e - f))) / span, c)
+          }
+          for (let y = 0; y < oh; y++) {
+            const e = ((y + 0.5) / oh) * ih - 0.5,
+              fy = Math.floor(e)
+            for (let q = lo; q <= hi; q++) wy[q - lo] = keys((2 * (q - (e - fy))) / span, c)
+            for (let x = 0; x < ow; x++) {
+              acc.fill(0)
+              let m = 0
+              for (let q = lo; q <= hi; q++) {
+                const sy = fy + q
+                if (sy < 0 || sy >= ih) continue
+                for (let p = lo; p <= hi; p++) {
+                  const sx = ix[x] + p
+                  if (sx < 0 || sx >= iw) continue
+                  const wgt = wx[x * taps + p - lo] * wy[q - lo],
+                    o = (sy * iw + sx) * 4
+                  acc[0] += src[o] * wgt
+                  acc[1] += src[o + 1] * wgt
+                  acc[2] += src[o + 2] * wgt
+                  acc[3] += src[o + 3] * wgt
+                  m += wgt
+                }
+              }
+              const o = (y * ow + x) * 4,
+                inv = m ? 255 / m : 0
+              out[o] = acc[0] * inv
+              out[o + 1] = acc[1] * inv
+              out[o + 2] = acc[2] * inv
+              out[o + 3] = acc[3] * inv
+            }
+          }
+          return out
+        }
+
+        // Plain bilinear resize (texel centres, clamp to edge): one pyramid level. src premultiplied floats → 8-bit.
+        function bilinearResize(src, iw, ih, ow, oh) {
+          const out = new Uint8ClampedArray(ow * oh * 4)
+          for (let y = 0; y < oh; y++) {
+            const sy = ((y + 0.5) / oh) * ih - 0.5,
+              y0 = Math.floor(sy),
+              fy = sy - y0
+            const ya = Math.min(ih - 1, Math.max(0, y0)),
+              yb = Math.min(ih - 1, Math.max(0, y0 + 1))
+            for (let x = 0; x < ow; x++) {
+              const sx = ((x + 0.5) / ow) * iw - 0.5,
+                x0 = Math.floor(sx),
+                fx = sx - x0
+              const xa = Math.min(iw - 1, Math.max(0, x0)),
+                xb = Math.min(iw - 1, Math.max(0, x0 + 1))
+              const a = (ya * iw + xa) * 4,
+                b = (ya * iw + xb) * 4,
+                c = (yb * iw + xa) * 4,
+                d = (yb * iw + xb) * 4,
+                o = (y * ow + x) * 4
+              for (let k = 0; k < 4; k++)
+                out[o + k] =
+                  255 *
+                  ((src[a + k] * (1 - fx) + src[b + k] * fx) * (1 - fy) +
+                    (src[c + k] * (1 - fx) + src[d + k] * fx) * fy)
+            }
+          }
+          return out
+        }
+
+        return { POP, Edges, addBlob, addRoundRect, coverage, intersect, resample, bilinearResize }
+      })
+    </script>
+    <script>
+      /* oxlint-disable eslint/curly, eslint/prefer-template, unicorn/no-zero-fractions, unicorn/prefer-at, unicorn/prefer-number-properties -- renderer mirrors recovered browser formulas */
+      /* fig-render.js — draws one node of a FigDoc with Canvas 2D plus CPU passes, following the formulas recovered
+       * from Figma's renderer: 4-sample path coverage and the image pyramid (fig-raster.js), premultiplied blend modes,
+       * separable triangle-kernel blur (w(i) = max(count - |i|, 0)), drop / inner shadows from the layer's alpha, image scale
+       * modes, and text from the glyph outlines stored in the file. Component instances are expanded from their main
+       * component with symbolOverrides and derivedSymbolData applied. */
+      ;(function (root, factory) {
+        const node = typeof module !== 'undefined' && module.exports
+        const api = factory(node ? require('./fig-raster.js') : root.FigRaster)
+        if (node) module.exports = api
+        else root.FigRender = api
+      })(typeof self !== 'undefined' ? self : this, function (Raster) {
+        'use strict'
+        const now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now())
+        // Every canvas here is read back (masks, effects, image pixels); keep them on the CPU in browsers.
+        const RW = { willReadFrequently: true }
+        const gk = (g) => g.sessionID + ':' + g.localID
+        const hex = (u8) => {
+          let s = ''
+          for (let i = 0; i < u8.length; i++) s += (u8[i] < 16 ? '0' : '') + u8[i].toString(16)
+          return s
+        }
+        const bump = (o, k, d = 1) => {
+          o[k] = (o[k] || 0) + d
+        }
+
+        const GCO = {
+          NORMAL: 'source-over',
+          PASS_THROUGH: 'source-over',
+          DARKEN: 'darken',
+          MULTIPLY: 'multiply',
+          COLOR_BURN: 'color-burn',
+          LIGHTEN: 'lighten',
+          SCREEN: 'screen',
+          LINEAR_DODGE: 'lighter',
+          COLOR_DODGE: 'color-dodge',
+          OVERLAY: 'overlay',
+          SOFT_LIGHT: 'soft-light',
+          HARD_LIGHT: 'hard-light',
+          DIFFERENCE: 'difference',
+          EXCLUSION: 'exclusion',
+          HUE: 'hue',
+          SATURATION: 'saturation',
+          COLOR: 'color',
+          LUMINOSITY: 'luminosity'
+        }
+        // Figma draws an image it cannot load as this translucent grey; the same colour appears in its own exports.
+        const MISSING = 'rgba(158,170,186,0.12)'
+        const imageKey = (p) =>
+          p.image && p.image.hash && p.image.hash.length
+            ? hex(p.image.hash)
+            : p.image && p.image.dataBlob !== undefined
+              ? 'blob:' + p.image.dataBlob
+              : null
+        const CONTAINERS = new Set(['FRAME', 'GROUP', 'SYMBOL', 'INSTANCE', 'SECTION', 'CANVAS'])
+        const SKIP = new Set([
+          'SLICE',
+          'WIDGET',
+          'STAMP',
+          'HIGHLIGHT',
+          'STICKY',
+          'CONNECTOR',
+          'CODE_BLOCK',
+          'SECTION_OVERLAY',
+          'VARIABLE',
+          'VARIABLE_SET',
+          'CODE_LIBRARY',
+          'CODE_FILE',
+          'CODE_LAYER',
+          'CODE_COMPONENT',
+          'CODE_INSTANCE',
+          'JSX',
+          'WEBPAGE'
+        ])
+
+        // 2x3 matrices in canvas order [a, b, c, d, e, f].
+        const mul = (m, n) => [
+          m[0] * n[0] + m[2] * n[1],
+          m[1] * n[0] + m[3] * n[1],
+          m[0] * n[2] + m[2] * n[3],
+          m[1] * n[2] + m[3] * n[3],
+          m[0] * n[4] + m[2] * n[5] + m[4],
+          m[1] * n[4] + m[3] * n[5] + m[5]
+        ]
+        const fromFig = (t) => (t ? [t.m00, t.m10, t.m01, t.m11, t.m02, t.m12] : [1, 0, 0, 1, 0, 0])
+        const inv = (m) => {
+          const det = m[0] * m[3] - m[1] * m[2]
+          if (!det || !isFinite(det)) return null
+          const a = m[3] / det,
+            b = -m[1] / det,
+            c = -m[2] / det,
+            d = m[0] / det
+          return [a, b, c, d, -(a * m[4] + c * m[5]), -(b * m[4] + d * m[5])]
+        }
+        const scaleOf = (m) => Math.sqrt(Math.abs(m[0] * m[3] - m[1] * m[2]))
+        const setT = (c, m) => c.setTransform(m[0], m[1], m[2], m[3], m[4], m[5])
+        const css = (c, alpha = 1) => {
+          const a = (c && c.a !== undefined ? c.a : 1) * alpha
+          return (
+            'rgba(' +
+            ((c ? c.r : 0) * 255).toFixed(3) +
+            ',' +
+            ((c ? c.g : 0) * 255).toFixed(3) +
+            ',' +
+            ((c ? c.b : 0) * 255).toFixed(3) +
+            ',' +
+            a.toFixed(5) +
+            ')'
+          )
+        }
+
+        // Boxes in device pixels {x0, y0, x1, y1}.
+        const union = (a, b) =>
+          !a
+            ? b
+            : !b
+              ? a
+              : {
+                  x0: Math.min(a.x0, b.x0),
+                  y0: Math.min(a.y0, b.y0),
+                  x1: Math.max(a.x1, b.x1),
+                  y1: Math.max(a.y1, b.y1)
+                }
+        const boxOf = (m, x0, y0, x1, y1, pad) => {
+          const xs = [
+            m[0] * x0 + m[2] * y0 + m[4],
+            m[0] * x1 + m[2] * y0 + m[4],
+            m[0] * x0 + m[2] * y1 + m[4],
+            m[0] * x1 + m[2] * y1 + m[4]
+          ]
+          const ys = [
+            m[1] * x0 + m[3] * y0 + m[5],
+            m[1] * x1 + m[3] * y0 + m[5],
+            m[1] * x0 + m[3] * y1 + m[5],
+            m[1] * x1 + m[3] * y1 + m[5]
+          ]
+          return {
+            x0: Math.min(...xs) - pad,
+            y0: Math.min(...ys) - pad,
+            x1: Math.max(...xs) + pad,
+            y1: Math.max(...ys) + pad
+          }
+        }
+        const toRect = (b, W, H, margin) => {
+          if (!b) return null
+          const x = Math.max(0, Math.floor(b.x0 - margin)),
+            y = Math.max(0, Math.floor(b.y0 - margin))
+          const x1 = Math.min(W, Math.ceil(b.x1 + margin)),
+            y1 = Math.min(H, Math.ceil(b.y1 + margin))
+          return x1 > x && y1 > y ? { x, y, w: x1 - x, h: y1 - y } : null
+        }
+
+        // ---- recovered blur: separable triangle kernel, weights max(r - |i|, 0) ----
+        function blur1D(src, w, h, r, horiz, pad) {
+          const out = new Float32Array(w * h)
+          if (r <= 1) {
+            out.set(src)
+            return out
+          }
+          if (r > 24) return boxBox(src, w, h, Math.round(r), horiz, pad)
+          const m = Math.ceil(r) - 1,
+            wt = new Float32Array(2 * m + 1)
+          let sum = 0
+          for (let i = -m; i <= m; i++) {
+            wt[i + m] = r - Math.abs(i)
+            sum += wt[i + m]
+          }
+          for (let i = 0; i < wt.length; i++) wt[i] /= sum
+          if (horiz) {
+            for (let y = 0; y < h; y++) {
+              const row = y * w
+              for (let x = 0; x < w; x++) {
+                let acc = 0
+                for (let i = -m; i <= m; i++) {
+                  const xx = x + i
+                  acc += wt[i + m] * (xx < 0 || xx >= w ? pad : src[row + xx])
+                }
+                out[row + x] = acc
+              }
+            }
+          } else {
+            for (let y = 0; y < h; y++) {
+              for (let x = 0; x < w; x++) {
+                let acc = 0
+                for (let i = -m; i <= m; i++) {
+                  const yy = y + i
+                  acc += wt[i + m] * (yy < 0 || yy >= h ? pad : src[yy * w + x])
+                }
+                out[y * w + x] = acc
+              }
+            }
+          }
+          return out
+        }
+        // For large radii: two box filters of width n compose exactly into the triangle with weights n - |i|.
+        function boxBox(src, w, h, n, horiz, pad) {
+          const a = Math.floor((n - 1) / 2),
+            b = Math.ceil((n - 1) / 2)
+          const pass = (inp, lo, hi) => {
+            const out = new Float32Array(w * h)
+            const len = horiz ? w : h,
+              lines = horiz ? h : w
+            for (let l = 0; l < lines; l++) {
+              const get = (i) => (i < 0 || i >= len ? pad : horiz ? inp[l * w + i] : inp[i * w + l])
+              let acc = 0
+              for (let i = -lo; i <= hi; i++) acc += get(i)
+              for (let i = 0; i < len; i++) {
+                if (horiz) out[l * w + i] = acc / n
+                else out[i * w + l] = acc / n
+                acc += get(i + hi + 1) - get(i - lo)
+              }
+            }
+            return out
+          }
+          return pass(pass(src, a, b), b, a)
+        }
+        const blurPlane = (P, w, h, r, pad = 0) =>
+          r <= 1 ? P : blur1D(blur1D(P, w, h, r, true, pad), w, h, r, false, pad)
+
+        function shift(src, w, h, dx, dy, outside) {
+          const out = new Float32Array(w * h)
+          const at = (x, y) => (x < 0 || y < 0 || x >= w || y >= h ? outside : src[y * w + x])
+          for (let y = 0; y < h; y++) {
+            const sy = y - dy,
+              y0 = Math.floor(sy),
+              ty = sy - y0
+            for (let x = 0; x < w; x++) {
+              const sx = x - dx,
+                x0 = Math.floor(sx),
+                tx = sx - x0
+              const top = at(x0, y0) * (1 - tx) + at(x0 + 1, y0) * tx,
+                bot = at(x0, y0 + 1) * (1 - tx) + at(x0 + 1, y0 + 1) * tx
+              out[y * w + x] = top * (1 - ty) + bot * ty
+            }
+          }
+          return out
+        }
+        function morph(src, w, h, r, dilate) {
+          const k = Math.round(r)
+          if (k < 1) return src
+          const pass = (inp, horiz) => {
+            const out = new Float32Array(w * h)
+            for (let y = 0; y < h; y++)
+              for (let x = 0; x < w; x++) {
+                let v = dilate ? 0 : 1
+                for (let i = -k; i <= k; i++) {
+                  const xx = horiz ? x + i : x,
+                    yy = horiz ? y : y + i
+                  const s = xx < 0 || yy < 0 || xx >= w || yy >= h ? 0 : inp[yy * w + xx]
+                  v = dilate ? Math.max(v, s) : Math.min(v, s)
+                }
+                out[y * w + x] = v
+              }
+            return out
+          }
+          return pass(pass(src, true), false)
+        }
+
+        class Renderer {
+          constructor(doc, env) {
+            this.doc = doc
+            this.env = env // { createCanvas(w, h), loadImage(key) → Promise<image|null>, Path2D, DOMMatrix }
+            this.images = new Map()
+            this.resampled = new Map()
+            this.pyramids = new Map()
+            this.paths = new Map()
+            // Triangle half-width = blurK × effect radius × device scale. The blur-tile code uses 0.5 × its input radius
+            // (f17769 / f25198); the native-export crops fit best at 1.0 against the panel value.
+            // aa 'figma' = 4-sample coverage like Figma's multisampled stencil-then-cover; 'canvas' = Canvas 2D's own AA.
+            // imageSampling: see drawSampled.
+            this.opts = {
+              blurK: 1.0,
+              imageQuality: 'medium',
+              aa: 'figma',
+              imageSampling: 'pyramid'
+            }
+          }
+
+          async render(idx, scale, opts) {
+            Object.assign(this.opts, opts || {})
+            const root = this.doc.node(idx)
+            const size = root.size || { x: 100, y: 100 }
+            // Every isolated layer is a full-size canvas, so cap both the side and the area.
+            const MAX = 8192,
+              MAX_AREA = 24e6
+            if (size.x * scale > MAX || size.y * scale > MAX) scale = MAX / Math.max(size.x, size.y)
+            if (size.x * size.y * scale * scale > MAX_AREA)
+              scale = Math.sqrt(MAX_AREA / (size.x * size.y))
+            const W = Math.max(1, Math.round(size.x * scale)),
+              H = Math.max(1, Math.round(size.y * scale))
+            for (let pass = 0; pass < 3; pass++) {
+              this.need = new Set()
+              const st = {
+                nodes: 0,
+                layers: 0,
+                effects: {},
+                unsupported: {},
+                missingImages: 0,
+                textWithoutGlyphs: 0,
+                masks: 0,
+                instances: 0,
+                errors: []
+              }
+              const t0 = now()
+              const dst = this.layer(W, H)
+              try {
+                this.drawNode(dst, { idx, n: root, ictx: [] }, [scale, 0, 0, scale, 0, 0], st, true)
+              } catch (e) {
+                st.errors.push(String((e && e.stack) || e))
+              }
+              Object.assign(st, { ms: Math.round(now() - t0), scale, width: W, height: H })
+              const pending = [...this.need].filter((k) => !this.images.has(k))
+              if (!pending.length || pass === 2) return { canvas: dst.canvas, stats: st }
+              await Promise.all(
+                pending.map((k) =>
+                  this.env.loadImage(k).then(
+                    (img) => this.images.set(k, img),
+                    () => this.images.set(k, null)
+                  )
+                )
+              )
+            }
+          }
+
+          layer(W, H) {
+            const canvas = this.env.createCanvas(W, H)
+            const ctx = canvas.getContext('2d', RW)
+            ctx.imageSmoothingEnabled = true
+            if ('imageSmoothingQuality' in ctx)
+              ctx.imageSmoothingQuality = this.opts.imageQuality || 'medium'
+            return { canvas, ctx, box: null, clip: null }
+          }
+
+          drawNode(dst, view, M, st, isRoot) {
+            const n = view.n
+            if (!isRoot && n.visible === false) return
+            if (SKIP.has(n.type)) return
+            const opacity = n.opacity === undefined ? 1 : n.opacity
+            if (opacity <= 0) return
+            st.nodes++
+            const L = isRoot ? M : mul(M, fromFig(n.transform))
+            const effects = (n.effects || []).filter((e) => e.visible !== false)
+            const blend = n.blendMode || (CONTAINERS.has(n.type) ? 'PASS_THROUGH' : 'NORMAL')
+            const isolate =
+              opacity < 1 || (blend !== 'PASS_THROUGH' && blend !== 'NORMAL') || effects.length > 0
+            if (!isolate) {
+              this.drawContent(dst, view, L, st)
+              return
+            }
+            const lay = this.layer(dst.canvas.width, dst.canvas.height)
+            st.layers++
+            this.drawContent(lay, view, L, st)
+            if (effects.length) this.applyEffects(lay, dst, effects, L, st)
+            this.composite(dst, lay, opacity, blend, st)
+          }
+
+          drawContent(dst, view, L, st) {
+            const n = view.n,
+              size = n.size || { x: 0, y: 0 }
+            if (n.type === 'TEXT') {
+              this.drawText(dst, n, L, st)
+              return
+            }
+            if (n.fillPaints && n.fillPaints.length) {
+              const paths =
+                this.geom(n.fillGeometry) ||
+                (CONTAINERS.has(n.type) || n.type === 'RECTANGLE' || n.type === 'ROUNDED_RECTANGLE'
+                  ? [{ path: this.rectPath(n), rule: 'nonzero', rect: this.rectSpec(n) }]
+                  : null)
+              if (paths) for (const p of n.fillPaints) this.paint(dst, paths, p, size, L, st, 0)
+            }
+            if (n.type !== 'BOOLEAN_OPERATION') {
+              const kids = this.childViews(view, st)
+              if (kids.length) {
+                const clip =
+                  (n.type === 'FRAME' || n.type === 'SYMBOL' || n.type === 'INSTANCE') &&
+                  n.frameMaskDisabled === false &&
+                  !n.resizeToFit
+                if (!clip) this.drawChildren(dst, kids, L, st)
+                else if (this.opts.aa === 'figma') {
+                  // Clip on the same four samples as the fills (a stencil clip), so edges are not antialiased twice.
+                  const E = new Raster.Edges(),
+                    r = this.rectSpec(n),
+                    prev = dst.clip
+                  Raster.addRoundRect(E, r.w, r.h, r.r, L)
+                  const cov = Raster.coverage(E, false, 0, 0, dst.canvas.width, dst.canvas.height)
+                  const next = prev ? Raster.intersect(cov, prev) : cov
+                  if (next) {
+                    dst.clip = next
+                    this.drawChildren(dst, kids, L, st)
+                    dst.clip = prev
+                  }
+                } else {
+                  dst.ctx.save()
+                  setT(dst.ctx, L)
+                  dst.ctx.clip(this.rectPath(n))
+                  this.drawChildren(dst, kids, L, st)
+                  dst.ctx.restore()
+                }
+              }
+            }
+            if (
+              n.strokePaints &&
+              n.strokePaints.length &&
+              n.strokeGeometry &&
+              n.strokeGeometry.length
+            ) {
+              const paths = this.geom(n.strokeGeometry)
+              if (paths)
+                for (const p of n.strokePaints)
+                  this.paint(dst, paths, p, size, L, st, (n.strokeWeight || 0) + 1)
+            }
+          }
+
+          drawChildren(dst, kids, L, st) {
+            for (let i = 0; i < kids.length; i++) {
+              const k = kids[i]
+              if (k.n.mask && k.n.visible !== false) {
+                // A mask clips every sibling above it, up to the end of the parent.
+                st.masks++
+                const W = dst.canvas.width,
+                  H = dst.canvas.height
+                const ml = this.layer(W, H),
+                  cl = this.layer(W, H)
+                st.layers += 2
+                this.drawNode(
+                  ml,
+                  { idx: k.idx, n: Object.assign({}, k.n, { mask: false }), ictx: k.ictx },
+                  L,
+                  st
+                )
+                if (k.n.maskType === 'LUMINANCE') this.luminanceToAlpha(ml)
+                for (let j = i + 1; j < kids.length; j++) this.drawNode(cl, kids[j], L, st)
+                const c = cl.ctx
+                c.save()
+                c.setTransform(1, 0, 0, 1, 0, 0)
+                c.globalCompositeOperation = 'destination-in'
+                c.drawImage(ml.canvas, 0, 0)
+                c.restore()
+                if (dst.clip) this.clipLayer(cl, dst.clip)
+                const d = dst.ctx
+                d.save()
+                d.setTransform(1, 0, 0, 1, 0, 0)
+                d.drawImage(cl.canvas, 0, 0)
+                d.restore()
+                dst.box = union(dst.box, ml.box)
+                return
+              }
+              this.drawNode(dst, k, L, st)
+            }
+          }
+
+          // ---- instances: main component children + overrides + derived (laid-out) values ----
+          childViews(view, st) {
+            const n = view.n
+            if (n.type === 'INSTANCE') {
+              const sid = n.overriddenSymbolID || (n.symbolData && n.symbolData.symbolID)
+              const si = sid ? this.doc.idx(gk(sid)) : undefined
+              if (si === undefined) {
+                bump(st.unsupported, '实例找不到主组件')
+                return []
+              }
+              st.instances++
+              const frame = {
+                over: pathMap(n.symbolData && n.symbolData.symbolOverrides),
+                der: pathMap(n.derivedSymbolData),
+                props: propMap(n.componentPropAssignments),
+                path: []
+              }
+              const ictx = view.ictx.concat([frame])
+              return this.doc.children(si).map((ci) => this.resolve(ci, ictx))
+            }
+            return this.doc.children(view.idx).map((ci) => this.resolve(ci, view.ictx))
+          }
+
+          resolve(ci, ictx) {
+            const base = this.doc.node(ci)
+            if (!ictx.length) return { idx: ci, n: base, ictx }
+            const key = this.doc.index.keys[ci]
+            const frames = ictx.map((f) => ({
+              over: f.over,
+              der: f.der,
+              props: f.props,
+              path: f.path.concat(key)
+            }))
+            let n = base,
+              own = false
+            const apply = (o) => {
+              n = own ? Object.assign(n, o) : Object.assign({}, n, o)
+              own = true
+            }
+            // Innermost first, so the outer instance's values win; laid-out (derived) values last.
+            for (let i = frames.length - 1; i >= 0; i--) {
+              const o = frames[i].over && frames[i].over.get(frames[i].path.join('/'))
+              if (o) apply(o)
+            }
+            for (let i = frames.length - 1; i >= 0; i--) {
+              const o = frames[i].der && frames[i].der.get(frames[i].path.join('/'))
+              if (o) apply(o)
+            }
+            if (n.componentPropRefs) {
+              for (const ref of n.componentPropRefs) {
+                if (ref.isDeleted || !ref.defID) continue
+                let v
+                for (let i = frames.length - 1; i >= 0 && !v; i--)
+                  v = frames[i].props && frames[i].props.get(gk(ref.defID))
+                if (!v) continue
+                if (ref.componentPropNodeField === 'VISIBLE' && typeof v.boolValue === 'boolean')
+                  apply({ visible: v.boolValue })
+                else if (ref.componentPropNodeField === 'OVERRIDDEN_SYMBOL_ID' && v.guidValue)
+                  apply({ overriddenSymbolID: v.guidValue })
+              }
+            }
+            return { idx: ci, n, ictx: frames }
+          }
+
+          // ---- geometry ----
+          geom(list) {
+            if (!list || !list.length) return null
+            const out = []
+            for (const g of list) {
+              const path = this.blobPath(g.commandsBlob)
+              if (path)
+                out.push({
+                  path,
+                  rule: g.windingRule === 'ODD' ? 'evenodd' : 'nonzero',
+                  blob: this.doc.blob(g.commandsBlob)
+                })
+            }
+            return out.length ? out : null
+          }
+          rectSpec(n) {
+            const w = (n.size && n.size.x) || 0,
+              h = (n.size && n.size.y) || 0
+            const corners = [
+              n.rectangleTopLeftCornerRadius,
+              n.rectangleTopRightCornerRadius,
+              n.rectangleBottomRightCornerRadius,
+              n.rectangleBottomLeftCornerRadius
+            ]
+            const r = corners.some((v) => v !== undefined)
+              ? corners.map((v) => v || 0)
+              : [0, 0, 0, 0].map(() => n.cornerRadius || 0)
+            return { w, h, r }
+          }
+          blobPath(k) {
+            if (k == null) return null
+            let P = this.paths.get(k)
+            if (P !== undefined) return P
+            const b = this.doc.blob(k)
+            if (!b || !b.length) {
+              this.paths.set(k, null)
+              return null
+            }
+            P = new this.env.Path2D()
+            const dv = new DataView(b.buffer, b.byteOffset, b.byteLength)
+            const f = (o) => dv.getFloat32(o, true)
+            let o = 0
+            while (o < b.length) {
+              const c = b[o++]
+              if (c === 0) P.closePath()
+              else if (c === 1) {
+                P.moveTo(f(o), f(o + 4))
+                o += 8
+              } else if (c === 2) {
+                P.lineTo(f(o), f(o + 4))
+                o += 8
+              } else if (c === 3) {
+                P.quadraticCurveTo(f(o), f(o + 4), f(o + 8), f(o + 12))
+                o += 16
+              } else if (c === 4) {
+                P.bezierCurveTo(f(o), f(o + 4), f(o + 8), f(o + 12), f(o + 16), f(o + 20))
+                o += 24
+              } else break
+            }
+            this.paths.set(k, P)
+            return P
+          }
+          rectPath(n) {
+            const { w, h, r } = this.rectSpec(n)
+            const P = new this.env.Path2D()
+            if (r.some((v) => v > 0) && P.roundRect)
+              P.roundRect(
+                0,
+                0,
+                w,
+                h,
+                r.map((v) => Math.max(0, Math.min(v, w / 2, h / 2)))
+              )
+            else P.rect(0, 0, w, h)
+            return P
+          }
+
+          // ---- text from stored glyph outlines (em units, y up) ----
+          drawText(dst, n, L, st) {
+            const dtd = n.derivedTextData
+            if (!dtd || !dtd.glyphs || !dtd.glyphs.length) {
+              st.textWithoutGlyphs++
+              return
+            }
+            const groups = new Map()
+            const group = (sid) => {
+              let g = groups.get(sid)
+              if (!g)
+                groups.set(
+                  sid,
+                  (g = { path: new this.env.Path2D(), rule: 'nonzero', glyphs: [], rects: [] })
+                )
+              return g
+            }
+            for (const g of dtd.glyphs) {
+              if (g.commandsBlob == null) {
+                if (g.emojiCodePoints && g.emojiCodePoints.length) bump(st.unsupported, '表情字符')
+                continue
+              }
+              const base = this.blobPath(g.commandsBlob)
+              if (!base) continue
+              const fs = g.fontSize || n.fontSize || 12,
+                x = g.position ? g.position.x : 0,
+                y = g.position ? g.position.y : 0
+              const G = group(g.styleID || 0)
+              G.path.addPath(base, new this.env.DOMMatrix([fs, 0, 0, -fs, x, y]))
+              G.glyphs.push({ blob: this.doc.blob(g.commandsBlob), m: [fs, 0, 0, -fs, x, y] })
+            }
+            for (const d of dtd.decorations || [])
+              for (const r of d.rects || []) {
+                const R = {
+                    x: r.x,
+                    y: r.y,
+                    w: r.w !== undefined ? r.w : r.width,
+                    h: r.h !== undefined ? r.h : r.height
+                  },
+                  G = group(d.styleID || 0)
+                G.path.rect(R.x, R.y, R.w, R.h)
+                G.rects.push(R)
+              }
+            const table = n.textData && n.textData.styleOverrideTable
+            const size = n.size || { x: 0, y: 0 }
+            for (const [sid, shape] of groups) {
+              let paints = n.fillPaints
+              if (sid && table) {
+                const o = table.find((s) => s.styleID === sid)
+                if (o && o.fillPaints) paints = o.fillPaints
+              }
+              if (paints)
+                for (const p of paints)
+                  this.paint(dst, [shape], p, size, L, st, (n.fontSize || 12) * 0.5)
+            }
+            if (
+              n.strokePaints &&
+              n.strokePaints.length &&
+              n.strokeGeometry &&
+              n.strokeGeometry.length
+            ) {
+              const paths = this.geom(n.strokeGeometry)
+              if (paths)
+                for (const p of n.strokePaints)
+                  this.paint(
+                    dst,
+                    paths,
+                    p,
+                    size,
+                    L,
+                    st,
+                    (n.strokeWeight || 0) + (n.fontSize || 12) * 0.5
+                  )
+            }
+          }
+
+          // ---- paints ----
+          paint(dst, paths, p, size, L, st, pad) {
+            if (!p || p.visible === false) return
+            const op = p.opacity === undefined ? 1 : p.opacity
+            if (op <= 0) return
+            const w = size.x || 0,
+              h = size.y || 0
+            dst.box = union(dst.box, boxOf(L, 0, 0, w, h, (pad || 0) * scaleOf(L) + 2))
+            if (this.opts.aa === 'figma') {
+              this.paintCovered(dst, paths, p, size, L, st, op)
+              return
+            }
+            const c = dst.ctx
+            c.save()
+            setT(c, L)
+            c.globalAlpha = op
+            c.globalCompositeOperation = GCO[p.blendMode] || 'source-over'
+            if (p.type === 'SOLID') {
+              c.fillStyle = css(p.color)
+              for (const q of paths) c.fill(q.path, q.rule)
+            } else {
+              if (paths.length === 1) c.clip(paths[0].path, paths[0].rule)
+              else {
+                const P = new this.env.Path2D()
+                for (const q of paths) P.addPath(q.path)
+                c.clip(P, paths[0].rule)
+              }
+              this.fillPaint(c, p, size, L, st)
+            }
+            c.restore()
+          }
+
+          // Figma's coverage: 4 point samples per pixel (see fig-raster.js), paint evaluated per pixel, then composited.
+          paintCovered(dst, paths, p, size, L, st, op) {
+            const W = dst.canvas.width,
+              H = dst.canvas.height,
+              E = new Raster.Edges()
+            for (const s of paths) {
+              if (s.blob) Raster.addBlob(E, s.blob, L)
+              if (s.rect) Raster.addRoundRect(E, s.rect.w, s.rect.h, s.rect.r, L)
+              if (s.glyphs) for (const g of s.glyphs) Raster.addBlob(E, g.blob, mul(L, g.m))
+              if (s.rects)
+                for (const r of s.rects)
+                  Raster.addRoundRect(E, r.w, r.h, [0, 0, 0, 0], mul(L, [1, 0, 0, 1, r.x, r.y]))
+            }
+            let cov = Raster.coverage(E, paths[0].rule === 'evenodd', 0, 0, W, H)
+            if (dst.clip) cov = Raster.intersect(cov, dst.clip)
+            if (!cov) return
+            const { x, y, w, h, bits } = cov
+            let flat = p.type === 'SOLID' ? css(p.color, op) : null
+            if (p.type === 'IMAGE') {
+              const key = imageKey(p)
+              if (key && !this.images.has(key)) this.need.add(key)
+              if (!key || !this.images.get(key)) {
+                if (key && this.images.has(key)) st.missingImages++
+                flat = MISSING
+              } else if (
+                this.opts.imageSampling !== 'canvas' &&
+                this.paintImageCovered(dst, p, size, L, st, op, cov)
+              )
+                return
+            }
+            // Paint the box with Canvas (its colour rounding matches Figma's on interior pixels), then cut it to the samples.
+            const tmp = this.env.createCanvas(w, h),
+              t = tmp.getContext('2d', RW)
+            if (flat) {
+              t.fillStyle = flat
+              t.fillRect(0, 0, w, h)
+            } else {
+              t.globalAlpha = op
+              t.imageSmoothingEnabled = true
+              if ('imageSmoothingQuality' in t)
+                t.imageSmoothingQuality = this.opts.imageQuality || 'medium'
+              t.setTransform(1, 0, 0, 1, -x, -y)
+              t.transform(L[0], L[1], L[2], L[3], L[4], L[5])
+              if (!this.fillPaint(t, p, size, L, st)) return
+              t.setTransform(1, 0, 0, 1, 0, 0)
+            }
+            let partial = false
+            for (let i = 0; i < bits.length; i++)
+              if (bits[i] !== 15) {
+                partial = true
+                break
+              }
+            if (partial) {
+              const img = this.env.createImageData(w, h),
+                d = img.data
+              for (let i = 0; i < bits.length; i++) d[i * 4 + 3] = Raster.POP[bits[i]] * 63.75
+              const mk = this.env.createCanvas(w, h)
+              mk.getContext('2d', RW).putImageData(img, 0, 0)
+              t.globalCompositeOperation = 'destination-in'
+              t.drawImage(mk, 0, 0)
+            }
+            const c = dst.ctx
+            c.save()
+            c.setTransform(1, 0, 0, 1, 0, 0)
+            c.globalCompositeOperation = GCO[p.blendMode] || 'source-over'
+            c.drawImage(tmp, x, y)
+            c.restore()
+          }
+
+          // Image paint per pixel, like Figma's image shader: bilinear (clamped) at the pixel centre from the chosen level,
+          // transparent where the centre falls outside the image, times the shape's sample coverage. False = not handled.
+          paintImageCovered(dst, p, size, L, st, op, cov) {
+            const key = imageKey(p),
+              img = key ? this.images.get(key) : null
+            if (!img || !img.width || !img.height) return false
+            if (p.paintFilter || p.filterColorAdjust) bump(st.unsupported, '图片调色')
+            const iw = img.width,
+              ih = img.height,
+              w = size.x || 0,
+              h = size.y || 0,
+              mode = p.imageScaleMode || 'STRETCH'
+            let N // node space → image pixels
+            if (mode === 'STRETCH') {
+              const T = fromFig(p.transform)
+              N = mul(mul([iw, 0, 0, ih, 0, 0], T), [1 / w, 0, 0, 1 / h, 0, 0])
+            } else if (mode === 'TILE') {
+              const sc = p.scale || 1
+              N = [1 / sc, 0, 0, 1 / sc, 0, 0]
+            } else {
+              const rot = (((p.rotation || 0) % 360) + 360) % 360,
+                swap = rot === 90 || rot === 270
+              const s =
+                mode === 'FIT'
+                  ? Math.min(w / (swap ? ih : iw), h / (swap ? iw : ih))
+                  : Math.max(w / (swap ? ih : iw), h / (swap ? iw : ih))
+              const a = (-rot * Math.PI) / 180,
+                cs = Math.cos(a),
+                sn = Math.sin(a)
+              N = mul(
+                [1 / s, 0, 0, 1 / s, iw / 2, ih / 2],
+                mul([cs, sn, -sn, cs, 0, 0], [1, 0, 0, 1, -w / 2, -h / 2])
+              )
+            }
+            const Li = inv(L),
+              Ni = inv(N)
+            if (!Li || !Ni || !w || !h) return false
+            const M = mul(N, Li),
+              D = mul(L, Ni) // device → image px, image px → device
+            const dw = iw * Math.hypot(D[0], D[1]),
+              dh = ih * Math.hypot(D[2], D[3])
+            const lvl =
+              this.opts.imageSampling === 'bicubic'
+                ? this.bicubicCopy(img, key, Math.trunc(dw), Math.trunc(dh))
+                : this.pyramidLevel(img, key, dw, dh)
+            if (!lvl.px) lvl.px = this.premultiplied(img)
+            const { x, y, w: bw, h: bh, bits } = cov,
+              lw = lvl.w,
+              lh = lvl.h,
+              px = lvl.px,
+              sx = lw / iw,
+              sy = lh / ih,
+              tile = mode === 'TILE'
+            const out = this.env.createImageData(bw, bh),
+              d = out.data
+            // A centre exactly on the image's top edge falls outside, one on the bottom edge inside (measured: popup top at
+            // y + 0.5 and 9-slice seams match only this way).
+            const outside = (u, v) => u < 0 || u > iw || v <= 0 || v > ih
+            for (let j = 0; j < bh; j++)
+              for (let i = 0; i < bw; i++) {
+                const k = Raster.POP[bits[j * bw + i]]
+                if (!k) continue
+                const X = x + i + 0.5,
+                  Y = y + j + 0.5
+                let u = M[0] * X + M[2] * Y + M[4],
+                  v = M[1] * X + M[3] * Y + M[5]
+                if (tile) {
+                  u = ((u % iw) + iw) % iw
+                  v = ((v % ih) + ih) % ih
+                } else if (outside(u, v)) continue
+                const tx = u * sx - 0.5,
+                  ty = v * sy - 0.5,
+                  x0 = Math.floor(tx),
+                  y0 = Math.floor(ty),
+                  fx = tx - x0,
+                  fy = ty - y0
+                const xa = tile ? (x0 + lw) % lw : Math.max(0, x0),
+                  xb = tile ? (x0 + 1) % lw : Math.min(lw - 1, x0 + 1)
+                const ya = tile ? (y0 + lh) % lh : Math.max(0, y0),
+                  yb = tile ? (y0 + 1) % lh : Math.min(lh - 1, y0 + 1)
+                const a = (ya * lw + xa) * 4,
+                  b = (ya * lw + xb) * 4,
+                  c = (yb * lw + xa) * 4,
+                  e = (yb * lw + xb) * 4,
+                  o = (j * bw + i) * 4
+                const w00 = (1 - fx) * (1 - fy),
+                  w10 = fx * (1 - fy),
+                  w01 = (1 - fx) * fy,
+                  w11 = fx * fy
+                const al = px[a + 3] * w00 + px[b + 3] * w10 + px[c + 3] * w01 + px[e + 3] * w11
+                if (al <= 0) continue
+                for (let ch = 0; ch < 3; ch++)
+                  d[o + ch] =
+                    ((px[a + ch] * w00 + px[b + ch] * w10 + px[c + ch] * w01 + px[e + ch] * w11) /
+                      al) *
+                    255
+                d[o + 3] = al * op * k * 63.75
+              }
+            const tmp = this.env.createCanvas(bw, bh)
+            tmp.getContext('2d', RW).putImageData(out, 0, 0)
+            const c = dst.ctx
+            c.save()
+            c.setTransform(1, 0, 0, 1, 0, 0)
+            c.globalCompositeOperation = GCO[p.blendMode] || 'source-over'
+            c.drawImage(tmp, x, y)
+            c.restore()
+            return true
+          }
+
+          // Gradient or image paint over the node box, in node space (c already carries L). False when nothing was drawn.
+          fillPaint(c, p, size, L, st) {
+            const w = size.x || 0,
+              h = size.y || 0
+            switch (p.type) {
+              case 'GRADIENT_LINEAR':
+              case 'GRADIENT_RADIAL':
+              case 'GRADIENT_ANGULAR':
+              case 'GRADIENT_DIAMOND': {
+                const it = inv(fromFig(p.transform))
+                if (!it || !w || !h) return false
+                // The paint transform maps the layer's unit box to gradient space; draw in gradient space.
+                const G = mul([w, 0, 0, h, 0, 0], it)
+                c.transform(G[0], G[1], G[2], G[3], G[4], G[5])
+                let grad
+                if (p.type === 'GRADIENT_LINEAR') grad = c.createLinearGradient(0, 0.5, 1, 0.5)
+                else if (p.type === 'GRADIENT_ANGULAR' && c.createConicGradient)
+                  grad = c.createConicGradient(0, 0.5, 0.5)
+                else grad = c.createRadialGradient(0.5, 0.5, 0, 0.5, 0.5, 0.5)
+                if (p.type === 'GRADIENT_ANGULAR' && !c.createConicGradient)
+                  bump(st.unsupported, '角度渐变')
+                if (p.type === 'GRADIENT_DIAMOND') bump(st.unsupported, '菱形渐变（按径向画）')
+                const stops = (p.stops || []).slice().sort((a, b) => a.position - b.position)
+                for (const s of stops)
+                  grad.addColorStop(Math.min(1, Math.max(0, s.position)), css(s.color))
+                c.fillStyle = grad
+                c.fillRect(-20, -20, 41, 41)
+                return true
+              }
+              case 'IMAGE': {
+                const key = imageKey(p),
+                  img = key ? this.images.get(key) : null
+                if (key && !this.images.has(key)) this.need.add(key)
+                if (!img) {
+                  if (key && this.images.has(key)) st.missingImages++
+                  c.fillStyle = MISSING
+                  c.fillRect(0, 0, w, h)
+                  return true
+                }
+                if (p.paintFilter || p.filterColorAdjust) bump(st.unsupported, '图片调色')
+                this.drawImageMode(c, img, p, w, h, L, key)
+                return true
+              }
+              default:
+                bump(st.unsupported, '填充 ' + p.type)
+                return false
+            }
+          }
+
+          drawImageMode(c, img, p, w, h, L, key) {
+            const iw = img.width,
+              ih = img.height
+            if (!iw || !ih) return
+            const mode = p.imageScaleMode || 'STRETCH'
+            if (mode === 'STRETCH') {
+              // Crop mode: the transform maps the layer's unit box into the image's unit box.
+              const it = inv(fromFig(p.transform))
+              if (!it) return
+              const D = mul(mul(L, [w, 0, 0, h, 0, 0]), it)
+              c.transform(w, 0, 0, h, 0, 0)
+              c.transform(it[0], it[1], it[2], it[3], it[4], it[5])
+              this.drawSampled(
+                c,
+                img,
+                key,
+                Math.hypot(D[0], D[1]),
+                Math.hypot(D[2], D[3]),
+                0,
+                0,
+                1,
+                1
+              )
+              return
+            }
+            if (mode === 'TILE') {
+              const sc = p.scale || 1,
+                pat = c.createPattern(img, 'repeat')
+              if (pat && pat.setTransform)
+                pat.setTransform(new this.env.DOMMatrix([sc, 0, 0, sc, 0, 0]))
+              c.fillStyle = pat
+              c.fillRect(0, 0, w, h)
+              return
+            }
+            const rot = (((p.rotation || 0) % 360) + 360) % 360,
+              swap = rot === 90 || rot === 270
+            const bw = swap ? ih : iw,
+              bh = swap ? iw : ih
+            const s = mode === 'FIT' ? Math.min(w / bw, h / bh) : Math.max(w / bw, h / bh)
+            c.translate(w / 2, h / 2)
+            if (rot) c.rotate((rot * Math.PI) / 180)
+            const dx = Math.hypot(L[0], L[1]),
+              dy = Math.hypot(L[2], L[3])
+            this.drawSampled(
+              c,
+              img,
+              key,
+              iw * s * (swap ? dy : dx),
+              ih * s * (swap ? dx : dy),
+              (-iw * s) / 2,
+              (-ih * s) / 2,
+              iw * s,
+              ih * s
+            )
+          }
+
+          // Draws img into (x, y, w, h) of the current transform; dw × dh is that rect's size in device pixels.
+          // 'pyramid' (measured on native exports): halve with bilinear to ceil(w/2) × ceil(h/2) per level, use the smallest
+          // level still at least the drawn size, sample it bilinearly. 'bicubic': useBicubicSampler's cubic shader to the
+          // truncated drawn size. 'canvas': the browser's own smoothing.
+          drawSampled(c, img, key, dw, dh, x, y, w, h) {
+            const mode = this.opts.imageSampling
+            if (!key || mode === 'canvas') {
+              c.drawImage(img, x, y, w, h)
+              return
+            }
+            const lvl =
+              mode === 'bicubic'
+                ? this.bicubicCopy(img, key, Math.trunc(dw), Math.trunc(dh))
+                : this.pyramidLevel(img, key, dw, dh)
+            const q = c.imageSmoothingQuality
+            if (q !== undefined) c.imageSmoothingQuality = 'low'
+            c.drawImage(lvl.cv, x, y, w, h)
+            if (q !== undefined) c.imageSmoothingQuality = q
+          }
+          premultiplied(img) {
+            const iw = img.width,
+              ih = img.height,
+              sc = this.env.createCanvas(iw, ih),
+              sg = sc.getContext('2d', RW)
+            sg.drawImage(img, 0, 0)
+            const sd = sg.getImageData(0, 0, iw, ih).data,
+              src = new Float32Array(iw * ih * 4)
+            for (let i = 0; i < sd.length; i += 4) {
+              const a = sd[i + 3] / 255
+              src[i] = (sd[i] / 255) * a
+              src[i + 1] = (sd[i + 1] / 255) * a
+              src[i + 2] = (sd[i + 2] / 255) * a
+              src[i + 3] = a
+            }
+            return src
+          }
+          // Premultiplied 8-bit pixels → { cv, px (premultiplied floats), w, h }.
+          level(px8, w, h) {
+            const od = this.env.createImageData(w, h),
+              o = od.data,
+              f = new Float32Array(px8.length)
+            for (let i = 0; i < px8.length; i += 4) {
+              const a = px8[i + 3],
+                k = a ? 255 / a : 0
+              o[i] = px8[i] * k
+              o[i + 1] = px8[i + 1] * k
+              o[i + 2] = px8[i + 2] * k
+              o[i + 3] = a
+              f[i] = px8[i] / 255
+              f[i + 1] = px8[i + 1] / 255
+              f[i + 2] = px8[i + 2] / 255
+              f[i + 3] = a / 255
+            }
+            const cv = this.env.createCanvas(w, h)
+            cv.getContext('2d', RW).putImageData(od, 0, 0)
+            return { cv, px: f, w, h }
+          }
+          pyramidLevel(img, key, dw, dh) {
+            let levels = this.pyramids.get(key)
+            if (!levels)
+              this.pyramids.set(key, (levels = [{ cv: img, w: img.width, h: img.height }]))
+            for (;;) {
+              const top = levels[levels.length - 1],
+                nw = Math.ceil(top.w / 2),
+                nh = Math.ceil(top.h / 2)
+              if (nw < dw || nh < dh || (nw === top.w && nh === top.h)) break
+              if (!top.px) top.px = this.premultiplied(img)
+              levels.push(this.level(Raster.bilinearResize(top.px, top.w, top.h, nw, nh), nw, nh))
+            }
+            let pick = levels[0]
+            for (const l of levels) if (l.w >= dw && l.h >= dh) pick = l
+            return pick
+          }
+          bicubicCopy(img, key, ow, oh) {
+            if (
+              ow < 1 ||
+              oh < 1 ||
+              ow > 8192 ||
+              oh > 8192 ||
+              (ow === img.width && oh === img.height)
+            )
+              return this.pyramidLevel(img, key, img.width, img.height)
+            const ck = key + '@' + ow + 'x' + oh
+            let res = this.resampled.get(ck)
+            if (!res)
+              this.resampled.set(
+                ck,
+                (res = this.level(
+                  Raster.resample(this.premultiplied(img), img.width, img.height, ow, oh),
+                  ow,
+                  oh
+                ))
+              )
+            return res
+          }
+
+          // ---- effects on an isolated layer ----
+          applyEffects(lay, dst, effects, L, st) {
+            if (!lay.box) return
+            const W = lay.canvas.width,
+              H = lay.canvas.height,
+              s = scaleOf(L),
+              k = this.opts.blurK
+            let margin = 2
+            for (const e of effects) {
+              const off = e.offset ? Math.hypot(e.offset.x || 0, e.offset.y || 0) : 0
+              margin = Math.max(
+                margin,
+                Math.ceil(((e.radius || 0) * k + off + Math.abs(e.spread || 0)) * s + 3)
+              )
+            }
+            const R = toRect(lay.box, W, H, margin)
+            if (!R) return
+            const src = lay.ctx.getImageData(R.x, R.y, R.w, R.h).data
+            const A = new Float32Array(R.w * R.h)
+            for (let i = 0; i < A.length; i++) A[i] = src[i * 4 + 3] / 255
+            const lin = (v) => ({
+              x: L[0] * (v ? v.x || 0 : 0) + L[2] * (v ? v.y || 0 : 0),
+              y: L[1] * (v ? v.x || 0 : 0) + L[3] * (v ? v.y || 0 : 0)
+            })
+            const put = (plane, color, op) => {
+              const img = this.env.createImageData(R.w, R.h),
+                d = img.data,
+                c = color || { r: 0, g: 0, b: 0, a: 1 }
+              const r = c.r * 255,
+                g = c.g * 255,
+                b = c.b * 255,
+                a = (c.a === undefined ? 1 : c.a) * 255
+              for (let i = 0; i < plane.length; i++) {
+                d[i * 4] = r
+                d[i * 4 + 1] = g
+                d[i * 4 + 2] = b
+                d[i * 4 + 3] = Math.min(255, Math.max(0, a * plane[i]))
+              }
+              const tmp = this.env.createCanvas(R.w, R.h)
+              tmp.getContext('2d', RW).putImageData(img, 0, 0)
+              const ctx = lay.ctx
+              ctx.save()
+              ctx.setTransform(1, 0, 0, 1, 0, 0)
+              ctx.globalCompositeOperation = op
+              ctx.drawImage(tmp, R.x, R.y)
+              ctx.restore()
+            }
+            const back = effects.filter((e) => e.type === 'BACKGROUND_BLUR')
+            for (const e of back) {
+              this.backgroundBlur(dst, R, A, (e.radius || 0) * s * k)
+              bump(st.effects, '背景模糊')
+            }
+            for (const e of effects) {
+              if (e.type === 'INNER_SHADOW') {
+                const o = lin(e.offset)
+                let S = shift(A, R.w, R.h, o.x, o.y, 0)
+                for (let i = 0; i < S.length; i++) S[i] = 1 - S[i]
+                if ((e.spread || 0) * s >= 0.5) S = morph(S, R.w, R.h, e.spread * s, true)
+                S = blurPlane(S, R.w, R.h, (e.radius || 0) * s * k, 1)
+                for (let i = 0; i < S.length; i++) S[i] *= A[i]
+                put(S, e.color, 'source-atop')
+                bump(st.effects, '内阴影')
+              }
+            }
+            for (const e of effects) {
+              if (e.type === 'DROP_SHADOW') {
+                const o = lin(e.offset)
+                let S = shift(A, R.w, R.h, o.x, o.y, 0)
+                const sp = (e.spread || 0) * s
+                if (sp >= 0.5) S = morph(S, R.w, R.h, sp, true)
+                else if (sp <= -0.5) S = morph(S, R.w, R.h, -sp, false)
+                S = blurPlane(S, R.w, R.h, (e.radius || 0) * s * k, 0)
+                if (e.showShadowBehindNode !== true)
+                  for (let i = 0; i < S.length; i++) S[i] *= 1 - A[i]
+                put(S, e.color, 'destination-over')
+                bump(st.effects, '投影')
+              }
+            }
+            for (const e of effects) {
+              if (e.type === 'FOREGROUND_BLUR') {
+                this.layerBlur(lay, R, (e.radius || 0) * s * k)
+                bump(st.effects, '图层模糊')
+              } else if (!['DROP_SHADOW', 'INNER_SHADOW', 'BACKGROUND_BLUR'].includes(e.type))
+                bump(st.unsupported, '效果 ' + e.type)
+            }
+            lay.box = { x0: R.x, y0: R.y, x1: R.x + R.w, y1: R.y + R.h }
+          }
+
+          premultBlur(data, w, h, r) {
+            const n = w * h,
+              ch = [0, 1, 2, 3].map(() => new Float32Array(n))
+            for (let i = 0; i < n; i++) {
+              const a = data[i * 4 + 3] / 255
+              ch[3][i] = a
+              ch[0][i] = (data[i * 4] / 255) * a
+              ch[1][i] = (data[i * 4 + 1] / 255) * a
+              ch[2][i] = (data[i * 4 + 2] / 255) * a
+            }
+            return ch.map((P) => blurPlane(P, w, h, r, 0))
+          }
+          layerBlur(lay, R, r) {
+            const img = lay.ctx.getImageData(R.x, R.y, R.w, R.h),
+              d = img.data
+            const ch = this.premultBlur(d, R.w, R.h, r)
+            for (let i = 0; i < R.w * R.h; i++) {
+              const a = ch[3][i],
+                inva = a > 1e-5 ? 1 / a : 0
+              d[i * 4] = ch[0][i] * inva * 255
+              d[i * 4 + 1] = ch[1][i] * inva * 255
+              d[i * 4 + 2] = ch[2][i] * inva * 255
+              d[i * 4 + 3] = a * 255
+            }
+            lay.ctx.putImageData(img, R.x, R.y)
+          }
+          backgroundBlur(dst, R, A, r) {
+            const img = dst.ctx.getImageData(R.x, R.y, R.w, R.h),
+              d = img.data
+            const ch = this.premultBlur(d, R.w, R.h, r)
+            const out = this.env.createImageData(R.w, R.h),
+              o = out.data
+            for (let i = 0; i < R.w * R.h; i++) {
+              const a = ch[3][i],
+                inva = a > 1e-5 ? 1 / a : 0
+              o[i * 4] = ch[0][i] * inva * 255
+              o[i * 4 + 1] = ch[1][i] * inva * 255
+              o[i * 4 + 2] = ch[2][i] * inva * 255
+              o[i * 4 + 3] = a * A[i] * 255
+            }
+            const tmp = this.env.createCanvas(R.w, R.h)
+            tmp.getContext('2d', RW).putImageData(out, 0, 0)
+            const c = dst.ctx
+            c.save()
+            c.setTransform(1, 0, 0, 1, 0, 0)
+            c.drawImage(tmp, R.x, R.y)
+            c.restore()
+          }
+          luminanceToAlpha(lay) {
+            const R = toRect(lay.box, lay.canvas.width, lay.canvas.height, 0)
+            if (!R) return
+            const img = lay.ctx.getImageData(R.x, R.y, R.w, R.h),
+              d = img.data
+            for (let i = 0; i < d.length; i += 4) {
+              const l = (0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2]) / 255
+              d[i + 3] = d[i + 3] * l
+            }
+            lay.ctx.putImageData(img, R.x, R.y)
+          }
+
+          // Multiplies a finished layer by the parent's clip coverage before it is composited (a quad drawn through a
+          // stencil clip, resolved).
+          clipLayer(lay, clip) {
+            const { x, y, w, h, bits } = clip,
+              W = lay.canvas.width,
+              H = lay.canvas.height,
+              c = lay.ctx
+            const img = this.env.createImageData(w, h),
+              d = img.data
+            for (let i = 0; i < bits.length; i++) d[i * 4 + 3] = Raster.POP[bits[i]] * 63.75
+            const mk = this.env.createCanvas(w, h)
+            mk.getContext('2d', RW).putImageData(img, 0, 0)
+            c.save()
+            c.setTransform(1, 0, 0, 1, 0, 0)
+            c.globalCompositeOperation = 'destination-in'
+            c.drawImage(mk, x, y)
+            c.restore()
+            c.clearRect(0, 0, W, y)
+            c.clearRect(0, y + h, W, H - y - h)
+            c.clearRect(0, y, x, h)
+            c.clearRect(x + w, y, W - x - w, h)
+          }
+
+          composite(dst, lay, opacity, blend, st) {
+            if (!lay.box) return
+            if (dst.clip) this.clipLayer(lay, dst.clip)
+            const c = dst.ctx
+            if (blend === 'LINEAR_BURN') {
+              this.linearBurn(dst, lay, opacity)
+              bump(st.effects, '线性加深（CPU）')
+            } else {
+              c.save()
+              c.setTransform(1, 0, 0, 1, 0, 0)
+              c.globalAlpha = opacity
+              c.globalCompositeOperation = GCO[blend] || 'source-over'
+              c.drawImage(lay.canvas, 0, 0)
+              c.restore()
+            }
+            dst.box = union(dst.box, lay.box)
+          }
+          // Recovered premultiplied formula: out = S(1-b) + B(1-a) + max(0, S·b + B·a - a·b); alpha = a + b - a·b.
+          linearBurn(dst, lay, opacity) {
+            const R = toRect(lay.box, lay.canvas.width, lay.canvas.height, 0)
+            if (!R) return
+            const si = lay.ctx.getImageData(R.x, R.y, R.w, R.h).data,
+              bi = dst.ctx.getImageData(R.x, R.y, R.w, R.h),
+              bd = bi.data
+            for (let i = 0; i < bd.length; i += 4) {
+              const a = (si[i + 3] / 255) * opacity,
+                b = bd[i + 3] / 255,
+                oa = a + b - a * b
+              if (oa <= 0) continue
+              for (let c = 0; c < 3; c++) {
+                const S = (si[i + c] / 255) * a,
+                  B = (bd[i + c] / 255) * b
+                const out = S * (1 - b) + B * (1 - a) + Math.max(0, S * b + B * a - a * b)
+                bd[i + c] = Math.min(255, (out / oa) * 255)
+              }
+              bd[i + 3] = oa * 255
+            }
+            dst.ctx.putImageData(bi, R.x, R.y)
+          }
+        }
+
+        function pathMap(list) {
+          const m = new Map()
+          if (list)
+            for (const o of list)
+              if (o.guidPath && o.guidPath.guids) m.set(o.guidPath.guids.map(gk).join('/'), o)
+          return m
+        }
+        function propMap(list) {
+          const m = new Map()
+          if (list) for (const a of list) if (a.defID && a.value) m.set(gk(a.defID), a.value)
+          return m
+        }
+
+        return { Renderer, hex, blurPlane }
+      })
+    </script>
+    <script>
+      /* oxlint-disable eslint/curly, eslint/no-unused-vars, eslint/prefer-template, unicorn/prefer-number-properties, unicorn/prefer-string-starts-ends-with -- prototype UI keeps browser compatibility code compact */
+      /* viewer.js — page wiring: open a .fig, browse pages and layers, render a node, compare with a Figma export. */
+      ;(function () {
+        'use strict'
+        const $ = (s) => document.querySelector(s)
+        const el = (tag, attrs, ...kids) => {
+          const e = document.createElement(tag)
+          for (const [k, v] of Object.entries(attrs || {})) {
+            if (k === 'class') e.className = v
+            else if (k.startsWith('on')) e.addEventListener(k.slice(2), v)
+            else if (v !== undefined && v !== null && v !== false)
+              e.setAttribute(k, v === true ? '' : v)
+          }
+          for (const k of kids)
+            if (k !== null && k !== undefined)
+              e.append(k.nodeType ? k : document.createTextNode(String(k)))
+          return e
+        }
+        const fmt = (n) => n.toLocaleString('zh-CN')
+        const TYPE_TAG = {
+          FRAME: '#',
+          SECTION: '§',
+          INSTANCE: '◇',
+          SYMBOL: '❖',
+          TEXT: 'T',
+          GROUP: '▣',
+          VECTOR: '✎',
+          BOOLEAN_OPERATION: '∪',
+          RECTANGLE: '▭',
+          ROUNDED_RECTANGLE: '▭',
+          ELLIPSE: '○',
+          CANVAS: '▤'
+        }
+
+        const state = {
+          doc: null,
+          renderer: null,
+          page: -1,
+          selected: -1,
+          result: null,
+          figmaImage: null,
+          view: 'render',
+          zoom: 'fit',
+          bg: 'checker'
+        }
+
+        const codecs = {
+          zstd: async (u8) => fzstd.decompress(u8),
+          inflateRaw: async (u8) =>
+            new Uint8Array(
+              await new Response(
+                new Blob([u8]).stream().pipeThrough(new DecompressionStream('deflate-raw'))
+              ).arrayBuffer()
+            )
+        }
+
+        function setStatus(text, kind) {
+          const s = $('#status')
+          s.textContent = text
+          s.dataset.kind = kind || ''
+        }
+
+        async function openFile(file) {
+          setStatus('正在读取 ' + file.name + ' …')
+          $('#steps').replaceChildren()
+          $('#tree').replaceChildren()
+          $('#pages').replaceChildren()
+          const reader = {
+            size: file.size,
+            read: async (o, n) => new Uint8Array(await file.slice(o, o + n).arrayBuffer()),
+            slice: (o, n) => file.slice(o, o + n)
+          }
+          const t0 = performance.now()
+          try {
+            const doc = await FigCore.openFig(reader, codecs, (steps) => showSteps(steps, null))
+            const total = Math.round(performance.now() - t0)
+            state.doc = doc
+            state.renderer = new FigRender.Renderer(doc, {
+              Path2D,
+              DOMMatrix,
+              createCanvas: (w, h) => {
+                const c = document.createElement('canvas')
+                c.width = w
+                c.height = h
+                return c
+              },
+              createImageData: (w, h) => new ImageData(w, h),
+              loadImage: async (key) => {
+                const src = key.startsWith('blob:')
+                  ? doc.blob(+key.slice(5))
+                  : await doc.imageSource(key)
+                if (!src) return null
+                try {
+                  return await createImageBitmap(src instanceof Blob ? src : new Blob([src]))
+                } catch (e) {
+                  return null
+                }
+              }
+            })
+            showSteps(doc.steps, total)
+            const images = doc.entries
+              ? [...doc.entries.keys()].filter((k) => k.startsWith('images/') && k.length > 7)
+                  .length
+              : 0
+            $('#docinfo').textContent =
+              (doc.meta && doc.meta.file_name ? doc.meta.file_name + ' · ' : '') +
+              fmt(doc.index.n) +
+              ' 个图层 · ' +
+              doc.pages().length +
+              ' 页 · 文件里有 ' +
+              fmt(images) +
+              ' 张图片'
+            setStatus('已打开：' + file.name + '，用时 ' + (total / 1000).toFixed(2) + ' 秒', 'ok')
+            fillPages()
+          } catch (e) {
+            console.error(e)
+            setStatus('打开失败：' + (e && e.message ? e.message : e), 'error')
+          }
+        }
+
+        function showSteps(steps, total) {
+          const box = $('#steps')
+          box.replaceChildren(
+            ...steps.map((s) =>
+              el('span', { class: 'chip' }, s.name + ' ', el('b', {}, s.ms + ' ms'))
+            )
+          )
+          if (total !== null)
+            box.append(el('span', { class: 'chip strong' }, '合计 ', el('b', {}, total + ' ms')))
+        }
+
+        function fillPages() {
+          const { doc } = state,
+            sel = $('#pages')
+          sel.replaceChildren(
+            ...doc
+              .pages()
+              .map((i) => el('option', { value: i }, doc.index.names[i] || '（无名页）'))
+          )
+          const popups = doc.pages().find((i) => /Popups/.test(doc.index.names[i]))
+          sel.value = String(popups !== undefined ? popups : doc.pages()[0])
+          selectPage(+sel.value)
+        }
+
+        function selectPage(i) {
+          state.page = i
+          state.pageList = null
+          $('#search').value = ''
+          const tree = $('#tree')
+          tree.replaceChildren(...rows(i, 0))
+        }
+
+        const RENDERABLE = (doc, i) => {
+          const t = doc.index.types[i]
+          return t && t !== 'CANVAS' && t !== 'DOCUMENT'
+        }
+
+        function rows(parent, depth) {
+          const { doc } = state,
+            kids = doc.children(parent),
+            out = []
+          // Same order as Figma Dev Mode's layer list: the file's order, back to front.
+          const list = kids
+          const LIMIT = 400
+          for (const i of list.slice(0, LIMIT)) out.push(row(i, depth))
+          if (list.length > LIMIT)
+            out.push(
+              el(
+                'div',
+                { class: 'more', style: 'padding-left:' + (16 + depth * 14) + 'px' },
+                '还有 ' + (list.length - LIMIT) + ' 项，请用搜索'
+              )
+            )
+          return out
+        }
+
+        function row(i, depth) {
+          const { doc } = state,
+            ix = doc.index,
+            has = doc.children(i).length > 0 && ix.types[i] !== 'INSTANCE'
+          const wrap = el('div', { class: 'node' })
+          const caret = el(
+            'button',
+            { class: 'caret', 'aria-label': has ? '展开' : '', tabindex: has ? null : '-1' },
+            has ? '▸' : ''
+          )
+          const label = el(
+            'button',
+            {
+              class: 'label' + (ix.hidden[i] ? ' hidden' : ''),
+              title: ix.names[i] + '（' + ix.types[i] + '）',
+              style: 'padding-left:' + (4 + depth * 14) + 'px'
+            },
+            el('span', { class: 'tag' }, TYPE_TAG[ix.types[i]] || '·'),
+            ix.names[i] || '（无名）'
+          )
+          let open = false,
+            box = null
+          caret.addEventListener('click', () => {
+            if (!has) return
+            open = !open
+            caret.textContent = open ? '▾' : '▸'
+            if (open) {
+              box = el('div', {}, ...rows(i, depth + 1))
+              wrap.append(box)
+            } else if (box) {
+              box.remove()
+              box = null
+            }
+          })
+          label.addEventListener('click', () => {
+            document.querySelectorAll('.label.sel').forEach((n) => n.classList.remove('sel'))
+            label.classList.add('sel')
+            select(i)
+          })
+          wrap.append(el('div', { class: 'line' }, caret, label))
+          return wrap
+        }
+
+        function search(q) {
+          const { doc } = state
+          if (!doc) return
+          q = q.trim().toLowerCase()
+          if (!q) {
+            selectPage(state.page)
+            return
+          }
+          if (!state.pageList) {
+            const out = [],
+              stack = [state.page]
+            while (stack.length) {
+              const i = stack.pop()
+              out.push(i)
+              const k = doc.children(i)
+              for (let j = k.length - 1; j >= 0; j--) stack.push(k[j])
+            }
+            state.pageList = out
+          }
+          const hits = state.pageList
+            .filter((i) => (doc.index.names[i] || '').toLowerCase().includes(q))
+            .slice(0, 300)
+          $('#tree').replaceChildren(
+            ...(hits.length
+              ? hits.map((i) => row(i, 0))
+              : [el('div', { class: 'more' }, '这一页没有匹配的图层')])
+          )
+        }
+
+        async function select(i) {
+          const { doc } = state
+          state.selected = i
+          const n = doc.node(i)
+          const ix = doc.index
+          $('#info').replaceChildren(
+            kv('名称', ix.names[i] || '（无名）'),
+            kv('类型', ix.types[i]),
+            kv('图层 ID', ix.keys[i]),
+            kv(
+              '尺寸',
+              n.size
+                ? Math.round(n.size.x * 100) / 100 + ' × ' + Math.round(n.size.y * 100) / 100
+                : '—'
+            ),
+            kv('子图层', doc.children(i).length),
+            kv(
+              '效果',
+              (n.effects || [])
+                .filter((e) => e.visible !== false)
+                .map((e) => e.type + ' r=' + (e.radius || 0))
+                .join('、') || '无'
+            )
+          )
+          if (!RENDERABLE(doc, i) || !n.size) {
+            setStatus('这一项没有可渲染的尺寸')
+            return
+          }
+          await renderSelected()
+        }
+
+        const kv = (k, v) =>
+          el('div', { class: 'kv' }, el('span', {}, k), el('span', {}, String(v)))
+
+        async function renderSelected() {
+          const { renderer, selected } = state
+          if (!renderer || selected < 0) return
+          const scale = +$('#scale').value,
+            blurK = +$('#blurk').value,
+            aa = $('#aa').value,
+            imageSampling = $('#imgq').value
+          setStatus('渲染中…')
+          await new Promise((r) => setTimeout(r, 16))
+          try {
+            const t0 = performance.now()
+            state.result = await renderer.render(selected, scale, { blurK, aa, imageSampling })
+            const st = state.result.stats,
+              total = Math.round(performance.now() - t0)
+            showStats(st, total)
+            setStatus(
+              '渲染完成：' +
+                st.width +
+                ' × ' +
+                st.height +
+                '，' +
+                total +
+                ' ms' +
+                (st.errors.length ? '（有错误，见右侧）' : ''),
+              st.errors.length ? 'error' : 'ok'
+            )
+            state.view = 'render'
+            if (state.figmaImage) compare()
+            show()
+          } catch (e) {
+            console.error(e)
+            setStatus('渲染失败：' + (e && e.message ? e.message : e), 'error')
+          }
+        }
+
+        function showStats(st, total) {
+          const list = (o) =>
+            Object.entries(o)
+              .map(([k, v]) => k + ' ' + v)
+              .join('、') || '无'
+          $('#stats').replaceChildren(
+            kv('用时', total + ' ms（绘制 ' + st.ms + ' ms）'),
+            kv('画布', st.width + ' × ' + st.height + ' @' + +st.scale.toFixed(3) + 'x'),
+            kv('绘制图层', st.nodes),
+            kv('展开的组件实例', st.instances),
+            kv('离屏图层', st.layers),
+            kv('蒙版', st.masks),
+            kv('效果', list(st.effects)),
+            kv('缺图', st.missingImages ? st.missingImages + ' 处（文件里没存这些图）' : '无'),
+            kv('暂不支持', list(st.unsupported)),
+            kv('没有字形的文字', st.textWithoutGlyphs || '无'),
+            ...(st.errors.length ? [el('pre', { class: 'err' }, st.errors.join('\n\n'))] : [])
+          )
+        }
+
+        function show() {
+          const stage = $('#stage'),
+            r = state.result
+          if (!r) return
+          let c = r.canvas
+          if (state.view === 'figma' && state.figmaCanvas) c = state.figmaCanvas
+          if (state.view === 'diff' && state.diffCanvas) c = state.diffCanvas
+          const area = $('#viewport')
+          let z =
+            state.zoom === 'fit'
+              ? Math.min(1, (area.clientWidth - 40) / c.width, (area.clientHeight - 40) / c.height)
+              : +state.zoom
+          if (!isFinite(z) || z <= 0) z = 1
+          c.style.width = Math.round(c.width * z) + 'px'
+          c.style.height = Math.round(c.height * z) + 'px'
+          c.style.imageRendering = z >= 2 ? 'pixelated' : 'auto'
+          stage.replaceChildren(c)
+          stage.dataset.bg = state.bg
+          document
+            .querySelectorAll('[data-view]')
+            .forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.view === state.view)))
+        }
+
+        async function loadFigma(file) {
+          try {
+            state.figmaImage = await createImageBitmap(file)
+            $('#figname').textContent =
+              file.name + '（' + state.figmaImage.width + ' × ' + state.figmaImage.height + '）'
+            compare()
+            state.view = 'diff'
+            show()
+          } catch (e) {
+            setStatus('读不了这张图：' + e.message, 'error')
+          }
+        }
+
+        // Compares premultiplied values, the same as compositing both images over one backdrop.
+        function compare() {
+          const r = state.result,
+            img = state.figmaImage
+          if (!r || !img) return
+          const W = r.canvas.width,
+            H = r.canvas.height
+          const fc = document.createElement('canvas')
+          fc.width = W
+          fc.height = H
+          const fg = fc.getContext('2d')
+          fg.drawImage(img, 0, 0, W, H)
+          state.figmaCanvas = fc
+          const a = r.canvas.getContext('2d').getImageData(0, 0, W, H).data,
+            b = fg.getImageData(0, 0, W, H).data
+          const dc = document.createElement('canvas')
+          dc.width = W
+          dc.height = H
+          const dg = dc.getContext('2d'),
+            di = dg.createImageData(W, H),
+            d = di.data
+          let le2 = 0,
+            le5 = 0,
+            sum = 0,
+            max = 0,
+            sq = 0
+          for (let i = 0; i < a.length; i += 4) {
+            let m = Math.abs(a[i + 3] - b[i + 3])
+            for (let c = 0; c < 3; c++) {
+              const v = Math.abs(a[i + c] * a[i + 3] - b[i + c] * b[i + 3]) / 255
+              m = Math.max(m, v)
+              sum += v
+              sq += v * v
+            }
+            if (m <= 2) le2++
+            if (m <= 5) le5++
+            if (m > max) max = m
+            const lum = (b[i] * 0.3 + b[i + 1] * 0.59 + b[i + 2] * 0.11) * (b[i + 3] / 255) * 0.25
+            if (m <= 2) {
+              d[i] = lum
+              d[i + 1] = lum
+              d[i + 2] = lum + 10
+            } else {
+              d[i] = Math.min(255, 90 + m * 3)
+              d[i + 1] = Math.max(40, 190 - m * 2)
+              d[i + 2] = 40
+            }
+            d[i + 3] = 255
+          }
+          dg.putImageData(di, 0, 0)
+          state.diffCanvas = dc
+          const n = W * H,
+            mse = sq / (n * 3)
+          $('#metrics').replaceChildren(
+            kv('差值 ≤ 2 的像素', ((100 * le2) / n).toFixed(2) + '%'),
+            kv('差值 ≤ 5 的像素', ((100 * le5) / n).toFixed(2) + '%'),
+            kv('平均误差', (sum / (n * 3)).toFixed(2) + ' / 255'),
+            kv('最大差值', Math.round(max)),
+            kv('PSNR', mse ? (10 * Math.log10(65025 / mse)).toFixed(2) + ' dB' : '完全一致'),
+            ...(img.width !== W || img.height !== H
+              ? [
+                  el(
+                    'div',
+                    { class: 'warn' },
+                    `尺寸不同：导出图 ${String(img.width)} × ${String(img.height)}，已缩放到渲染尺寸再比，会多出缩放误差。请用相同倍率导出。`
+                  )
+                ]
+              : [])
+          )
+        }
+
+        function download() {
+          const r = state.result
+          if (!r) return
+          r.canvas.toBlob((blob) => {
+            const a = el('a', {
+              href: URL.createObjectURL(blob),
+              download:
+                (state.doc.index.names[state.selected] || 'render') +
+                '@' +
+                $('#scale').value +
+                'x.png'
+            })
+            document.body.append(a)
+            a.click()
+            a.remove()
+          }, 'image/png')
+        }
+
+        // ---- wiring ----
+        $('#file').addEventListener('change', (e) => {
+          const f = e.target.files[0]
+          if (f) openFile(f)
+        })
+        $('#figma').addEventListener('change', (e) => {
+          const f = e.target.files[0]
+          if (f) loadFigma(f)
+        })
+        $('#pages').addEventListener('change', (e) => selectPage(+e.target.value))
+        $('#search').addEventListener('input', (e) => {
+          clearTimeout(state.searchT)
+          state.searchT = setTimeout(() => search(e.target.value), 200)
+        })
+        for (const id of ['#scale', '#blurk', '#aa', '#imgq'])
+          $(id).addEventListener('change', renderSelected)
+        $('#zoom').addEventListener('change', (e) => {
+          state.zoom = e.target.value
+          show()
+        })
+        $('#bg').addEventListener('change', (e) => {
+          state.bg = e.target.value
+          show()
+        })
+        $('#download').addEventListener('click', download)
+        document.querySelectorAll('[data-view]').forEach((b) =>
+          b.addEventListener('click', () => {
+            state.view = b.dataset.view
+            show()
+          })
+        )
+        window.addEventListener('resize', () => {
+          if (state.zoom === 'fit') show()
+        })
+        const drop = $('#drop')
+        ;['dragenter', 'dragover'].forEach((t) =>
+          document.addEventListener(t, (e) => {
+            e.preventDefault()
+            drop.hidden = false
+          })
+        )
+        ;['dragleave', 'drop'].forEach((t) =>
+          drop.addEventListener(t, (e) => {
+            e.preventDefault()
+            drop.hidden = true
+          })
+        )
+        drop.addEventListener('drop', (e) => {
+          const f = e.dataTransfer.files[0]
+          if (!f) return
+          if (/\.fig$/i.test(f.name)) openFile(f)
+          else if (/^image\//.test(f.type)) loadFigma(f)
+        })
+      })()
+    </script>
+  </body>
+</html>
