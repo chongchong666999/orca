@@ -78,9 +78,9 @@ cocos-agent 基于 [Orca](https://github.com/stablyai/orca)（MIT 协议，保�
 | `src/renderer/src/assets/main.css` | 待回馈上游 | 展开的标题栏跟随侧栏宽度，窄栏内省略过长名称 | 保留上游改动，重新约束标题栏宽度并保留名称省略 |
 | `src/renderer/src/components/browser-pane/assemble-chrome/browser-page-chrome-header.tsx` | 挂点 | import + const Toolbar 组件替换：Cocos 编辑器页不渲染浏览器工具栏（4 行） | 保留上游改动，重新加上 Toolbar 常量并把标签改回 <Toolbar |
 | `src/renderer/src/components/browser-pane/assemble-chrome/browser-workspace-pane.tsx` | 挂点 | import + useCocosEditorTabView/useCocosEditorCover：编辑器启动中显示 Creator 灰屏、暂停或未运行时显示恢复视图、页面加载完成前用灰屏盖住（19 行） | 保留上游改动，重新加上两个 hook、两处早退和末尾的覆盖层 |
-| `src/renderer/src/components/browser-pane/describe-page/browser-page-types.ts` | 待回馈上游 | BrowserPageUrlSetter 的选项加 preserveLoading（1 行） | 随 browser-page-webview-navigation-handlers.ts 处理 |
-| `src/renderer/src/components/browser-pane/host-guest/browser-page-annotation-document.test.ts` | 待回馈上游 | 随 preserveLoading：页内换 URL 时已加载的页面保持非 loading 的用例 | 随 browser-page-webview-navigation-handlers.ts 处理 |
-| `src/renderer/src/components/browser-pane/host-guest/browser-page-webview-navigation-handlers.ts` | 待回馈上游 | 页内导航传 preserveLoading，切换 Prefab（?doc=）不再闪加载画面（4 行） | 上游若页内导航已不重置 loading 则取上游；否则保留 preserveLoading |
+| `src/renderer/src/components/browser-pane/describe-page/browser-page-types.ts` | 待回馈上游 | BrowserPageUrlSetter 的 options 增加 preserveLoading（1 行） | 保留上游改动，重新加上 preserveLoading |
+| `src/renderer/src/components/browser-pane/host-guest/browser-page-annotation-document.test.ts` | 待回馈上游 | 页内导航（pushState 改 URL）不把已加载的页面标回 loading 的测试，harness 透传 options | 保留上游改动，重新加上这个用例和 options 透传 |
+| `src/renderer/src/components/browser-pane/host-guest/browser-page-webview-navigation-handlers.ts` | 待回馈上游 | 页内导航调用 setUrl 时带 preserveLoading，不再把已加载的页面标回 loading（4 行） | 保留上游改动，重新让 handleDidNavigateInPage 传 { preserveLoading: true } |
 | `src/renderer/src/components/Landing.tsx` | 品牌 | import + ORCA_GITHUB_URL 改为 COCOS_AGENT_GITHUB_URL（2 行） | 保留上游改动，常量改回 COCOS_AGENT_GITHUB_URL 并加 import |
 | `src/renderer/src/components/right-sidebar/right-sidebar-panel-content.tsx` | 挂点 | lazy import + effectiveTab === 'terminal' 渲染 SidebarTerminalPanel（2 行） | 保留上游改动，重新加上这 2 行 |
 | `src/renderer/src/components/right-sidebar/use-right-sidebar-activity-items.ts` | 挂点 | import + 活动栏增加 terminal 项（8 行） | 保留上游改动，重新加上这一项 |
