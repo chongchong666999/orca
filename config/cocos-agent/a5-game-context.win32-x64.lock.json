@@ -1,8 +1,8 @@
 {
-  "version": "5.0.12",
+  "version": "5.0.13",
   "target": "win32-x64",
   "targets": ["win32-x64"],
-  "file": "a5labs-prime-a5-game-context-5.0.12-all-platform-offline-bundled.tgz",
-  "sha256": "bc523929247c4a7896d49e239f31427de9258873a8826bda4ed70ee1d8fe8211",
-  "source": "Local test build, not released: 5.0.12 all-platform offline bundle; the import keeps only its win32-x64 native packages"
+  "file": "a5labs-prime-a5-game-context-5.0.13-all-platform-offline-bundled.tgz",
+  "sha256": "96be64cc018d0ee6680bcf0c7e6247c0ca07d8835b349d16e34a216ea06134a8",
+  "source": "Local test build, not released: 5.0.13 all-platform offline bundle; the import keeps only its win32-x64 native packages"
 }
