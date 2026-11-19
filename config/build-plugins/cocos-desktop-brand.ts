@@ -19,6 +19,12 @@ export function cocosDesktopBrand(): PluginOption {
           {
             find: /^(?:\.\.\/)+resources\/logo\.svg$/,
             replacement: resolve('resources/cocos-agent/logo.svg')
+          },
+          // The classic icon also repaints the live Dock tile and window icons. Kept outside resources/ so
+          // electron-vite copies it into out/main: the package leaves resources/cocos-agent out of app.asar.
+          {
+            find: /^(?:\.\.\/)+resources\/icon(?:-dev(?:-mac)?)?\.png(?=\?|$)/,
+            replacement: resolve('config/cocos-agent/app-icon.png')
           }
         ]
       }

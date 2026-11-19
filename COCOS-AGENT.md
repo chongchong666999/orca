@@ -4,7 +4,7 @@ cocos-agent 基于 [Orca](https://github.com/stablyai/orca)（MIT 协议，保�
 
 ## 改动原则：尽量少碰上游文件
 
-Cocos 桌面打包通过 `config/build-plugins/cocos-desktop-brand.ts` 注入产品名、徽标和 GitHub 仓库。上游的 Star 查询、写入和浏览器入口共用 `desktop-product.ts`。更新上游时若新增 Star 入口，复用同一个仓库地址。静态品牌文案由 Cocos 的 i18n hook 处理。
+Cocos 桌面打包通过 `config/build-plugins/cocos-desktop-brand.ts` 注入产品名、徽标、应用图标和 GitHub 仓库。构建时把上游的 `resources/logo.svg` 指到 `resources/cocos-agent/logo.svg`，把 `resources/icon*.png` 指到 `config/cocos-agent/app-icon.png`，上游文件保持原样，运行时重绘的 Dock 和窗口图标因此也是 Cocos 的。这张 PNG 放在 `resources/` 外：打包时 `resources/cocos-agent` 不进 app.asar，放在外面才会由 electron-vite 复制进 `out/main`。上游的 Star 查询、写入和浏览器入口共用 `desktop-product.ts`。更新上游时若新增 Star 入口，复用同一个仓库地址。静态品牌文案（含设置里的「账户」入口名称）由 Cocos 的 i18n hook `cocosBrandText` 按 key 替换。
 
 - Cocos 编辑器面板、右侧终端、会话持久化和 MCP 配置放在 Cocos 自有模块。独立安装包的图标、身份和更新策略由打包配置及包内资源决定。
 - 上游文件只保留宿主挂点。优先用现有注册、路由和生命周期接口；避免改默认行为、搬动上游代码或复制整份实现。必须镜像的小段代码在登记表标出来源。

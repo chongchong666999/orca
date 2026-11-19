@@ -25,6 +25,9 @@ export function cocosBrandText(i18n: I18nInstance, key: string, text: string): s
     case 'auto.components.settings.GeneralSupportSection.55a87e5fd1':
     case 'auto.components.settings.GeneralSupportSection.6922c1fa2b':
     case 'auto.components.settings.general.search.36a72f0d9e':
+    case 'auto.components.settings.orcaAccount.title':
+    case 'auto.components.settings.orcaAccount.account':
+    case 'auto.components.artifacts.ArtifactPublishButton.accountTitle':
     case 'auto.components.StarNagCard.5f6df21046':
     case 'auto.components.sidebar.SidebarSettingsHelpMenu.5161eef55d':
     case 'auto.components.sidebar.SidebarSettingsHelpMenu.4e8f5710d3':
