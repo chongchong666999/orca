@@ -1,10 +1,12 @@
 import { createRequire } from 'node:module'
+import path from 'node:path'
 const require = createRequire(import.meta.url)
 const { getRawHeader, extractFile } = require('@electron/asar')
 
 export function assertCocosPackageContents(archive) {
   if (
-    !extractFile(archive, 'out/renderer/index.html')
+    // asar splits lookups on path.sep, so a forward-slash path is not found on Windows.
+    !extractFile(archive, path.join('out', 'renderer', 'index.html'))
       .toString()
       .includes('<title>Cocos Agent</title>')
   ) {
