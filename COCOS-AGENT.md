@@ -154,7 +154,7 @@ node config/scripts/build-cocos-agent-mac.mjs --skip-typecheck   # 更快
 node config/scripts/build-cocos-agent-mac.mjs --release          # arm64 dmg、zip、sha256
 ```
 
-产物在 `dist/mac-arm64/cocos-agent.app`；release 产物在 `dist/cocos-agent-<内部构建版本>-arm64.{dmg,zip}`，各带 `.sha256`。应用和内置原生程序使用 ad-hoc 签名，不需要开发者账号或证书，构建结束执行 `codesign --verify --deep --strict`。macOS 每次打包生成独立的 `com.a5labs.cocos-agent.adhoc.b<随机构建标识>`，避免新版应用和旧版保留终端共用同一个 TCC 权限记录、因不同代码哈希反复要求授权。同一安装包保留该标识；新构建需要分别授权，系统隐私设置可能出现多个同名条目。这不是跨版本免授权方案。用户数据仍在 `~/Library/Application Support/cocos-agent`，终端 daemon、socket 和 launchd 任务继续根据这个目录区分，项目、会话及设置不迁移。
+产物在 `dist/mac-arm64/cocos-agent.app`；release 产物在 `dist/cocos-agent-beta-<cocos-agent 版本>-<日期>-<时分>-<提交>-arm64.{dmg,zip}`（例如 `cocos-agent-beta-0.1.1-20261119-0905-dfca0ec26289-arm64.dmg`），各带 `.sha256`。版本号取自 `src/shared/cocos-agent/cocos-agent-version.ts` 的 `COCOS_AGENT_VERSION`；应用内部版本仍是 Orca 的（daemon 和 CLI 的兼容检查要读它），只有安装包文件名和关于面板显示 cocos-agent 版本。应用和内置原生程序使用 ad-hoc 签名，不需要开发者账号或证书，构建结束执行 `codesign --verify --deep --strict`。macOS 每次打包生成独立的 `com.a5labs.cocos-agent.adhoc.b<随机构建标识>`，避免新版应用和旧版保留终端共用同一个 TCC 权限记录、因不同代码哈希反复要求授权。同一安装包保留该标识；新构建需要分别授权，系统隐私设置可能出现多个同名条目。这不是跨版本免授权方案。用户数据仍在 `~/Library/Application Support/cocos-agent`，终端 daemon、socket 和 launchd 任务继续根据这个目录区分，项目、会话及设置不迁移。
 
 本地分发首次打开：把应用复制到 Applications；若系统阻止启动，按 [Apple 的说明](https://support.apple.com/en-us/102445)在“系统设置 → 隐私与安全性 → 仍要打开”中确认。文件夹访问是另一项授权，首次访问时按需允许。旧版后台终端可能在关闭窗口后继续运行；处理旧包的授权冲突时，先结束对应终端中的任务，再从会话管理重启终端后台。不要只关闭窗口，也不要重置所有应用的系统权限。原因、验证与边界见 [macOS 内部分发权限记录](docs/cocos-agent/macos-internal-distribution-2026-11-06.md)。
 

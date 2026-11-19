@@ -23,13 +23,17 @@ async function assertA5GameContextPackage(packageRoot, packageLock) {
   }
 }
 
+// A beta package is named by cocos-agent's version, when and from which commit it was built (build-cocos-agent-mac.mjs
+// sets it); without that, by the app's version as before. The app's own version stays Orca's.
+const betaArtifactName = `cocos-agent-beta-${process.env.COCOS_AGENT_BETA_BUILD || '${version}'}-\${arch}.\${ext}`
+
 /** @type {import('electron-builder').Configuration} */
 module.exports = {
   ...base,
   appId: 'com.a5labs.cocos-agent',
   productName: COCOS_AGENT_NAME,
-  artifactName: 'cocos-agent-beta-${version}-${arch}.${ext}',
-  dmg: { ...base.dmg, artifactName: 'cocos-agent-beta-${version}-${arch}.${ext}' },
+  artifactName: betaArtifactName,
+  dmg: { ...base.dmg, artifactName: betaArtifactName },
   files: [
     ...base.files,
     '!resources/cocos-agent{,/**/*}',

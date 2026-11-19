@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto'
 import { readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { getLocalBuildIdentity } from './build-mac-local.mjs'
+import { cocosAgentVersion, createCocosAgentBetaBuild } from './cocos-agent-beta-build.mjs'
 import { prepareInternalSigning } from './cocos-internal-signing.mjs'
 
 const skipTypecheck = process.argv.includes('--skip-typecheck')
@@ -25,7 +26,11 @@ run(['run', 'build:native'])
 run(['run', 'ensure:electron-runtime'])
 
 const identity = getLocalBuildIdentity()
-console.log(`[build:cocos-agent] local version ${identity.version} (${process.arch})`)
+// The dmg and zip are named by cocos-agent's version (cocos-agent-beta-build.mjs); the app's own stays Orca's.
+const beta = createCocosAgentBetaBuild(cocosAgentVersion(), new Date(), identity.commit)
+console.log(
+  `[build:cocos-agent] beta ${beta}, internal version ${identity.version} (${process.arch})`
+)
 run(
   [
     'exec',
@@ -39,7 +44,8 @@ run(
   {
     ...process.env,
     ORCA_BUILD_COMMIT: identity.commit,
-    ORCA_LOCAL_BUILD_VERSION: identity.version
+    ORCA_LOCAL_BUILD_VERSION: identity.version,
+    COCOS_AGENT_BETA_BUILD: beta
   }
 )
 console.log(`[build:cocos-agent] done: ${appPath}`)
@@ -61,7 +67,7 @@ if (!requirement.toLowerCase().includes(signing.identity.toLowerCase())) {
 console.log(`[build:cocos-agent] privacy identity: ${bundleId}`)
 if (release) {
   for (const ext of ['dmg', 'zip']) {
-    const file = `cocos-agent-beta-${identity.version}-arm64.${ext}`
+    const file = `cocos-agent-beta-${beta}-arm64.${ext}`
     const output = path.join('dist', file)
     const hash = createHash('sha256').update(readFileSync(output)).digest('hex')
     writeFileSync(`${output}.sha256`, `${hash}  ${file}\n`)
