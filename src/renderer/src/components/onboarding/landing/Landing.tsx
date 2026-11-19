@@ -1,3 +1,4 @@
+import { productRepositoryUrl } from '../../../../../shared/app-lifecycle/desktop-product'
 import { useEffect, useEffectEvent, useMemo, useRef, useState } from 'react'
 import { AlertTriangle, ExternalLink, FolderPlus, GitBranchPlus, Star, X } from 'lucide-react'
 import { cn } from '../../../lib/class-names'
@@ -22,9 +23,6 @@ import {
   LandingShortcutList,
   type LandingShortcutItem
 } from './landing-layout'
-
-// Do not deep-link to /stargazers: GitHub 404s that page for users without repo write access.
-const ORCA_GITHUB_URL = 'https://github.com/stablyai/orca'
 
 type StarButtonProps = {
   hasRepos: boolean
@@ -61,7 +59,7 @@ function GitHubStarButton({
       return
     }
     if (state === 'web-fallback') {
-      await window.api.shell.openUrl(ORCA_GITHUB_URL)
+      await window.api.shell.openUrl(productRepositoryUrl)
       return
     }
     if (state !== 'not-starred') {

@@ -1,4 +1,5 @@
 import path from 'node:path'
+import { desktopProduct } from '../../shared/app-lifecycle/desktop-product'
 import type { DevInstanceIdentity } from '../startup/profile-startup/dev-instance-identity'
 
 export function isCocosAgentPackage(): boolean {
@@ -10,7 +11,7 @@ export function applyCocosAgentPackageIdentity(identity: DevInstanceIdentity): D
   return isCocosAgentPackage() && !identity.isDev
     ? {
         ...identity,
-        name: 'cocos-agent',
+        name: desktopProduct?.name ?? 'cocos-agent',
         appName: 'cocos-agent',
         appUserModelId: 'com.a5labs.cocos-agent'
       }

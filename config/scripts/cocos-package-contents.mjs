@@ -1,8 +1,15 @@
 import { createRequire } from 'node:module'
 const require = createRequire(import.meta.url)
-const { getRawHeader } = require('@electron/asar')
+const { getRawHeader, extractFile } = require('@electron/asar')
 
 export function assertCocosPackageContents(archive) {
+  if (
+    !extractFile(archive, 'out/renderer/index.html')
+      .toString()
+      .includes('<title>Cocos Agent</title>')
+  ) {
+    throw new Error('The Cocos desktop brand is missing from the packaged renderer.')
+  }
   const { files } = getRawHeader(archive).header
   for (const name of [
     '.mcp.json',

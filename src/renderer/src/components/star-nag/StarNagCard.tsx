@@ -1,3 +1,4 @@
+import { productRepositoryUrl } from '../../../../shared/app-lifecycle/desktop-product'
 import { useCallback, useEffect, useState } from 'react'
 import { ExternalLink, Star, X } from 'lucide-react'
 import { Card } from '../ui/card'
@@ -5,7 +6,6 @@ import { Button } from '../ui/button'
 import { useMountedRef } from '@/hooks/useMountedRef'
 import { useTranslate } from '@/i18n/use-translate'
 
-const ORCA_REPO_URL = 'https://github.com/stablyai/orca'
 type StarNagMode = 'gh' | 'web'
 
 /** Main owns visibility thresholds and GitHub checks. Keep the card until explicit action; nonterminal exits persist a cooldown. */
@@ -79,7 +79,7 @@ export function StarNagCard(): React.JSX.Element | null {
     }
     const openGithubFallback = async (): Promise<boolean> => {
       try {
-        await window.api.shell.openUrl(ORCA_REPO_URL)
+        await window.api.shell.openUrl(productRepositoryUrl)
         await window.api.starNag.openWeb()
         if (mountedRef.current) {
           setVisible(false)

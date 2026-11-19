@@ -1,4 +1,5 @@
 {
+  "brand": { "starPrompt": "在 GitHub 上為 Cocos Agent 加星，支持這個專案。" },
   "editor": {
     "menu": {
       "goTo": "前往 Cocos Creator",

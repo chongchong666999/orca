@@ -1,4 +1,5 @@
 import { markdownParserAliases } from './config/build-plugins/markdown-parser-exports'
+import { cocosDesktopBrand } from './config/build-plugins/cocos-desktop-brand'
 import { createRequire } from 'node:module'
 import { resolve } from 'node:path'
 import { defineConfig, type UserConfig } from 'electron-vite'
@@ -184,7 +185,7 @@ const MAIN_MINIFY: 'oxc' | false = process.env.ORCA_UNMINIFIED_MAIN === '1' ? fa
 export const electronViteConfig: UserConfig = {
   main: {
     // A Vite `pre` plugin: Rollup-level plugins only see ids Vite's resolver leaves unresolved.
-    plugins: [createSucraseUnusedTransformersPlugin()],
+    plugins: [createSucraseUnusedTransformersPlugin(), cocosDesktopBrand()],
     build: {
       // Use Rolldown’s in-process oxc minifier; esbuild mode depends on an undeclared hoisted package.
       minify: MAIN_MINIFY,
@@ -262,6 +263,7 @@ export const electronViteConfig: UserConfig = {
       }
     },
     plugins: [
+      cocosDesktopBrand(),
       react(reactPluginOptions()),
       tailwindcss(),
       createPdfjsViewerAssetsPlugin(),

@@ -11,7 +11,10 @@ const release = process.argv.includes('--release')
 const pnpm = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm'
 const appPath = `dist/mac-${process.arch}/cocos-agent-beta.app`
 
-function run(args, env = { ...process.env, ORCA_SKIP_DEV_CLI_INSTALL: '1' }) {
+function run(
+  args,
+  env = { ...process.env, ORCA_SKIP_DEV_CLI_INSTALL: '1', COCOS_AGENT_DESKTOP: '1' }
+) {
   execFileSync(pnpm, args, { env, stdio: 'inherit' })
 }
 

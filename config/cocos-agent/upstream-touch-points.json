@@ -2,6 +2,48 @@
   "$comment": "Every upstream Orca file the Cocos integration changes. Keep behavior in Cocos-owned modules and update the generated COCOS-AGENT.md table when these entry points move.",
   "entries": [
     {
+      "path": "electron.vite.config.ts",
+      "kind": "hook",
+      "change": "注册 Cocos 桌面构建的产品配置、图标和窗口标题",
+      "onConflict": "在主进程和渲染进程的插件列表接回构建 hook"
+    },
+    {
+      "path": "src/main/github/client/fetch/orca-star.ts",
+      "kind": "hook",
+      "change": "Star 查询和写入使用产品仓库",
+      "onConflict": "沿用上游交互流程，将仓库来源接到共享产品配置"
+    },
+    {
+      "path": "src/renderer/src/components/onboarding/landing/Landing.tsx",
+      "kind": "hook",
+      "change": "GitHub 入口读取产品仓库地址",
+      "onConflict": "沿用上游交互流程，将仓库来源接到共享产品配置"
+    },
+    {
+      "path": "src/renderer/src/components/settings/general/GeneralSupportSection.tsx",
+      "kind": "hook",
+      "change": "GitHub 入口读取产品仓库地址",
+      "onConflict": "沿用上游交互流程，将仓库来源接到共享产品配置"
+    },
+    {
+      "path": "src/renderer/src/components/sidebar/chrome/SidebarSettingsHelpMenu.tsx",
+      "kind": "hook",
+      "change": "GitHub 入口读取产品仓库地址",
+      "onConflict": "沿用上游交互流程，将仓库来源接到共享产品配置"
+    },
+    {
+      "path": "src/renderer/src/components/star-nag/StarNagCard.tsx",
+      "kind": "hook",
+      "change": "GitHub 入口读取产品仓库地址",
+      "onConflict": "沿用上游交互流程，将仓库来源接到共享产品配置"
+    },
+    {
+      "path": "src/renderer/src/components/star-nag/StarNagToastHost.tsx",
+      "kind": "hook",
+      "change": "GitHub 入口读取产品仓库地址",
+      "onConflict": "沿用上游交互流程，将仓库来源接到共享产品配置"
+    },
+    {
       "path": ".gitignore",
       "kind": "hook",
       "change": "忽略本地 Cocos 索引，并允许跟踪 Cocos 文档",
@@ -238,7 +280,7 @@
     {
       "path": "src/shared/i18n/orca-i18n-instance.ts",
       "kind": "hook",
-      "change": "只附加 cocosAgent 语言命名空间",
+      "change": "附加 cocosAgent 语言命名空间与静态品牌文案 hook",
       "onConflict": "保留上游翻译加载与所有原有文案"
     },
     {

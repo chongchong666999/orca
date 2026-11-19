@@ -4,6 +4,8 @@ cocos-agent 基于 [Orca](https://github.com/stablyai/orca)（MIT 协议，保�
 
 ## 改动原则：尽量少碰上游文件
 
+Cocos 桌面打包通过 `config/build-plugins/cocos-desktop-brand.ts` 注入产品名、徽标和 GitHub 仓库。上游的 Star 查询、写入和浏览器入口共用 `desktop-product.ts`。更新上游时若新增 Star 入口，复用同一个仓库地址。静态品牌文案由 Cocos 的 i18n hook 处理。
+
 - Cocos 编辑器面板、右侧终端、会话持久化和 MCP 配置放在 Cocos 自有模块。独立安装包的图标、身份和更新策略由打包配置及包内资源决定。
 - 上游文件只保留宿主挂点。优先用现有注册、路由和生命周期接口；避免改默认行为、搬动上游代码或复制整份实现。必须镜像的小段代码在登记表标出来源。
 - 同步时以新 Orca 的接口和行为为基准，在对应的新入口接回 Cocos。与 Cocos 无关的修复单独提交给 stablyai/orca。
@@ -46,8 +48,10 @@ cocos-agent 基于 [Orca](https://github.com/stablyai/orca)（MIT 协议，保�
 | `config/nsis/orca-installer-hooks.nsh` | 挂点 | 卸载时移除 cocos-agent 的 a5-game-context 命令目录（resources\a5-game-context-bin）的用户 PATH 条目，共 2 行追加 | 保留上游改动，重新追加这两行 |
 | `config/scripts/development/setup/install-dev-cli.mjs` | 挂点 | Cocos 打包可跳过全局开发 CLI 安装 | 优先使用上游的跳过选项 |
 | `config/scripts/preflight/changed-checks/check-changed-selection.mjs` | 挂点 | VERIFY_CHECKS 增加 cocos-agent upstream touch points 一项（6 行） | 保留上游改动，重新加上这一项 |
+| `electron.vite.config.ts` | 挂点 | 注册 Cocos 桌面构建的产品配置、图标和窗口标题 | 在主进程和渲染进程的插件列表接回构建 hook |
 | `native/windows-cli-launcher/src/main.rs` | 挂点 | CLI 支持 Cocos 打包后的应用可执行文件名 | 保留上游的 Windows 启动逻辑，复用上游提供的可执行文件解析 |
 | `resources/darwin/bin/orca` | 挂点 | 默认 Orca 可执行文件不存在时，从应用 Info.plist 取实际文件名 | 保留上游 CLI 分流逻辑，仅保留 Cocos 包所需的文件名解析 |
+| `src/main/github/client/fetch/orca-star.ts` | 挂点 | Star 查询和写入使用产品仓库 | 沿用上游交互流程，将仓库来源接到共享产品配置 |
 | `src/main/ipc/pty/spawn/spawn-options-assembly.ts` | 挂点 | 在本机 Agent 启动命令上追加当前 Cocos 编辑器的 MCP 配置 | 保留上游启动策略，在 Claude 的 plugin-dir 参数处理前接回 Cocos 参数 |
 | `src/main/persistence/applying-settings/ui-selection-normalization.ts` | 枚举 | normalizeRightSidebarTab 接受 'terminal'（1 行） | 保留上游改动，重新加上这一行 |
 | `src/main/startup/main-process-ipc-bootstrap.ts` | 挂点 | import + registerCocosAgentIpc()（2 行） | 保留上游改动，重新加上这 2 行 |
@@ -58,9 +62,14 @@ cocos-agent 基于 [Orca](https://github.com/stablyai/orca)（MIT 协议，保�
 | `src/renderer/src/components/browser-pane/assemble-chrome/browser-workspace-pane.tsx` | 挂点 | import + useCocosEditorTabView/useCocosEditorCover：编辑器启动中显示 Creator 灰屏、暂停或未运行时显示恢复视图、页面加载完成前用灰屏盖住（19 行） | 保留上游改动，重新加上两个 hook、两处早退和末尾的覆盖层 |
 | `src/renderer/src/components/browser-pane/describe-page/browser-page-types.ts` | 挂点 | 提交 Cocos 页内地址时可保留加载状态 | 如上游已有对应选项则复用 |
 | `src/renderer/src/components/browser-pane/host-guest/lifecycle/browser-page-webview-navigation-handlers.ts` | 挂点 | 同一个 Cocos 编辑器的页内文档切换保留当前加载状态 | 不改变普通浏览器导航，跟随上游加载所有权逻辑 |
+| `src/renderer/src/components/onboarding/landing/Landing.tsx` | 挂点 | GitHub 入口读取产品仓库地址 | 沿用上游交互流程，将仓库来源接到共享产品配置 |
 | `src/renderer/src/components/right-sidebar/activity-bar/use-right-sidebar-activity-items.ts` | 挂点 | 注册 Cocos 自有的右侧终端入口 | 保留上游活动栏的过滤和排序，接回 Cocos 入口 |
 | `src/renderer/src/components/right-sidebar/right-sidebar-panel-content.tsx` | 挂点 | lazy import + effectiveTab === 'terminal' 渲染 SidebarTerminalPanel（2 行） | 保留上游改动，重新加上这 2 行 |
+| `src/renderer/src/components/settings/general/GeneralSupportSection.tsx` | 挂点 | GitHub 入口读取产品仓库地址 | 沿用上游交互流程，将仓库来源接到共享产品配置 |
 | `src/renderer/src/components/sidebar/chrome/SidebarNav.tsx` | 挂点 | 挂载 Cocos Creator 入口 | 保留上游导航结构，在其中接回组件 |
+| `src/renderer/src/components/sidebar/chrome/SidebarSettingsHelpMenu.tsx` | 挂点 | GitHub 入口读取产品仓库地址 | 沿用上游交互流程，将仓库来源接到共享产品配置 |
+| `src/renderer/src/components/star-nag/StarNagCard.tsx` | 挂点 | GitHub 入口读取产品仓库地址 | 沿用上游交互流程，将仓库来源接到共享产品配置 |
+| `src/renderer/src/components/star-nag/StarNagToastHost.tsx` | 挂点 | GitHub 入口读取产品仓库地址 | 沿用上游交互流程，将仓库来源接到共享产品配置 |
 | `src/renderer/src/components/tab-bar/create-menu/tab-bar-static-create-menu.tsx` | 挂点 | 将 Cocos Creator 的打开、跳转和停止加入上游新建菜单模型 | 保留上游的菜单排序和自定义，合入 Cocos 菜单项 |
 | `src/renderer/src/components/tab-bar/model/use-tab-bar-item-projection.ts` | 挂点 | import + useCentralTerminalTabs：标签栏只投影中央终端（4 行） | 保留上游改动，重新加上 hook 并让 terminalMap/terminalIds 用 centralTabs |
 | `src/renderer/src/components/terminal-pane/mounting/TerminalOverlaySlot.tsx` | 挂点 | 复用上游终端挂载和关闭流程，将 Cocos 侧栏的可见性、焦点和布局作为参数 | 保留上游的退出原因、终端生命周期和 Activity portal |
@@ -81,10 +90,10 @@ cocos-agent 基于 [Orca](https://github.com/stablyai/orca)（MIT 协议，保�
 | `src/renderer/src/store/terminals/tabs/terminal-tab-navigation.ts` | 挂点 | import + setActiveTab 开头 routeTerminalTabToSidebar 早退（4 行） | 保留上游改动，重新加上早退 |
 | `src/renderer/src/store/testing/app-store-test-fixture.ts` | 挂点 | import + ...createSidebarTerminalSlice(...a)（2 行） | 保留上游改动，重新加上这 2 行 |
 | `src/renderer/src/store/types.ts` | 挂点 | import + AppState 交叉 SidebarTerminalSlice（2 行） | 保留上游改动，重新加上这 2 行 |
-| `src/shared/i18n/orca-i18n-instance.ts` | 挂点 | 只附加 cocosAgent 语言命名空间 | 保留上游翻译加载与所有原有文案 |
+| `src/shared/i18n/orca-i18n-instance.ts` | 挂点 | 附加 cocosAgent 语言命名空间与静态品牌文案 hook | 保留上游翻译加载与所有原有文案 |
 | `src/shared/ui-chrome/ui-chrome-types.ts` | 枚举 | 共享侧栏标签列表接受 terminal，RPC 直接读此列表 | 只添加 terminal 枚举值 |
 
-共 41 个上游文件。由 `node config/scripts/cocos-agent/check-upstream-touch-points.mjs --write-doc` 生成，请改 `config/cocos-agent/upstream-touch-points.json`。
+共 48 个上游文件。由 `node config/scripts/cocos-agent/check-upstream-touch-points.mjs --write-doc` 生成，请改 `config/cocos-agent/upstream-touch-points.json`。
 
 自有文件中复制自上游的逻辑（上游改了来源时要对比）：
 

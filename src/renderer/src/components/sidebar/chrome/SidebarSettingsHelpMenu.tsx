@@ -1,3 +1,4 @@
+import { productRepositoryUrl } from '../../../../../shared/app-lifecycle/desktop-product'
 import { DiscordIcon } from '../../icons/DiscordIcon'
 import React, { useState } from 'react'
 import {
@@ -52,7 +53,6 @@ const SidebarFeedbackDialog = lazyWithRetry(
 
 const DOCS_URL = 'https://orca.dev/docs'
 const CHANGELOG_URL = 'https://orca.dev/changelog'
-const GITHUB_URL = 'https://github.com/stablyai/orca'
 const DISCORD_URL = 'https://discord.gg/fzjDKHxv8Q'
 const X_URL = 'https://x.com/orca_build'
 const NO_UPDATE_CHECK_MODIFIERS = {
@@ -281,7 +281,7 @@ export function SidebarSettingsHelpMenu(): React.JSX.Element {
             <DropdownMenuSeparator />
             <ExternalMenuItem
               label={t('auto.components.sidebar.SidebarSettingsHelpMenu.5687ab246a', 'GitHub')}
-              url={GITHUB_URL}
+              url={productRepositoryUrl}
               icon={<Github className="size-3.5" />}
             />
             <DropdownMenuItem onSelect={() => openAppHttpLink(DISCORD_URL)}>

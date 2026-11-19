@@ -1,4 +1,5 @@
 {
+  "brand": { "starPrompt": "Star Cocos Agent on GitHub to support the project." },
   "editor": {
     "menu": {
       "goTo": "Go to Cocos Creator",

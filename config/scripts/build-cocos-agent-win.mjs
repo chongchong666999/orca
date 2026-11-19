@@ -11,7 +11,10 @@ const skipTypecheck = process.argv.includes('--skip-typecheck')
 const release = process.argv.includes('--release')
 const appDirectory = 'dist/win-unpacked'
 
-function run(args, env = { ...process.env, ORCA_SKIP_DEV_CLI_INSTALL: '1' }) {
+function run(
+  args,
+  env = { ...process.env, ORCA_SKIP_DEV_CLI_INSTALL: '1', COCOS_AGENT_DESKTOP: '1' }
+) {
   const pnpm = resolvePnpmCliInvocation()
   execFileSync(pnpm.command, [...pnpm.prefixArgs, ...args], {
     env,

@@ -1,10 +1,10 @@
+import { productRepositoryUrl } from '../../../../shared/app-lifecycle/desktop-product'
 import { useEffect, useRef, useState } from 'react'
 import { Check, ExternalLink, Loader2, Star, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { useTranslate } from '@/i18n/use-translate'
 
-const ORCA_REPO_URL = 'https://github.com/stablyai/orca'
 type StarNagMode = 'gh' | 'web'
 type StarNagToastStatus = 'idle' | 'busy' | 'starred' | 'opened'
 
@@ -50,7 +50,7 @@ function StarNagToast({
     setDismissSuppressed(true)
     if (mode === 'web') {
       try {
-        await window.api.shell.openUrl(ORCA_REPO_URL)
+        await window.api.shell.openUrl(productRepositoryUrl)
         await window.api.starNag.openWeb()
         markResolved()
         setStatus('opened')
