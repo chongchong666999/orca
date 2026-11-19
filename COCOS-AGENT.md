@@ -153,16 +153,16 @@ node config/scripts/build-cocos-agent-mac.mjs --release          # arm64 dmg、z
 
 ## 同步上游
 
-- `cocos-agent`：A5 仓库。`main` 跟随 Orca 上游，Cocos 开发在 `dev/0.1.1`。
+- `cocos-agent`：A5 仓库。`main` 跟随 Orca 上游，Cocos 开发在 `dev/0.1.2`。
 - `upstream`：`stablyai/orca`，只用来拉上游代码。
 - 基线：`config/cocos-agent/upstream-base.json` 记录上次合入的上游提交。登记表以它为基准。
 
 每轮同步：
 
 ```sh
-git fetch --no-tags cocos-agent main dev/0.1.1
-git merge-tree --write-tree --name-only cocos-agent/dev/0.1.1 cocos-agent/main
-git worktree add ../orca-sync -b codex/cocos-sync cocos-agent/dev/0.1.1
+git fetch --no-tags cocos-agent main dev/0.1.2
+git merge-tree --write-tree --name-only cocos-agent/dev/0.1.2 cocos-agent/main
+git worktree add ../orca-sync -b codex/cocos-sync cocos-agent/dev/0.1.2
 git -C ../orca-sync merge --no-ff --no-commit cocos-agent/main
 ```
 
@@ -172,6 +172,6 @@ git -C ../orca-sync merge --no-ff --no-commit cocos-agent/main
 2. 更新 `upstream-base.json` 的提交，并按实际差异更新登记表。运行 `node config/scripts/cocos-agent/check-upstream-touch-points.mjs --write-doc`。
 3. 提交合并后，运行 `pnpm check:changed --base=cocos-agent/main --maxWorkers=2`，检查整个 Cocos 层相对新基线的差异。
 4. 专项验收：打开 Cocos 项目、右侧新建 Shell / Claude / Codex、切换工作区、收起侧栏再切会话、退出重开、编辑保存关闭、`build-cocos-agent-mac.mjs` 成包。上游改了终端休眠/恢复或 Agent 启动时再跑 `tests/e2e/cocos-sidebar-terminal.spec.ts` 与 `src/main/cocos-agent/*.test.ts`。
-5. 开 PR 合回 `dev/0.1.1`，**保留 merge 祖先，不要 squash**，否则下一轮 git 认不出已合入的上游历史。
+5. 开 PR 合回 `dev/0.1.2`，**保留 merge 祖先，不要 squash**，否则下一轮 git 认不出已合入的上游历史。
 
 用 merge 保留共享分支的祖先关系。Orca 基线升级与内置 Cocos 包升级分开交付。继续收缩挂点时，优先评估用上游的终端 portal 统一中央与右栏的挂载，并验证终端切换和重启恢复，再删去两套挂载路径之间的特判。
