@@ -5,7 +5,7 @@ import { afterEach, expect, it, vi } from 'vitest'
 import { runProcess } from '@orca/process-host'
 
 const environment = vi.hoisted(() => ({ directory: '' }))
-vi.mock('../../shared/app-environment', () => ({
+vi.mock('../../shared/app-lifecycle/app-environment', () => ({
   getAppEnvironment: () => ({ isPackaged: () => true, getPath: () => environment.directory })
 }))
 afterEach(async () => {

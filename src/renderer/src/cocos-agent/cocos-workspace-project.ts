@@ -7,19 +7,17 @@ import {
   getWorktreeExecutionHostId,
   isLocalExecutionHost,
   type ExecutionHostId
-} from '../../../shared/execution-host'
-import { parseWorkspaceKey } from '../../../shared/workspace-scope'
-import type { AppState } from '@/store'
-import { getWorktreeMapFromState } from '@/store/selectors'
+} from '../../../shared/execution-host/execution-host'
+import { parseWorkspaceKey } from '../../../shared/workspace/identity/workspace-scope'
+import type { AppState } from '@/store/types'
+import { resolveQualifiedIndexedFolderWorkspace } from '@/store/folder-workspaces/folder-workspace-record-index'
+import { selectWorktreesByRepo } from '@/store/workspaces/catalog/workspace-record-fields'
+import { findIndexedRepoOwner } from '@/lib/workspace/ownership/repo-owner-index'
 import {
-  resolveQualifiedIndexedFolderWorkspace,
-  selectWorktreesByRepo
-} from '@/store/workspace-record-selectors'
-import {
-  findIndexedRepoOwner,
+  findFirstIndexedWorktree,
   findIndexedWorktreeOwnerForHost,
   resolveIndexedWorktreeOwner
-} from '@/lib/worktree-runtime-owner-index'
+} from '@/lib/workspace/ownership/worktree-runtime-owner-index'
 
 // Why: renderer modules also load in node test environments, where there is no window.
 export function cocosAgentApi(): CocosAgentPreloadApi | undefined {
@@ -58,7 +56,7 @@ export function localCocosWorkspacePath(
   const worktree = hostId
     ? findIndexedWorktreeOwnerForHost(worktrees, worktreeId, hostId)
     : resolveIndexedWorktreeOwner(worktrees, worktreeId).kind === 'resolved'
-      ? (getWorktreeMapFromState(state).get(worktreeId) ?? null)
+      ? findFirstIndexedWorktree(worktrees, worktreeId)
       : null
   if (!worktree) {
     return null

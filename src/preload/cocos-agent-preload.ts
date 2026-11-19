@@ -33,5 +33,5 @@ if (process.contextIsolated) {
     console.error(error)
   }
 } else {
-  ;(window as Window & { cocosAgent?: CocosAgentPreloadApi }).cocosAgent = cocosAgentApi
+  Object.assign(window, { cocosAgent: cocosAgentApi })
 }

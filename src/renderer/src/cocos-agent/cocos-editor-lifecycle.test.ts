@@ -2,7 +2,7 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { AppState } from '@/store'
+import type { AppState } from '@/store/types'
 import type { CocosEditorRecord } from '../../../shared/cocos-agent/cocos-editor-types'
 
 const mocks = vi.hoisted(() => ({
@@ -23,11 +23,11 @@ const mocks = vi.hoisted(() => ({
 vi.mock('@/store', () => ({
   useAppStore: { getState: () => mocks.state, subscribe: mocks.subscribe }
 }))
-vi.mock('@/store/slices/browser-webview-cleanup', () => ({
+vi.mock('@/store/slices/browser/cleanup/browser-webview-cleanup', () => ({
   destroyWorkspaceWebviews: mocks.destroy
 }))
 vi.mock('sonner', () => ({ toast: { error: mocks.error } }))
-vi.mock('../../../shared/app-environment', () => ({
+vi.mock('../../../shared/app-lifecycle/app-environment', () => ({
   getAppEnvironment: () => ({ getPath: () => mocks.directory })
 }))
 vi.mock('./cocos-workspace-project', () => ({

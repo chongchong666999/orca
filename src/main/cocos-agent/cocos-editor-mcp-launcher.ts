@@ -1,8 +1,8 @@
 import { mkdir } from 'node:fs/promises'
 import path from 'node:path'
-import { getAppEnvironment } from '../../shared/app-environment'
+import { getAppEnvironment } from '../../shared/app-lifecycle/app-environment'
 import { quoteStartupArg } from '../../shared/agent-launch/startup/tui-agent-startup-shell'
-import { writeFileAtomically } from '../codex-accounts/fs-utils'
+import { publishCocosAgentFile } from './cocos-agent-file-publication'
 import { resolveA5GameContextBinary } from './a5-game-context-binary'
 
 export async function refreshCocosEditorMcpLauncher(binary?: string): Promise<string | null> {
@@ -20,8 +20,10 @@ export async function refreshCocosEditorMcpLauncher(binary?: string): Promise<st
   const directory = path.join(getAppEnvironment().getPath('userData'), 'cocos-editor-runtime')
   await mkdir(directory, { recursive: true, mode: 0o700 })
   const launcher = path.join(directory, 'a5-game-context')
-  writeFileAtomically(launcher, `#!/bin/sh\nexec ${quoteStartupArg(target, 'posix')} "$@"\n`, {
-    mode: 0o700
-  })
+  await publishCocosAgentFile(
+    launcher,
+    `#!/bin/sh\nexec ${quoteStartupArg(target, 'posix')} "$@"\n`,
+    0o700
+  )
   return launcher
 }

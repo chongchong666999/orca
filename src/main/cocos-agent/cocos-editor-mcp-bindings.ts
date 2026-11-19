@@ -1,8 +1,9 @@
 import { lstat, readFile, readdir } from 'node:fs/promises'
 import path from 'node:path'
 import { z } from 'zod'
-import { getAppEnvironment } from '../../shared/app-environment'
-import { writeFileAtomically } from '../codex-accounts/fs-utils'
+import { getAppEnvironment } from '../../shared/app-lifecycle/app-environment'
+import { withSidecarSnapshotQueue } from '../filesystem/sidecar-snapshot-file'
+import { publishCocosAgentFile } from './cocos-agent-file-publication'
 import type { CocosEditorRecord } from '../../shared/cocos-agent/cocos-editor-types'
 
 export type CocosEditorBinding = {
@@ -28,13 +29,15 @@ function isSameProjectRoot(reported: string, projectRoot: string): boolean {
   )
 }
 
-export function registerCocosEditorBinding(
+export async function registerCocosEditorBinding(
   file: string,
   binding: CocosEditorBinding,
   workspaceId?: string
-): void {
+): Promise<void> {
   if (workspaceId) {
-    writeFileAtomically(file, JSON.stringify({ ...binding, workspaceId }), { mode: 0o600 })
+    await withSidecarSnapshotQueue(file, () =>
+      publishCocosAgentFile(file, JSON.stringify({ ...binding, workspaceId }), 0o600)
+    )
   }
 }
 
@@ -181,10 +184,18 @@ export async function refreshCocosEditorBindings(
     if (!isCurrent()) {
       break
     }
-    for (const { file } of sessions) {
-      writeFileAtomically(file, JSON.stringify({ ...binding, workspaceId }), { mode: 0o600 })
+    const contents = JSON.stringify({ ...binding, workspaceId })
+    const publications = await Promise.all(
+      sessions.map(({ file }) =>
+        withSidecarSnapshotQueue(file, () =>
+          publishCocosAgentFile(file, contents, 0o600, isCurrent)
+        )
+      )
+    )
+    if (publications.every(Boolean) && isCurrent()) {
+      return
     }
-    return
+    break
   }
   throw new Error('编辑器实例已改变，AI 连接尚未恢复。请恢复当前编辑器后重试。')
 }

@@ -1,6 +1,7 @@
-import { startBrowserSplitPageServer } from './helpers/browser-split-page-server'
-import { expect, test } from './helpers/orca-app'
-import { waitForActiveWorktree, waitForSessionReady } from './helpers/store'
+import { startBrowserSplitPageServer } from './browser/input-navigation/browser-split-page-server'
+import { expect } from '@stablyai/playwright-test'
+import { test } from './desktop/electron-fixtures/orca-app'
+import { waitForActiveWorktree, waitForSessionReady } from './desktop/renderer-probes/store'
 
 test('the Cocos editor stays flush with the left sidebar as it narrows', async ({
   orcaPage: page,

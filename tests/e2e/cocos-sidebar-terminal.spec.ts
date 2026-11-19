@@ -1,12 +1,18 @@
 import { mkdtempSync, realpathSync, rmSync } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
-import { configureGoldenStubAgent, getGoldenStubAgentLaunchEnv } from './helpers/golden-stub-agent'
-import { waitForActiveWorktree, waitForSessionReady } from './helpers/store'
-import { expect, test } from './helpers/orca-app'
-import { readTerminalAccessibilityText } from './helpers/terminal-accessibility-tree'
-import type { Page, ElectronApplication } from '@stablyai/playwright-test'
-import { attachRepoAndOpenTerminal, createRestartSession } from './helpers/orca-restart'
+import {
+  configureGoldenStubAgent,
+  getGoldenStubAgentLaunchEnv
+} from './golden-journeys/golden-stub-agent'
+import { waitForActiveWorktree, waitForSessionReady } from './desktop/renderer-probes/store'
+import { test } from './desktop/electron-fixtures/orca-app'
+import { readTerminalAccessibilityText } from './terminal/input/terminal-accessibility-tree'
+import { expect, type Page, type ElectronApplication } from '@stablyai/playwright-test'
+import {
+  attachRepoAndOpenTerminal,
+  createRestartSession
+} from './desktop/electron-fixtures/orca-restart'
 
 async function sidebarText(page: Page): Promise<string | null> {
   const tabId = await page
@@ -32,12 +38,15 @@ test('sidebar shell and agent stay interactive alongside the browser', async ({
   await waitForSessionReady(page)
   await waitForActiveWorktree(page)
   await page.evaluate(async () => {
-    await window.__store!.getState().updateSettings({ uiLanguage: 'en' })
+    const state = window.__store!.getState()
+    await state.updateSettings({ uiLanguage: 'en' })
+    state.setRightSidebarOpen(true)
   })
   await electronApp.evaluate(({ BrowserWindow }) =>
     BrowserWindow.getAllWindows()[0].setSize(1440, 900)
   )
   await configureGoldenStubAgent(page, { agent: 'codex' })
+  await page.getByRole('button', { name: 'Terminal', exact: true }).click()
   const panel = page.locator('[data-sidebar-terminal-panel]')
   await expect(panel).toBeVisible()
   const originalWorktreeId = await page.evaluate(() => window.__store!.getState().activeWorktreeId!)
@@ -111,7 +120,7 @@ test('sidebar shell and agent stay interactive alongside the browser', async ({
     if (!folder) {
       throw new Error('Could not create folder workspace')
     }
-    store.getState().setActiveFolderWorkspace(folder.id)
+    store.getState().setActiveFolderWorkspace(folder.folderWorkspace.id)
     store.getState().setRightSidebarTab('terminal')
   }, folderPath)
   await panel.getByRole('button', { name: 'New session', exact: true }).click()

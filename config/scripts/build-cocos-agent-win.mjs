@@ -4,8 +4,8 @@
 import { execFileSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import path from 'node:path'
-import { getLocalBuildIdentity } from './build-mac-local.mjs'
-import { resolvePnpmCliInvocation } from './pnpm-cli-invocation.mjs'
+import { getLocalBuildIdentity } from './desktop-distribution/macos/build-mac-local.mjs'
+import { resolvePnpmCliInvocation } from './tool-invocation/pnpm-cli-invocation.mjs'
 
 const skipTypecheck = process.argv.includes('--skip-typecheck')
 const release = process.argv.includes('--release')

@@ -1,22 +1,27 @@
 import { execFileSync } from 'node:child_process'
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
-import type { ElectronApplication } from '@stablyai/playwright-test'
-import { test, expect } from './helpers/orca-app'
-import { attachRepoAndOpenTerminal, createRestartSession } from './helpers/orca-restart'
-import { waitForSessionReady } from './helpers/store'
+import { expect, type ElectronApplication } from '@stablyai/playwright-test'
+import { test } from './desktop/electron-fixtures/orca-app'
+import {
+  attachRepoAndOpenTerminal,
+  createRestartSession
+} from './desktop/electron-fixtures/orca-restart'
+import { waitForSessionReady } from './desktop/renderer-probes/store'
 
-const resources = '/Applications/cocos-agent.app/Contents/Resources/a5-game-context'
+const resources = path.resolve('resources/cocos-agent/a5-game-context')
 const bundledEditor = `${resources}/node_modules/@a5labs-prime/a5-game-context-darwin-arm64/native-engine/bin/darwin-arm64/a5-game-context`
-const bundledNode = '/Applications/cocos-agent.app/Contents/MacOS/cocos-agent'
 
 test('restores the actual Cocos editor page after the application restarts', async ({
   testRepoPath
 }, testInfo) => {
   // Two cold desktop launches and editor startup each have their own readiness deadline.
   test.setTimeout(300_000)
-  test.skip(process.platform !== 'darwin', 'This local regression uses the installed macOS editor')
-  test.skip(!existsSync(bundledEditor), 'The bundled editor is required for this regression')
+  test.skip(
+    process.platform !== 'darwin' || process.arch !== 'arm64',
+    'Requires the macOS arm64 editor'
+  )
+  test.skip(!existsSync(bundledEditor), 'Run the pinned editor import before this regression')
   mkdirSync(path.join(testRepoPath, 'assets'), { recursive: true })
   writeFileSync(
     path.join(testRepoPath, 'project.json'),
@@ -29,8 +34,8 @@ test('restores the actual Cocos editor page after the application restarts', asy
     ORCA_BACKGROUND_LAUNCH: '1',
     A5_GAME_CONTEXT_BIN: bundledEditor,
     A5_GAME_CONTEXT_PACKAGE_ROOT: resources,
-    A5_NODE_EXE: bundledNode,
-    A5_NODE_BINARY: bundledNode
+    A5_NODE_EXE: process.execPath,
+    A5_NODE_BINARY: process.execPath
   })
   let app: ElectronApplication | undefined
   const visibleEditor = async (instance: ElectronApplication) =>
@@ -56,23 +61,8 @@ test('restores the actual Cocos editor page after the application restarts', asy
     const first = await session.launch()
     app = first.app
     await waitForSessionReady(first.page)
-    const worktree = await attachRepoAndOpenTerminal(first.page, testRepoPath)
-    await first.page.evaluate(
-      async ({ worktree, project }) => {
-        const opened = await window.cocosAgent!.openEditor({ projectPath: project })
-        if (!opened.ok) {
-          throw new Error(opened.message)
-        }
-        const url = new URL(opened.url)
-        url.searchParams.set('cocos-agent', 'editor')
-        url.searchParams.set('cocos-workspace', worktree)
-        url.searchParams.set('cocos-view', 'restart-test-view')
-        return window
-          .__store!.getState()
-          .createBrowserTab(worktree, url.toString(), { activate: true }).id
-      },
-      { worktree, project: testRepoPath }
-    )
+    await attachRepoAndOpenTerminal(first.page, testRepoPath)
+    await first.page.getByRole('button', { name: 'Cocos Creator', exact: true }).click()
     await expect.poll(() => visibleEditor(app!), { timeout: 90_000 }).not.toBeNull()
     const firstPage = await visibleEditor(app)
     await session.close(app)
@@ -95,7 +85,9 @@ test('restores the actual Cocos editor page after the application restarts', asy
     await waitForSessionReady(second.page)
     await expect.poll(() => visibleEditor(app!), { timeout: 60_000 }).not.toBeNull()
     const restored = await visibleEditor(app)
-    expect(restored?.url).toContain('cocos-view=restart-test-view')
+    expect(new URL(restored!.url).searchParams.get('cocos-workspace')).toBe(
+      new URL(firstPage!.url).searchParams.get('cocos-workspace')
+    )
     expect(restored?.url).not.toBe(firstPage?.url)
     const cdp = await second.page.context().newCDPSession(second.page)
     const { data } = await cdp.send('Page.captureScreenshot', { format: 'png' })

@@ -1,11 +1,11 @@
-import { existsSync } from 'node:fs'
-import { samePathEntry, splitPathEntries } from '../cli/cli-install-path-format'
-import { writeWindowsUserPath } from '../cli/cli-privileged-processes'
+import { access } from 'node:fs/promises'
+import { samePathEntry, splitPathEntries } from '../cli/command-paths/cli-install-path-format'
+import { writeWindowsUserPath } from '../cli/installation/cli-privileged-processes'
 import {
   invalidateWindowsUserPathRegistryCache,
   readFreshWindowsUserPathRegistry,
   type WindowsUserPathReadResult
-} from '../cli/windows-user-path-registry'
+} from '../cli/command-paths/windows-user-path-registry'
 import {
   A5_GAME_CONTEXT_COMMANDS,
   type A5GameContextCommandRegistration
@@ -21,14 +21,20 @@ export async function addWindowsA5GameContextPathEntry(input: {
   readUserPath?: () => Promise<WindowsUserPathReadResult>
   writeUserPath?: (value: string) => Promise<void>
   environment?: NodeJS.ProcessEnv
-  exists?: (directory: string) => boolean
+  exists?: (directory: string) => boolean | Promise<boolean>
 }): Promise<A5GameContextCommandRegistration> {
   const current = await (input.readUserPath ?? readFreshWindowsUserPathRegistry)()
   if (current.state !== 'success') {
     // Why: PATH is read-modify-write; a failed read must not become a write of a partial PATH.
     throw new Error(`${current.detail} No PATH changes were made.`)
   }
-  const exists = input.exists ?? existsSync
+  const exists =
+    input.exists ??
+    ((directory: string) =>
+      access(directory).then(
+        () => true,
+        () => false
+      ))
   const same = (entry: string): boolean =>
     samePathEntry(
       'win32',
@@ -38,7 +44,12 @@ export async function addWindowsA5GameContextPathEntry(input: {
       current.expandable
     )
   const entries = splitPathEntries('win32', current.value)
-  const next = entries.filter((entry) => same(entry) || !OUR_ENTRY.test(entry) || exists(entry))
+  const next: string[] = []
+  for (const entry of entries) {
+    if (same(entry) || !OUR_ENTRY.test(entry) || (await exists(entry))) {
+      next.push(entry)
+    }
+  }
   if (!next.some(same)) {
     next.push(input.directory)
   }

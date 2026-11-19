@@ -1,15 +1,14 @@
 import { describe, expect, it } from 'vitest'
-import type { AppState } from '@/store'
 import { findEditorPageTabs } from './cocos-editor-tabs'
 
-function stateWithPages(urlsByTab: Record<string, string>): AppState {
+function stateWithPages(urlsByTab: Record<string, string>) {
   const tabIds = Object.keys(urlsByTab)
   return {
     browserTabsByWorktree: { wt: tabIds.map((id) => ({ id })) },
     browserPagesByWorkspace: Object.fromEntries(
       tabIds.map((id) => [id, [{ id: `${id}-page`, url: urlsByTab[id] }]])
     )
-  } as unknown as AppState
+  }
 }
 
 describe('findEditorPageTabs', () => {

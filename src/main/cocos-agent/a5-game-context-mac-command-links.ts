@@ -11,7 +11,7 @@ import {
   symlink
 } from 'node:fs/promises'
 import path from 'node:path'
-import { isExecutableFile, splitPathEntries } from '../cli/cli-install-path-format'
+import { isExecutableFile, splitPathEntries } from '../cli/command-paths/cli-install-path-format'
 import {
   A5_GAME_CONTEXT_COMMANDS,
   type A5GameContextCommandRegistration

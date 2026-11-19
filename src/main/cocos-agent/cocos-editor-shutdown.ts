@@ -2,8 +2,8 @@ const SHUTDOWN_TIMEOUT_MS = 120_000
 const SHUTDOWN_PROBE_INTERVAL_MS = 100
 
 function connectionErrorCode(error: unknown): unknown {
-  const cause = error instanceof Error ? (error.cause as { code?: unknown } | undefined) : undefined
-  return cause?.code
+  const cause = error instanceof Error ? error.cause : undefined
+  return cause && typeof cause === 'object' && 'code' in cause ? cause.code : undefined
 }
 
 export class CocosEditorShutdown {

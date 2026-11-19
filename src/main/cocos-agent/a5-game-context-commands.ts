@@ -1,9 +1,8 @@
-import { existsSync } from 'node:fs'
 import { homedir } from 'node:os'
 import path from 'node:path'
-import { getAppEnvironment } from '../../shared/app-environment'
-import { isExecutableFile } from '../cli/cli-install-path-format'
-import { hostShellEnvironment } from '../runtime/structured-agent-shell-environment'
+import { getAppEnvironment } from '../../shared/app-lifecycle/app-environment'
+import { isExecutableFile } from '../cli/command-paths/cli-install-path-format'
+import { hostShellEnvironment } from '../runtime/agent-session/environment/structured-agent-shell-environment'
 import type { A5GameContextCommandRegistration } from './a5-game-context-command-registration'
 import { linkMacA5GameContextCommands } from './a5-game-context-mac-command-links'
 import {
@@ -37,7 +36,7 @@ export async function registerA5GameContextCommands(
   }
   if (process.platform === 'win32') {
     const directory = path.join(resourcesPath, WINDOWS_A5_GAME_CONTEXT_BIN)
-    if (!existsSync(path.join(directory, 'a5-game-context.cmd'))) {
+    if (!(await isExecutableFile(path.join(directory, 'a5-game-context.cmd')))) {
       return null
     }
     return addWindowsA5GameContextPathEntry({ directory })

@@ -1,6 +1,9 @@
-import { existsSync, readFileSync } from 'node:fs'
+import {
+  readObservedFileSync as readFileSync,
+  observedExistsSync as existsSync
+} from '../../../filesystem/file-content-observation'
+
 import { parse as parseToml } from 'smol-toml'
-import '../identity/codex-trust-identity'
 import { writeTomlConfigAtomically as writeConfigAtomically } from '../../configuration/toml/config-toml-atomic-write'
 import { findAllHookTrustBlocks } from './config-toml-hook-trust-blocks'
 import {
@@ -16,8 +19,8 @@ import {
   readHookTrustContent as readHookTrustEntriesFromContent
 } from './config-toml-hook-trust-read'
 import { upsertProjectTrustContent as upsertProjectTrustLevelInContent } from './config-toml-project-trust'
-import '../../configuration/toml/config-toml-syntax'
 import { observe } from '../../configuration/codex-path-observation'
+import '../../configuration/toml/config-toml-syntax'
 
 export type CodexEventLabel =
   | 'pre_tool_use'
@@ -206,6 +209,6 @@ function readTomlFile(configPath: string): string {
   return stripLeadingBom(readFileSync(configPath, 'utf-8'))
 }
 
-function stripLeadingBom(content: string): string {
+export function stripLeadingBom(content: string): string {
   return content.charCodeAt(0) === 0xfeff ? content.slice(1) : content
 }

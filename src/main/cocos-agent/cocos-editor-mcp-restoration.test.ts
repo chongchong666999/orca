@@ -1,12 +1,13 @@
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { runProcess } from '@orca/process-host'
+import { runProcess, runProcessSync } from '@orca/process-host'
+import { resolvePinnedBunExecutable } from '../../../config/scripts/tool-invocation/pinned-bun-executable.mjs'
 import os from 'node:os'
 import { afterEach, expect, it, vi } from 'vitest'
 
 const environment = vi.hoisted(() => ({ directory: '' }))
-vi.mock('../../shared/app-environment', () => ({
+vi.mock('../../shared/app-lifecycle/app-environment', () => ({
   getAppEnvironment: () => ({ getPath: () => environment.directory })
 }))
 afterEach(async () => {
@@ -31,7 +32,7 @@ it('rediscovers a retained terminal binding after the app module restarts and re
   }
   await writeFile(file, JSON.stringify(oldBinding))
   const firstApp = await import('./cocos-editor-mcp-bindings')
-  firstApp.registerCocosEditorBinding(file, oldBinding, 'workspace-one')
+  await firstApp.registerCocosEditorBinding(file, oldBinding, 'workspace-one')
   vi.resetModules()
   const restartedApp = await import('./cocos-editor-mcp-bindings')
   vi.stubGlobal(
@@ -177,7 +178,7 @@ it('preserves legacy unowned bindings and requests a one-time MCP reconnect inst
 it('refreshes the retained binding in a separate app process with no inherited module registry', async () => {
   environment.directory = await mkdtemp(path.join(os.tmpdir(), 'cocos-binding-process-'))
   const source = path.resolve('src/main/cocos-agent/cocos-editor-mcp-bindings.ts')
-  const appEnvironment = path.resolve('src/shared/app-environment.ts')
+  const appEnvironment = path.resolve('src/shared/app-lifecycle/app-environment.ts')
   const script = path.join(environment.directory, 'restart.ts')
   await writeFile(
     script,
@@ -196,7 +197,7 @@ it('refreshes the retained binding in a separate app process with no inherited m
     if (process.argv[2] === 'start') {
       await mkdir(session, { recursive: true });
       await writeFile(file, JSON.stringify(binding));
-      registerCocosEditorBinding(file, binding, 'workspace-one');
+      await registerCocosEditorBinding(file, binding, 'workspace-one');
     } else {
       globalThis.fetch = async () => Response.json({ ...binding, instanceId: 'new-instance' });
       await refreshCocosEditorBindings({ projectRoot: '/projects/game', url: 'http://127.0.0.1:40002/?token=fixture-new', startedByApp: true },
@@ -206,7 +207,7 @@ it('refreshes the retained binding in a separate app process with no inherited m
     }
   `
   )
-  const program = path.resolve('node_modules/bun/bin/bun.exe')
+  const program = resolvePinnedBunExecutable(process.cwd(), runProcessSync) ?? 'bun'
   const first = await runProcess({
     program,
     args: [script, 'start', environment.directory],

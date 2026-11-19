@@ -1,7 +1,7 @@
-import { ghExecFileAsync, acquire, release } from '../../gh-utils'
-import { runAsDefaultWslCliUserAct } from '../../../git/command-runner/default-wsl-cli-fallback'
-import { COCOS_AGENT_GITHUB_REPO } from '../../../../shared/cocos-agent-brand'
-export const ORCA_REPO = COCOS_AGENT_GITHUB_REPO
+import { ghExecFileAsync } from '../../../git/command-runner/hosted-cli/gh-exec-file'
+import { acquire, release } from '../../execution/github-operation-slots'
+import { runAsDefaultWslCliUserAct } from '../../../git/command-runner/hosted-cli/default-wsl-cli-fallback'
+export const ORCA_REPO = 'stablyai/orca'
 
 // Bound optional star prompts more tightly than user work; failures can fall back to the browser.
 const STAR_GH_TIMEOUT_MS = 15_000

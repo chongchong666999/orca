@@ -1,5 +1,5 @@
 import type { AppState } from '@/store/types'
-import { resolveActiveTabOwnerWorktreeId } from '@/store/slices/active-tab-owner-worktree'
+import { resolveActiveTabOwnerWorktreeId } from '@/store/terminals/ownership/active-tab-owner-worktree'
 import {
   isSidebarTerminal,
   selectSidebarTerminalSession

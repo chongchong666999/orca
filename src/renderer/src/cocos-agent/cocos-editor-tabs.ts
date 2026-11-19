@@ -1,5 +1,5 @@
 import type { CocosEditorRecord } from '../../../shared/cocos-agent/cocos-editor-types'
-import { destroyWorkspaceWebviews } from '@/store/slices/browser-webview-cleanup'
+import { destroyWorkspaceWebviews } from '@/store/slices/browser/cleanup/browser-webview-cleanup'
 import {
   beginCocosEditorStart,
   isCocosEditorSuspended,
@@ -10,9 +10,10 @@ import {
 } from './cocos-editor-tab-state'
 import { refreshCocosEditorTabBindings } from './cocos-editor-binding-refresh'
 import { toast } from 'sonner'
-import type { ExecutionHostId } from '../../../shared/execution-host'
+import type { ExecutionHostId } from '../../../shared/execution-host/execution-host'
 import { cocosText } from './cocos-text'
-import { useAppStore, type AppState } from '@/store'
+import { useAppStore } from '@/store'
+import type { AppState } from '@/store/types'
 import { cocosAgentApi, localCocosWorkspacePath } from './cocos-workspace-project'
 import {
   editorIdentity,

@@ -1,6 +1,6 @@
 import { mkdir, mkdtemp, realpath, writeFile } from 'node:fs/promises'
 import path from 'node:path'
-import { getAppEnvironment } from '../../shared/app-environment'
+import { getAppEnvironment } from '../../shared/app-lifecycle/app-environment'
 import { insertAgentStartupArgs } from '../../shared/agent-launch/startup/insert-agent-startup-args'
 import type { AgentStartupShell } from '../../shared/agent-launch/startup/tui-agent-startup-shell'
 import { resolveA5GameContextBinary } from './a5-game-context-binary'
@@ -25,9 +25,12 @@ export async function prepareCocosEditorMcpLaunch(input: {
   ) {
     return input.command
   }
+  const editors = cocosEditorService.list()
+  if (editors.length === 0) {
+    return input.command
+  }
   const requestedCwd = input.cwd
   const cwd = await realpath(requestedCwd).catch(() => requestedCwd)
-  const editors = cocosEditorService.list()
   const editor =
     (await findCocosEditorForWorkspace(cwd, editors)) ??
     [...editors]
@@ -83,6 +86,6 @@ export async function prepareCocosEditorMcpLaunch(input: {
       '当前 Agent 启动命令无法安全附加编辑器配置，请使用直接的 Claude 或 Codex 命令。'
     )
   }
-  registerCocosEditorBinding(bindingPath, binding, input.worktreeId)
+  await registerCocosEditorBinding(bindingPath, binding, input.worktreeId)
   return command
 }

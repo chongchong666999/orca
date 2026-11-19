@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
-import { getLocalBuildIdentity } from './build-mac-local.mjs'
+import { getLocalBuildIdentity } from './desktop-distribution/macos/build-mac-local.mjs'
 import { cocosAgentVersion, createCocosAgentBetaBuild } from './cocos-agent-beta-build.mjs'
 import { prepareInternalSigning } from './cocos-internal-signing.mjs'
 

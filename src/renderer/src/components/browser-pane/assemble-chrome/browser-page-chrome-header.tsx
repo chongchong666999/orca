@@ -1,16 +1,16 @@
 import type { Dispatch, MutableRefObject, RefObject, SetStateAction } from 'react'
-import type { BrowserPage as BrowserPageState } from '../../../../../shared/browser-workspace-types'
+import type { BrowserPage as BrowserPageState } from '../../../../../shared/browser/workspaces/browser-workspace-types'
 import type { ShareableBrowserArtifactFile } from '../describe-page/browser-artifact-upload'
-import type { GrabModeHook } from '../annotate/useGrabMode'
+import type { GrabModeHook } from '../annotate/grab/useGrabMode'
 import { BrowserPageToolbar } from './browser-page-toolbar'
 import { HiddenBrowserPageToolbar } from '@/cocos-agent/HiddenBrowserPageToolbar'
 import { isCocosEditorPageUrl } from '@/cocos-agent/cocos-editor-tabs'
 import { BrowserPageDownloadList } from '../navigate/browser-page-download-list'
-import { BrowserPageChromeBanners } from './browser-page-chrome-banners'
+import { BrowserPageChromeBanners } from './feedback/browser-page-chrome-banners'
 import type { useBrowserPageReloadActions } from '../navigate/use-browser-page-reload-actions'
 import type { useBrowserPageNavigationDownloads } from '../navigate/use-browser-page-navigation-downloads'
-import type { useBrowserPageGrabAnnotations } from '../annotate/use-browser-page-grab-annotations'
-import type { useBrowserPageAnnotationSend } from '../annotate/use-browser-page-annotation-send'
+import type { useBrowserPageGrabAnnotations } from '../annotate/grab/use-browser-page-grab-annotations'
+import type { useBrowserPageAnnotationSend } from '../annotate/delivery/use-browser-page-annotation-send'
 
 export function BrowserPageChromeHeader({
   chromeHeaderRef,
@@ -27,6 +27,7 @@ export function BrowserPageChromeHeader({
   grab,
   grabAnnotations,
   annotationSend,
+  onOpenFind,
   markupIsActive,
   markupStart,
   markupCancel,
@@ -52,6 +53,7 @@ export function BrowserPageChromeHeader({
   grab: GrabModeHook
   grabAnnotations: ReturnType<typeof useBrowserPageGrabAnnotations>
   annotationSend: ReturnType<typeof useBrowserPageAnnotationSend>
+  onOpenFind: () => void
   markupIsActive: boolean
   markupStart: () => Promise<void>
   markupCancel: () => void
@@ -104,6 +106,11 @@ export function BrowserPageChromeHeader({
         markupCancel={markupCancel}
         grabElementShortcut={grabElementShortcut}
         browserAnnotationsLength={annotationSend.browserAnnotations.length}
+        notes={{
+          onCopyAll: annotationSend.handleCopyBrowserAnnotations,
+          onClear: annotationSend.handleClearBrowserAnnotations
+        }}
+        onOpenFind={onOpenFind}
         shareableArtifactFile={shareableArtifactFile}
         currentBrowserUrl={currentBrowserUrl}
         externalUrl={externalUrl}

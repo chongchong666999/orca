@@ -1,8 +1,7 @@
 {
   "upstream": "https://github.com/stablyai/orca",
-  "upstreamSha": "974bb4a7cab99cb9735b493d348a33a2b465cd7e",
-  "upstreamRef": "upstream/main as fetched on 2026-11-04 (merge-base of dev/0.1.0)",
-  "mergedInto": "dev/0.1.0",
-  "cocosPackage": "5.0.1",
-  "verified": "2026-11-08 touch-point layout refactor (dev/0.1.1); no upstream merge performed yet"
+  "upstreamSha": "880b55e0552dfa1591621e9937e8f036eafb302a",
+  "upstreamRef": "cocos-agent/main (mirror of stablyai/orca main fetched on 2026-11-19)",
+  "mergedInto": "codex/cocos-dev-main-sync",
+  "cocosPackage": "5.0.20 darwin-arm64; 5.0.13 win32-x64"
 }

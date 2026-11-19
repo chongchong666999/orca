@@ -1,9 +1,9 @@
 import { toast } from 'sonner'
 import { cocosText } from './cocos-text'
 import { useAppStore } from '@/store'
-import { holdEmptyWorkspaceDefaultSurfaceForLaunch } from '@/lib/empty-workspace-default-surface-claims'
-import type { InitialTerminalOptions } from '@/lib/worktree-activation-store-contract'
-import { ensureWorktreeHasInitialTerminal } from '@/lib/worktree-initial-terminal-seeding'
+import { holdEmptyWorkspaceDefaultSurfaceForLaunch } from '@/lib/workspace/activation/initial-surface/empty-workspace-default-surface-claims'
+import type { InitialTerminalOptions } from '@/lib/workspace/activation/worktree-activation-store-contract'
+import { ensureWorktreeHasInitialTerminal } from '@/lib/workspace/activation/initial-surface/worktree-initial-terminal-seeding'
 import {
   cocosAgentApi,
   detectCocosProject,

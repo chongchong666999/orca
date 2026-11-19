@@ -44,6 +44,7 @@ module.exports = {
   forceCodeSigning: false,
   mac: {
     ...base.mac,
+    icon: 'resources/cocos-agent/icons/icon.icns',
     appId: 'com.a5labs.cocos-agent.internal',
     extendInfo: {
       ...base.mac.extendInfo,
@@ -66,6 +67,7 @@ module.exports = {
   // Why a folder of its own: it goes on the user PATH, and cocos-agent's `orca` in resources\bin must not.
   win: {
     ...base.win,
+    icon: 'resources/cocos-agent/icons/icon.ico',
     executableName: COCOS_AGENT_NAME,
     extraResources: [
       ...base.win.extraResources,

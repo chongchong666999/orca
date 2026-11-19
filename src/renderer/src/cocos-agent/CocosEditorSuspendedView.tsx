@@ -21,13 +21,11 @@ export function CocosEditorSuspendedView({
       return
     }
     setPending(true)
-    try {
-      const outcome = await openCocosEditorTab(worktreeId, projectPath, { focus: 'unchanged' })
-      if (outcome.kind === 'failed') {
-        toast.error(outcome.message)
-      }
-    } finally {
-      setPending(false)
+    const outcome = await openCocosEditorTab(worktreeId, projectPath, {
+      focus: 'unchanged'
+    }).finally(() => setPending(false))
+    if (outcome.kind === 'failed') {
+      toast.error(outcome.message)
     }
   }
   return (

@@ -1,7 +1,8 @@
 import { refreshCocosEditorTabBindings } from './cocos-editor-binding-refresh'
 import { toast } from 'sonner'
 import { cocosText } from './cocos-text'
-import { useAppStore, type AppState } from '@/store'
+import { useAppStore } from '@/store'
+import type { AppState } from '@/store/types'
 import {
   cocosAgentApi,
   detectCocosProject,

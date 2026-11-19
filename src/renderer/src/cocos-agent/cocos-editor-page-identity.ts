@@ -1,5 +1,4 @@
-import type { AppState } from '@/store'
-import { createBrowserUuid } from '@/lib/browser-uuid'
+import { createNonSecureContextUuid } from '../../../shared/identifiers/non-secure-context-uuid'
 
 const LOOPBACK_HOSTS = new Set(['127.0.0.1', 'localhost', '[::1]'])
 const EDITOR_TAB_MARKER = ['cocos-agent', 'editor'] as const
@@ -8,7 +7,7 @@ export function markedEditorUrl(url: string, worktreeId: string): string {
   const parsed = new URL(url)
   parsed.searchParams.set(...EDITOR_TAB_MARKER)
   parsed.searchParams.set('cocos-workspace', worktreeId)
-  parsed.searchParams.set('cocos-view', createBrowserUuid())
+  parsed.searchParams.set('cocos-view', createNonSecureContextUuid())
   return parsed.toString()
 }
 
@@ -34,7 +33,10 @@ export function isCocosEditorPageUrl(url: string): boolean {
 }
 
 export function findEditorPageTabs(
-  state: AppState,
+  state: {
+    browserTabsByWorktree: Record<string, readonly { id: string }[]>
+    browserPagesByWorkspace: Record<string, readonly { url: string }[]>
+  },
   worktreeId: string
 ): { tabId: string; identity: string }[] {
   return (state.browserTabsByWorktree[worktreeId] ?? []).flatMap((tab) => {
