@@ -16,7 +16,7 @@ export function cocosBrandText(i18n: I18nInstance, key: string, text: string): s
       return desktopProduct.name
     case 'auto.components.StarNagCard.30c36231c1':
     case 'auto.components.star.nag.StarNagToastHost.body':
-      return i18n.t('cocosAgent:brand.starPrompt', { defaultValue: en.brand.starPrompt })
+      return i18n.t(cocosAgentKey('brand.starPrompt'), { defaultValue: en.brand.starPrompt })
     case 'auto.components.Landing.520304a067':
     case 'auto.components.onboarding.OnboardingFlow.277ba45540':
     case 'auto.components.onboarding.OnboardingFlow.a249f81538':
