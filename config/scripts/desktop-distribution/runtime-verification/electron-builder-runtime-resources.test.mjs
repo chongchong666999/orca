@@ -19,7 +19,7 @@ describe('packaged runtime resources', () => {
 
       // The entry points themselves carry no specifier; only the shared chunk does.
       const sources = new Map([
-        ['out/main/index.js', ''],
+        ['out/main/index.js', 'const sqlite = require("node:sqlite")'],
         ['out/main/agent-hooks/installation/managed-agent-hook-controls.js', ''],
         ['out/main/chunks/managed-agent-hook-controls-CWf8D-KR.js', 'require(`jsonc-parser`)']
       ])
