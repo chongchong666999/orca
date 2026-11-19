@@ -1,7 +1,7 @@
 {
-  "version": "5.0.13",
+  "version": "5.0.20",
   "target": "darwin-arm64",
-  "file": "a5-game-context-5.0.13-darwin-arm64.tgz",
-  "sha256": "cb97aeb20a4b93c5155f1e689c91b4fdf43c8d31502918da28f588b395d771f8",
-  "source": "Local test build, not released: GitNexus bugfix/swc-typescript-parity 4c5dc265f (SWC output as TypeScript 4.1 runs it, projects open without a document, editor logs, errors on TypeScript lines), npm run pack:platform -- --target darwin-arm64"
+  "file": "a5-game-context-5.0.20-darwin-arm64.tgz",
+  "sha256": "09a8a5d8c7f7ed663c08b70430f44460a00e34e503b4b3d396743485375563fb",
+  "source": "Local build of GitNexus github/main a5fb04484, npm run build:native && npm run pack:platform -- --target darwin-arm64"
 }
