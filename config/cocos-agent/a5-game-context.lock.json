@@ -1,7 +1,7 @@
 {
-  "version": "5.0.21",
+  "version": "5.0.22",
   "target": "darwin-arm64",
-  "file": "a5-game-context-5.0.21-darwin-arm64.tgz",
-  "sha256": "b9e23a3d57086fced9b0d2447852a03d508fce59d9a9b2e3a11543219dcf099d",
-  "source": "Local build of GitNexus github/main bd41a26848, npm run build:native && npm run pack:platform -- --target darwin-arm64"
+  "file": "a5-game-context-5.0.22-darwin-arm64.tgz",
+  "sha256": "711e0732550be986e27a8ca91aef39bbc1453a54132349f820d36abd4c0bc773",
+  "source": "Local build of GitNexus github/main fcf2ec74b1, npm run build:native && npm run pack:platform -- --target darwin-arm64"
 }
