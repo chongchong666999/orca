@@ -5,6 +5,7 @@ import path from 'node:path'
 import { getLocalBuildIdentity } from './desktop-distribution/macos/build-mac-local.mjs'
 import { cocosAgentVersion, createCocosAgentBetaBuild } from './cocos-agent-beta-build.mjs'
 import { prepareInternalSigning } from './cocos-internal-signing.mjs'
+import product from '../cocos-agent/desktop-product.json' with { type: 'json' }
 
 const skipTypecheck = process.argv.includes('--skip-typecheck')
 const release = process.argv.includes('--release')
@@ -55,13 +56,26 @@ console.log(`[build:cocos-agent] done: ${appPath}`)
 execFileSync('codesign', ['--verify', '--deep', '--strict', appPath], {
   stdio: 'inherit'
 })
-const bundleId = execFileSync(
-  '/usr/bin/plutil',
-  ['-extract', 'CFBundleIdentifier', 'raw', '-o', '-', path.join(appPath, 'Contents/Info.plist')],
-  { encoding: 'utf8' }
-).trim()
+function bundleProperty(key) {
+  return execFileSync(
+    '/usr/bin/plutil',
+    ['-extract', key, 'raw', '-o', '-', path.join(appPath, 'Contents/Info.plist')],
+    { encoding: 'utf8' }
+  ).trim()
+}
+
+const bundleId = bundleProperty('CFBundleIdentifier')
 if (bundleId !== 'com.a5labs.cocos-agent.internal') {
   throw new Error('The internal macOS package must keep its stable signing identity')
+}
+if (bundleProperty('CFBundleDisplayName') !== product.name) {
+  throw new Error('The macOS bundle must display the Cocos product name')
+}
+const bundleIcon = readFileSync(
+  path.join(appPath, 'Contents/Resources', bundleProperty('CFBundleIconFile'))
+)
+if (!bundleIcon.equals(readFileSync('resources/cocos-agent/icons/icon.icns'))) {
+  throw new Error('The macOS bundle must use the Cocos icon')
 }
 const requirement = execFileSync('codesign', ['-d', '-r-', appPath], { encoding: 'utf8' })
 if (!requirement.toLowerCase().includes(signing.identity.toLowerCase())) {

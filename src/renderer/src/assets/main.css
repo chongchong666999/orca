@@ -1293,6 +1293,11 @@ html.native-shell .app-layout {
   height: 100%;
 }
 
+/* The sidebar body sets the open column's width, even when the titlebar has more content. */
+.titlebar-left:not(.titlebar-left-floating) {
+  container: sidebar-titlebar / inline-size;
+}
+
 /* Tab-group split resize handle — wide hit area, visible center line. */
 .tab-group-split-resize-handle {
   flex-shrink: 0;
@@ -1587,9 +1592,6 @@ html.native-shell .app-layout {
   gap: 4px;
   height: 24px;
   max-width: min(280px, 32vw);
-  margin-left: 2px;
-  margin-right: 4px;
-  padding: 0 6px;
   border-radius: 4px;
   color: var(--muted-foreground);
   font-size: 12px;
@@ -1607,7 +1609,9 @@ html.native-shell .app-layout {
 }
 
 .titlebar-app-name-main {
-  flex: 0 0 auto;
+  margin-inline: 8px 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .titlebar-icon-button {

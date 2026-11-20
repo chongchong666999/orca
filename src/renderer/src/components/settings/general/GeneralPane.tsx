@@ -1,6 +1,7 @@
 import type React from 'react'
 import { useEffect, useRef } from 'react'
 import type { GlobalSettings } from '../../../../../shared/settings/global-settings-types'
+import { desktopProduct } from '../../../../../shared/app-lifecycle/desktop-product'
 import { useAppStore } from '../../../store/index'
 import { CliSection } from '../cli/install/CliSection'
 import { GeneralEditorSettingsSection } from '../editor/GeneralEditorSettingsSection'
@@ -282,7 +283,7 @@ function GeneralRootSettings({
           ) : null}
         </SettingsGroup>
       ) : null}
-      {matchesSettingsSearch(query, getGeneralCliSearchEntries()) ? (
+      {!desktopProduct && matchesSettingsSearch(query, getGeneralCliSearchEntries()) ? (
         <CliSection
           currentPlatform={getDesktopPlatformFromUserAgent(navigator.userAgent)}
           settings={settings}

@@ -1,10 +1,6 @@
 import { resolve } from 'node:path'
 import type { PluginOption } from 'vite'
-
-const product = {
-  name: 'Cocos Agent',
-  githubRepository: 'sky-jp_A5labsco/cocos-agent'
-}
+import product from '../cocos-agent/desktop-product.json'
 
 export function cocosDesktopBrand(): PluginOption {
   if (process.env.COCOS_AGENT_DESKTOP !== '1') {
@@ -29,6 +25,6 @@ export function cocosDesktopBrand(): PluginOption {
         ]
       }
     }),
-    transformIndexHtml: (html) => html.replace(/<title>Orca\b/, `<title>${product.name}`)
+    transformIndexHtml: (html) => html.replace(/<title>Orca(?: Agent)?\b/, `<title>${product.name}`)
   }
 }

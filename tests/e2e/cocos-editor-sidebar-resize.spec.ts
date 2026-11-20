@@ -27,9 +27,9 @@ test('the Cocos editor stays flush with the left sidebar as it narrows', async (
       },
       { worktreeId, url: url.href }
     )
-    const editor = page.locator(`[data-browser-overlay-tab-id="${editorId}"] webview:visible`)
+    const editor = page.locator(`[data-browser-overlay-tab-id="${editorId}"]`)
     const handle = page.locator('[data-sidebar-resize-handle]')
-    await expect(editor).toBeVisible()
+    await expect(editor.getByRole('button', { name: 'Resume Cocos Creator' })).toBeVisible()
     const expectAligned = async (width: number) => {
       await expect
         .poll(() =>

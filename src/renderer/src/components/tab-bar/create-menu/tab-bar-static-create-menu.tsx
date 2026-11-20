@@ -1,7 +1,6 @@
 import React from 'react'
 import { FilePlus, FileText, Globe, Smartphone, TerminalSquare } from 'lucide-react'
 import { useTranslate } from '@/i18n/use-translate'
-import { useCocosEditorCreateItems } from '@/cocos-agent/cocos-editor-create-items'
 import { MobileEmulatorTabIntroCallout } from '../../emulator-pane/tab-intro/MobileEmulatorTabIntroCallout'
 import { NewTabMenuTipSlot } from '../menu-fit/NewTabMenuTipSlot'
 import { ShellIcon } from '../../terminal/shells/ShellIcon'
@@ -65,7 +64,6 @@ export function TabBarStaticCreateMenu({
     onOpenFileTab
   } = props
   const pluginNewFiles = usePluginNewFiles()
-  const cocosItems = useCocosEditorCreateItems(props.worktreeId, terminalOnly)
   const simulatorAvailable = !terminalOnly && mobileEmulatorEnabled && mobileEmulatorCreationEnabled
 
   const terminalItems: TabBarCreateRowItem[] =
@@ -191,13 +189,11 @@ export function TabBarStaticCreateMenu({
           ...openMarkdownItems,
           ...terminalItems,
           ...browserItems,
-          ...cocosItems,
           ...simulatorItems
         ]
       : [
           ...terminalItems,
           ...browserItems,
-          ...cocosItems,
           ...markdownItems,
           ...openMarkdownItems,
           ...simulatorItems

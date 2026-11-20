@@ -2,6 +2,7 @@
 const base = require('./electron-builder.config.cjs')
 const { existsSync } = require('node:fs')
 const path = require('node:path')
+const product = require('./cocos-agent/desktop-product.json')
 
 const COCOS_AGENT_NAME = 'cocos-agent-beta'
 // The a5-game-context package and the editor's preparation script, at the same place on every platform.
@@ -49,7 +50,7 @@ module.exports = {
     extendInfo: {
       ...base.mac.extendInfo,
       CFBundleName: COCOS_AGENT_NAME,
-      CFBundleDisplayName: COCOS_AGENT_NAME
+      CFBundleDisplayName: product.name
     },
     identity: '-',
     sign: async (options) => {

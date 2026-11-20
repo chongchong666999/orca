@@ -1,6 +1,8 @@
 // Every upstream (stablyai/orca) file cocos-agent modifies must be registered in
 // config/cocos-agent/upstream-touch-points.json, and COCOS-AGENT.md's touch-point table is generated
-// from that file. Usage: node config/scripts/cocos-agent/check-upstream-touch-points.mjs [--write-doc] [--base <sha>]
+// from that file. A merge that drops a hook must not pass by deleting its entry: entries the
+// previous registry had stay registered or are retired with a reason and the replacement, if any.
+// Usage: node config/scripts/cocos-agent/check-upstream-touch-points.mjs [--write-doc] [--base <sha>] [--previous <ref>]
 import { execFileSync } from 'node:child_process'
 import { readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
@@ -38,13 +40,19 @@ export function findUnregistered(changed, entries) {
   return changed.filter((entry) => !registered.has(entry.path)).map((entry) => entry.path)
 }
 
-/** Registered files that no longer differ from upstream: the registry must not list ghosts. */
+/** Registered files that no longer differ from upstream: their Cocos change is gone. */
 export function findStale(changed, entries) {
   const changedPaths = new Set(changed.map((entry) => entry.path))
   return entries.filter((entry) => !changedPaths.has(entry.path)).map((entry) => entry.path)
 }
 
-export function renderTouchPointsTable(entries, mirrors = []) {
+function findDropped(previousEntries, entries, retired) {
+  const paths = new Set(entries.map((entry) => entry.path))
+  const retiredPaths = new Set(retired.map((entry) => entry.path))
+  return previousEntries.filter((entry) => !paths.has(entry.path) && !retiredPaths.has(entry.path))
+}
+
+export function renderTouchPointsTable(entries, mirrors = [], retired = []) {
   const rows = [...entries]
     .sort((a, b) => a.path.localeCompare(b.path))
     .map(
@@ -54,6 +62,9 @@ export function renderTouchPointsTable(entries, mirrors = []) {
   const mirrorRows = [...mirrors]
     .sort((a, b) => a.path.localeCompare(b.path))
     .map((mirror) => `| \`${mirror.path}\` | \`${mirror.mirrorOf}\` | ${mirror.note} |`)
+  const retiredRows = [...retired]
+    .sort((a, b) => a.path.localeCompare(b.path))
+    .map((entry) => `| \`${entry.path}\` | ${entry.change} | ${entry.reason} |`)
   // The formatter would pad the generated columns; keep the section byte-stable instead.
   return [
     '<!-- prettier-ignore-start -->',
@@ -70,6 +81,16 @@ export function renderTouchPointsTable(entries, mirrors = []) {
           '| 自有文件 | 镜像自 | 说明 |',
           '| --- | --- | --- |',
           ...mirrorRows
+        ]
+      : []),
+    ...(retiredRows.length
+      ? [
+          '',
+          '已退役的挂点（有意不再改上游，合并时不用接回）：',
+          '',
+          '| 原文件 | 原改动 | 退役原因 |',
+          '| --- | --- | --- |',
+          ...retiredRows
         ]
       : []),
     '<!-- prettier-ignore-end -->'
@@ -105,16 +126,38 @@ export function validateEntries(entries) {
   return problems
 }
 
+export function validateRetired(retired, entries) {
+  const problems = []
+  const registered = new Set(entries.map((entry) => entry.path))
+  for (const entry of retired) {
+    for (const field of ['path', 'change', 'reason']) {
+      if (typeof entry[field] !== 'string' || entry[field].length === 0) {
+        problems.push(`retired ${entry.path ?? '?'}: missing ${field}`)
+      }
+    }
+    if (registered.has(entry.path)) {
+      problems.push(`${entry.path}: both registered and retired`)
+    }
+  }
+  return problems
+}
+
 function readJson(file) {
   return JSON.parse(readFileSync(path.join(repoRoot, file), 'utf8'))
 }
 
+function argValue(argv, flag) {
+  const index = argv.indexOf(flag)
+  return index === -1 ? undefined : argv[index + 1]
+}
+
 export function main(argv = process.argv.slice(2)) {
-  const baseIndex = argv.indexOf('--base')
-  const base = baseIndex === -1 ? readJson(UPSTREAM_BASE_PATH).upstreamSha : argv[baseIndex + 1]
+  const base = argValue(argv, '--base') ?? readJson(UPSTREAM_BASE_PATH).upstreamSha
+  const previous = argValue(argv, '--previous')
   const writeDoc = argv.includes('--write-doc')
-  const { entries, mirrors = [] } = readJson(TOUCH_POINTS_PATH)
-  const problems = validateEntries(entries)
+  const { entries, mirrors = [], retired = [] } = readJson(TOUCH_POINTS_PATH)
+  const onConflict = new Map(entries.map((entry) => [entry.path, entry.onConflict]))
+  const problems = [...validateEntries(entries), ...validateRetired(retired, entries)]
   for (const mirror of mirrors) {
     for (const field of ['path', 'mirrorOf', 'note']) {
       if (typeof mirror[field] !== 'string' || mirror[field].length === 0) {
@@ -136,15 +179,32 @@ export function main(argv = process.argv.slice(2)) {
     }
     for (const file of findStale(changed, entries)) {
       problems.push(
-        `${file}: registered but identical to upstream; remove it from ${TOUCH_POINTS_PATH}`
+        `${file}: registered but identical to upstream, so its Cocos change is gone; re-apply it (${onConflict.get(file)}), or move the entry to "retired" with a reason if it is no longer needed`
       )
     }
   } else {
-    console.warn(
-      `[cocos-agent] upstream base ${base} is not in this clone (shallow checkout?); only the registry and the doc were checked`
+    problems.push(
+      `upstream base ${base} is not in this clone; fetch the recorded upstream commit before checking`
     )
   }
-  const table = renderTouchPointsTable(entries, mirrors)
+  let previousRegistry = null
+  if (previous) {
+    let previousCommit
+    try {
+      previousCommit = git(['rev-parse', '--verify', '--quiet', `${previous}^{commit}`]).trim()
+    } catch {
+      problems.push(`previous Cocos ref ${previous} is not in this clone`)
+    }
+    if (previousCommit && git(['ls-tree', previousCommit, '--', TOUCH_POINTS_PATH]).length > 0) {
+      previousRegistry = JSON.parse(git(['show', `${previousCommit}:${TOUCH_POINTS_PATH}`]))
+    }
+  }
+  for (const entry of findDropped(previousRegistry?.entries ?? [], entries, retired)) {
+    problems.push(
+      `${entry.path}: registered at ${previous.slice(0, 11)} but dropped without a "retired" record; a merge probably lost its Cocos change (${entry.change}). Re-apply it (${entry.onConflict}) or retire it with a reason`
+    )
+  }
+  const table = renderTouchPointsTable(entries, mirrors, retired)
   const docFile = path.join(repoRoot, DOC_PATH)
   const doc = readFileSync(docFile, 'utf8')
   const expected = replaceDocSection(doc, table)

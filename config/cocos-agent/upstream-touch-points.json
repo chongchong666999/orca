@@ -26,6 +26,12 @@
       "onConflict": "沿用上游交互流程，将仓库来源接到共享产品配置"
     },
     {
+      "path": "src/renderer/src/components/settings/general/GeneralPane.tsx",
+      "kind": "hook",
+      "change": "Cocos 桌面不展示上游 CLI 安装项",
+      "onConflict": "保留上游设置结构，按 Cocos 产品构建判断是否显示"
+    },
+    {
       "path": "src/renderer/src/components/sidebar/chrome/SidebarSettingsHelpMenu.tsx",
       "kind": "hook",
       "change": "GitHub 入口读取产品仓库地址",
@@ -62,10 +68,16 @@
       "onConflict": "优先使用上游的跳过选项"
     },
     {
-      "path": "config/scripts/preflight/changed-checks/check-changed-selection.mjs",
-      "kind": "hook",
-      "change": "VERIFY_CHECKS 增加 cocos-agent upstream touch points 一项（6 行）",
-      "onConflict": "保留上游改动，重新加上这一项"
+      "path": "config/packaged-runtime-node-modules.cjs",
+      "kind": "upstream-candidate",
+      "change": "打包时兼容 node: 内置模块的解析结果",
+      "onConflict": "优先采用上游对内置模块的识别逻辑"
+    },
+    {
+      "path": "config/scripts/desktop-distribution/runtime-verification/electron-builder-runtime-resources.test.mjs",
+      "kind": "upstream-candidate",
+      "change": "验证 node: 内置模块不被当作外部依赖",
+      "onConflict": "随对应的上游打包修复一起更新"
     },
     {
       "path": "native/windows-cli-launcher/src/main.rs",
@@ -104,6 +116,18 @@
       "onConflict": "保留上游初始化和用户数据逻辑，仅包装最终身份值"
     },
     {
+      "path": "src/main/startup/gpu-recovery/gpu-lifecycle.ts",
+      "kind": "hook",
+      "change": "关于窗口显示 Cocos Agent 的独立版本",
+      "onConflict": "保留上游窗口字段，只包装显示版本"
+    },
+    {
+      "path": "src/main/startup/main-window/main-window-actions.ts",
+      "kind": "upstream-candidate",
+      "change": "后台启动时仅记录渲染失败，不弹出原生恢复框",
+      "onConflict": "沿用上游恢复流程和后台启动策略"
+    },
+    {
       "path": "src/main/updater/updater-service.ts",
       "kind": "hook",
       "change": "独立 Cocos 安装包隔离 Orca 更新源，其他启动沿用 Orca 更新行为",
@@ -114,6 +138,24 @@
       "kind": "hook",
       "change": "import './cocos-agent-preload'（1 行）",
       "onConflict": "保留上游改动，重新加上这 1 行"
+    },
+    {
+      "path": "src/renderer/src/app-shell/chrome/TitlebarLeftControls.tsx",
+      "kind": "brand",
+      "change": "较长的 Cocos Agent 名称随窄侧栏收缩，保留导航按钮的空间",
+      "onConflict": "保留上游标题栏，将窄屏收缩规则接回标题和历史按钮"
+    },
+    {
+      "path": "src/renderer/src/app-shell/startup/use-onboarding-and-feature-tips.ts",
+      "kind": "hook",
+      "change": "Cocos 桌面跳过上游 CLI 安装引导",
+      "onConflict": "仅在 Cocos 产品构建中跳过这条引导"
+    },
+    {
+      "path": "src/renderer/src/assets/main.css",
+      "kind": "brand",
+      "change": "标题区跟随侧栏宽度，产品名过窄时省略",
+      "onConflict": "沿用上游布局和样式 token，保留标题收缩"
     },
     {
       "path": "src/renderer/src/components/browser-pane/assemble-chrome/browser-page-chrome-header.tsx",
@@ -158,10 +200,10 @@
       "onConflict": "保留上游导航结构，在其中接回组件"
     },
     {
-      "path": "src/renderer/src/components/tab-bar/create-menu/tab-bar-static-create-menu.tsx",
+      "path": "src/renderer/src/components/tab-bar/strip/tab-bar-surface.tsx",
       "kind": "hook",
-      "change": "将 Cocos Creator 的打开、跳转和停止加入上游新建菜单模型",
-      "onConflict": "保留上游的菜单排序和自定义，合入 Cocos 菜单项"
+      "change": "挂载自有的 Cocos Creator 打开、跳转和停止菜单",
+      "onConflict": "仅在新建菜单内接回 CocosEditorMenuItems"
     },
     {
       "path": "src/renderer/src/components/tab-bar/model/use-tab-bar-item-projection.ts",
@@ -288,6 +330,18 @@
       "kind": "enum",
       "change": "共享侧栏标签列表接受 terminal，RPC 直接读此列表",
       "onConflict": "只添加 terminal 枚举值"
+    }
+  ],
+  "retired": [
+    {
+      "path": "config/scripts/preflight/changed-checks/check-changed-selection.mjs",
+      "change": "在 Orca check:changed 调用 Cocos 登记表检查",
+      "reason": "合并检查改用独立的 config/scripts/cocos-agent/check.mjs"
+    },
+    {
+      "path": "src/renderer/src/components/tab-bar/create-menu/tab-bar-static-create-menu.tsx",
+      "change": "在上游图标行内加入 Cocos Creator",
+      "reason": "改用 tab-bar-surface.tsx 的独立菜单项，避免被上游菜单自定义隐藏"
     }
   ],
   "mirrors": [

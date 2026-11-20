@@ -22,14 +22,6 @@ test('restores the actual Cocos editor page after the application restarts', asy
     'Requires the macOS arm64 editor'
   )
   test.skip(!existsSync(bundledEditor), 'Run the pinned editor import before this regression')
-  mkdirSync(path.join(testRepoPath, 'assets'), { recursive: true })
-  writeFileSync(
-    path.join(testRepoPath, 'project.json'),
-    JSON.stringify({ version: '2.4.13', name: 'RestartFixture' })
-  )
-  writeFileSync(path.join(testRepoPath, 'assets', '.gitkeep'), '')
-  execFileSync('git', ['add', 'project.json', 'assets/.gitkeep'], { cwd: testRepoPath })
-  execFileSync('git', ['commit', '-m', 'Add isolated Cocos fixture'], { cwd: testRepoPath })
   const session = createRestartSession(testInfo, {
     ORCA_BACKGROUND_LAUNCH: '1',
     A5_GAME_CONTEXT_BIN: bundledEditor,
@@ -61,8 +53,26 @@ test('restores the actual Cocos editor page after the application restarts', asy
     const first = await session.launch()
     app = first.app
     await waitForSessionReady(first.page)
-    await attachRepoAndOpenTerminal(first.page, testRepoPath)
-    await first.page.getByRole('button', { name: 'Cocos Creator', exact: true }).click()
+    const worktreeId = await attachRepoAndOpenTerminal(first.page, testRepoPath)
+    await first.page.evaluate(async (id) => {
+      const state = window.__store!.getState()
+      if (!state.tabsByWorktree[id]?.length) {
+        state.createTab(id)
+      }
+      await state.updateSettings({ uiLanguage: 'en' })
+    }, worktreeId)
+    // Make it a Creator project after activation so opening is owned by the + action.
+    mkdirSync(path.join(testRepoPath, 'assets'))
+    writeFileSync(
+      path.join(testRepoPath, 'project.json'),
+      JSON.stringify({ version: '2.4.13', name: 'RestartFixture' }),
+      { flag: 'wx' }
+    )
+    writeFileSync(path.join(testRepoPath, 'assets', '.gitkeep'), '')
+    execFileSync('git', ['add', 'project.json', 'assets/.gitkeep'], { cwd: testRepoPath })
+    execFileSync('git', ['commit', '-m', 'Add isolated Cocos fixture'], { cwd: testRepoPath })
+    await first.page.getByRole('button', { name: 'New tab', exact: true }).click()
+    await first.page.getByRole('menuitem', { name: 'Cocos Creator', exact: true }).click()
     await expect.poll(() => visibleEditor(app!), { timeout: 90_000 }).not.toBeNull()
     const firstPage = await visibleEditor(app)
     await session.close(app)

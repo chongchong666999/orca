@@ -31,6 +31,7 @@ import { getDashboardPopoutWindow } from '../../window/dashboard-popout-window'
 import { getWorkspaceSpaceWindow } from '../../window/workspace-space-window'
 import { markUserQuitWindowClose } from '../../window/main-window/user-quit-window-close'
 import { loadMainWindow } from '../../window/createMainWindow'
+import { isBackgroundLaunch } from '../../window/activation/foreground-activation-policy'
 import {
   describeInstallDirAclPoison,
   isBlockingInstallDirAclRepairInFlight
@@ -314,6 +315,11 @@ export async function showRendererRecoveryPrompt(
   retry?: () => void,
   availableCommitMB?: number
 ): Promise<void> {
+  // cocos-agent: agent-launched validation runs hidden, and a native dialog would take focus.
+  if (isBackgroundLaunch()) {
+    console.error('[window] Background renderer recovery failed', { recentRecoveryCount, failure })
+    return
+  }
   await presentRendererRecoveryPrompt({
     recentRecoveryCount,
     ...(failure ? { failure } : {}),

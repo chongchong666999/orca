@@ -26,6 +26,7 @@ import { renderTabBarItems } from '../model/tab-bar-item-surface'
 import { WindowedTabStrip } from './WindowedTabStrip'
 import type { TabStripSegment } from './tab-strip-window'
 import { TabBarStaticCreateMenu } from '../create-menu/tab-bar-static-create-menu'
+import { CocosEditorMenuItems } from '@/cocos-agent/CocosEditorMenuItems'
 import { NewTabMenuContent } from '../menu-fit/NewTabMenuContent'
 import ClientHostedBrowserTabRows from '../browser-tabs/ClientHostedBrowserTabRows'
 import { BotNewChatMenuItems } from '../../bots/BotNewChatMenuItems'
@@ -311,6 +312,9 @@ export function renderTabBarSurface(
                 queueNewActiveTerminalFocusAfterNewTabMenuClose
               }
             />
+          ) : null}
+          {showStaticCreateMenuItems ? (
+            <CocosEditorMenuItems worktreeId={worktreeId} terminalOnly={terminalOnly} />
           ) : null}
           {showStaticCreateMenuItems && showAgentLaunchItems && !botGroup ? (
             <>

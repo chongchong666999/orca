@@ -13,6 +13,7 @@ import {
   promptForGpuFallbackRecoveredLaunch
 } from '../../crash-reporting/recovery/gpu-fallback-recovered-launch'
 import { promptForGpuFallbackRestart } from '../../crash-reporting/recovery/gpu-fallback-restart-prompt'
+import { cocosAgentAboutVersion } from '../../cocos-agent/cocos-agent-package'
 import { engageGpuFallbackAfterCrashBurst } from '../../crash-reporting/recovery/gpu-fallback-engagement'
 import { recordCrashBreadcrumb } from '../../crash-reporting/breadcrumbs/crash-breadcrumb-store'
 import { recordDurableCrashBreadcrumb } from '../../crash-reporting/breadcrumbs/durable-crash-breadcrumb'
@@ -43,7 +44,7 @@ export function updateGpuAccelerationAboutPanel(): void {
   app.setAboutPanelOptions(
     createGpuAccelerationAboutPanelOptions({
       appName: app.name,
-      appVersion: app.getVersion(),
+      appVersion: cocosAgentAboutVersion(app.getVersion()),
       platform: process.platform,
       gpuFallbackActive: state.gpuFallbackActiveThisLaunch,
       gpuFeatureStatus: state.gpuFeatureStatus

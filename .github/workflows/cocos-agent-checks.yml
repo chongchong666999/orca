@@ -1,0 +1,38 @@
+name: Cocos Agent Checks
+
+on:
+  pull_request:
+    branches: ['dev/**', 'codex/cocos-*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  cocos_agent:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      COCOS_AGENT_DESKTOP: '1'
+      ORCA_BACKGROUND_LAUNCH: '1'
+      ORCA_SKIP_DEV_CLI_INSTALL: '1'
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install hidden Electron test tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y openbox ripgrep x11-utils xauth xvfb
+      - uses: ./.github/actions/install-node-dependencies
+        with:
+          native-runtime: electron
+      - name: Check Cocos hooks and lint
+        env:
+          COCOS_PREVIOUS_SHA: ${{ github.event.pull_request.base.sha }}
+        run: node config/scripts/cocos-agent/check.mjs --previous "$COCOS_PREVIOUS_SHA"
+      - name: Exercise Cocos desktop and sidebar
+        run: |
+          xvfb-run --auto-servernum bash .github/scripts/e2e-with-window-manager.sh \
+            pnpm test:e2e tests/e2e/cocos-desktop-brand.spec.ts tests/e2e/cocos-sidebar-terminal.spec.ts --workers=1

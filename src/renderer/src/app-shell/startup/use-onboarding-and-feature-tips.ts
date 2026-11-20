@@ -17,6 +17,7 @@ import { useAppStore } from '../../store/index'
 import { isWebClientLocation } from '../platform/web-client-location'
 import { useBotsEnabled, useHasBot } from '../../lib/bot-catalog'
 import type { OnboardingState } from '../../../../shared/onboarding/onboarding-state-types'
+import { desktopProduct } from '../../../../shared/app-lifecycle/desktop-product'
 
 export type OnboardingGate = ReturnType<typeof useOnboardingAndFeatureTips>
 
@@ -24,7 +25,9 @@ export type OnboardingGate = ReturnType<typeof useOnboardingAndFeatureTips>
 export function useOnboardingAndFeatureTips() {
   const [onboarding, setOnboarding] = useState<OnboardingState | null>(null)
   const [onboardingLoaded, setOnboardingLoaded] = useState(false)
-  const [featureTipCliInstalled, setFeatureTipCliInstalled] = useState<boolean | null>(null)
+  const [featureTipCliInstalled, setFeatureTipCliInstalled] = useState<boolean | null>(
+    desktopProduct ? true : null
+  )
   const [chatUiHereCornerCardOpen, setChatUiHereCornerCardOpen] = useState(false)
   const promptedThisSessionRef = useRef(false)
   const suppressedByOnboardingThisSessionRef = useRef(false)
@@ -71,7 +74,7 @@ export function useOnboardingAndFeatureTips() {
   }, [actions, contextualToursAutoEligible, onboarding, onboardingLoaded, persistedUIReady])
 
   useEffect(() => {
-    if (!persistedUIReady) {
+    if (!persistedUIReady || desktopProduct) {
       return
     }
 
