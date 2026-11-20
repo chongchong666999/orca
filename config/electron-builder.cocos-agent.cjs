@@ -76,7 +76,12 @@ module.exports = {
       { from: 'resources/cocos-agent/win32/a5-game-context-bin', to: 'a5-game-context-bin' }
     ]
   },
-  nsis: { ...base.nsis, artifactName: 'cocos-agent-beta-windows-setup.${ext}' },
+  nsis: {
+    ...base.nsis,
+    artifactName: 'cocos-agent-beta-windows-setup.${ext}',
+    oneClick: false,
+    allowToChangeInstallationDirectory: true
+  },
   afterPack: async (context) => {
     await base.afterPack(context)
     if (context.electronPlatformName === 'win32') {
