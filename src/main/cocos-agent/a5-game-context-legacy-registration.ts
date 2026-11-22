@@ -7,7 +7,12 @@ const COMMANDS = ['a5-game-context', 'cocos-cli'] as const
 
 /** The bin folders cocos-agent 0.1.2 and earlier linked its launchers into. */
 function legacyLinkFolders(home: string): string[] {
-  return [path.join(home, '.local', 'bin'), path.join(home, 'bin'), '/opt/homebrew/bin', '/usr/local/bin']
+  return [
+    path.join(home, '.local', 'bin'),
+    path.join(home, 'bin'),
+    '/opt/homebrew/bin',
+    '/usr/local/bin'
+  ]
 }
 
 /**

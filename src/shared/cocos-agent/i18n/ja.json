@@ -141,6 +141,9 @@
       "title": "a5-game-context {{version}} を再インストールしますか？",
       "description": "グローバルの {{current}} を、cocos-agent 同梱のバージョンで置き換えます（古い場合でも）。インストール済みのコピーが壊れているときに使ってください。",
       "confirm": "再インストール"
-    }
+    },
+    "searchKeywords": "a5-game-context|cocos-cli|npm|cocos|コマンドライン",
+    "cocosCliPath": "cocos-cli：",
+    "nodeVersion": "Node {{version}}"
   }
 }

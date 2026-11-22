@@ -41,7 +41,9 @@ function notify(previous: A5ToolchainState | null, status: A5ToolchainStatus): v
   const version = status.bundledVersion ?? ''
   if (status.state === 'installing') {
     toast.loading(
-      cocosText('toolchain.notice.installing', 'Installing a5-game-context {{version}}', { version }),
+      cocosText('toolchain.notice.installing', 'Installing a5-game-context {{version}}', {
+        version
+      }),
       {
         id: TOAST_ID,
         description: cocosText(

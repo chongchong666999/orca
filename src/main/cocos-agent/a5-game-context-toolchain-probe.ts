@@ -2,6 +2,7 @@ import { lstat, readFile, readdir, readlink, realpath } from 'node:fs/promises'
 import path from 'node:path'
 import type { ProcessResult, ProcessSpec } from '@orca/process-host/process-spec'
 import type { A5ToolchainOtherCopy } from '../../shared/cocos-agent/a5-game-context-toolchain-types'
+import { isJsonRecord } from '../../shared/cocos-agent/cocos-json-record'
 import {
   isExecutableFile,
   isPathInsideOrEqual,
@@ -69,10 +70,10 @@ function prefixOfPackageDir(platform: NodeJS.Platform, packageDir: string): stri
 export async function readPackageVersion(packageDir: string): Promise<string | null> {
   try {
     const value: unknown = JSON.parse(await readFile(path.join(packageDir, 'package.json'), 'utf8'))
-    if (!value || typeof value !== 'object') {
+    if (!isJsonRecord(value)) {
       return null
     }
-    const { name, version } = value as Record<string, unknown>
+    const { name, version } = value
     return name === A5_PACKAGE_NAME && typeof version === 'string' ? version : null
   } catch {
     return null
@@ -210,7 +211,10 @@ async function findOtherCopies(
       if (!isLink || isCocosAgentAppLink(await readlink(link).catch(() => ''), name)) {
         continue
       }
-      if (current.packageDir && (await isIn(link, current.packageDir, input.platform, current.prefix ?? ''))) {
+      if (
+        current.packageDir &&
+        (await isIn(link, current.packageDir, input.platform, current.prefix ?? ''))
+      ) {
         continue
       }
       copies.push({
@@ -259,7 +263,10 @@ export async function probeA5Toolchain(input: ToolchainProbeInput): Promise<Tool
   const packageDir = globalVersion ? installedDir : null
   const commandPath = await findOnPath('a5-game-context', input.platform, pathValue)
   const shadowedBy =
-    commandPath && packageDir && prefix && !(await isIn(commandPath, packageDir, input.platform, prefix))
+    commandPath &&
+    packageDir &&
+    prefix &&
+    !(await isIn(commandPath, packageDir, input.platform, prefix))
       ? commandPath
       : null
   return {

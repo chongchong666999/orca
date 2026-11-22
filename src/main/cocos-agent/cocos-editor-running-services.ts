@@ -5,6 +5,7 @@ import type {
   CocosEditorRecord,
   CocosRunningService
 } from '../../shared/cocos-agent/cocos-editor-types'
+import { isJsonRecord } from '../../shared/cocos-agent/cocos-json-record'
 import { readCocosEditorLifecycleState } from './cocos-editor-close'
 import { editorShutdownUrl, isSameEditor } from './cocos-editor-open-output'
 
@@ -33,10 +34,10 @@ export async function readRunningEditorNotes(
       .map(async (name): Promise<CocosEditorRecord | null> => {
         try {
           const note: unknown = JSON.parse(await readFile(path.join(directory, name), 'utf8'))
-          if (!note || typeof note !== 'object') {
+          if (!isJsonRecord(note)) {
             return null
           }
-          const { project, url, token } = note as Record<string, unknown>
+          const { project, url, token } = note
           if (typeof project !== 'string' || typeof url !== 'string' || typeof token !== 'string') {
             return null
           }

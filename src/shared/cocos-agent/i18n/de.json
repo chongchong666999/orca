@@ -145,6 +145,9 @@
       "title": "a5-game-context {{version}} neu installieren?",
       "description": "Damit wird die globale {{current}} durch die Version ersetzt, die cocos-agent mitbringt, auch wenn sie älter ist. Nutze das, wenn die installierte Kopie defekt ist.",
       "confirm": "Neu installieren"
-    }
+    },
+    "searchKeywords": "a5-game-context|cocos-cli|npm|cocos|Befehlszeile",
+    "cocosCliPath": "cocos-cli:",
+    "nodeVersion": "Node {{version}}"
   }
 }

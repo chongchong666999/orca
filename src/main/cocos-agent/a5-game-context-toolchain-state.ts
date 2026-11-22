@@ -5,7 +5,20 @@ import type {
   A5ToolchainState
 } from '../../shared/cocos-agent/a5-game-context-toolchain-types'
 import { quoteStartupArg } from '../../shared/agent-launch/startup/tui-agent-startup-shell'
+import { isJsonRecord } from '../../shared/cocos-agent/cocos-json-record'
 import type { ToolchainProbe } from './a5-game-context-toolchain-probe'
+
+const FAILURE_CODES: readonly A5ToolchainFailureCode[] = [
+  'permission',
+  'busy',
+  'no-space',
+  'timed-out',
+  'unknown'
+]
+
+function isFailureCode(value: unknown): value is A5ToolchainFailureCode {
+  return FAILURE_CODES.some((code) => code === value)
+}
 
 export type ToolchainSettings = {
   autoInstall: boolean
@@ -59,18 +72,32 @@ export function needsInstall(state: A5ToolchainState): boolean {
 export async function readToolchainSettings(file: string): Promise<ToolchainSettings> {
   try {
     const value: unknown = JSON.parse(await readFile(file, 'utf8'))
-    const record = value && typeof value === 'object' ? (value as Record<string, unknown>) : {}
-    const failure = record.failure as ToolchainSettings['failure'] | undefined
+    const record = isJsonRecord(value) ? value : {}
+    const failure = record.failure
     return {
       autoInstall: record.autoInstall !== false,
-      ...(failure && typeof failure.bundledVersion === 'string' ? { failure } : {})
+      ...(isJsonRecord(failure) &&
+      typeof failure.bundledVersion === 'string' &&
+      isFailureCode(failure.code) &&
+      typeof failure.detail === 'string'
+        ? {
+            failure: {
+              bundledVersion: failure.bundledVersion,
+              code: failure.code,
+              detail: failure.detail
+            }
+          }
+        : {})
     }
   } catch {
     return { autoInstall: true }
   }
 }
 
-export async function writeToolchainSettings(file: string, settings: ToolchainSettings): Promise<void> {
+export async function writeToolchainSettings(
+  file: string,
+  settings: ToolchainSettings
+): Promise<void> {
   await mkdir(path.dirname(file), { recursive: true })
   await writeFile(file, `${JSON.stringify(settings, null, 2)}\n`)
 }

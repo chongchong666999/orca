@@ -302,7 +302,7 @@ export class CocosEditorService {
     }
     const outcome = await this.shutdown.request(url.toString())
     if (outcome === 'closed') {
-        this.editors.delete(projectRoot)
+      this.editors.delete(projectRoot)
       this.closingEditors.delete(projectRoot)
     } else if (outcome === 'closing') {
       this.closingEditors.set(projectRoot, new URL(shutdownUrl).origin)

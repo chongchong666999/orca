@@ -145,6 +145,9 @@
       "title": "Reinstall a5-game-context {{version}}?",
       "description": "This replaces the global {{current}} with the version cocos-agent ships, even if it is older. Use it when the installed copy is broken.",
       "confirm": "Reinstall"
-    }
+    },
+    "searchKeywords": "a5-game-context|cocos-cli|npm|cocos|command line",
+    "cocosCliPath": "cocos-cli:",
+    "nodeVersion": "Node {{version}}"
   }
 }

@@ -26,6 +26,7 @@ import { createLocalizedCatalog } from '@/i18n/localized-catalog'
 import { useUiLanguageRevision } from '@/i18n/use-ui-language-revision'
 import { cocosText } from '../cocos-text'
 import { cocosAgentApi } from '../cocos-workspace-project'
+import { withBusyFlag } from '../with-busy-flag'
 import { toolchainFailureReason, toolchainSummary } from '../a5-game-context-toolchain-copy'
 
 export const COCOS_TOOLCHAIN_SECTION_ID = 'cocos-toolchain'
@@ -37,7 +38,10 @@ const getCocosToolchainSearchEntries = createLocalizedCatalog(() => [
       'toolchain.searchDescription',
       'The a5-game-context and cocos-cli every terminal and agent uses, installed with npm.'
     ),
-    keywords: ['a5-game-context', 'cocos-cli', 'npm', 'cocos', 'cli'],
+    keywords: cocosText(
+      'toolchain.searchKeywords',
+      'a5-game-context|cocos-cli|npm|cocos|command line'
+    ).split('|'),
     targetSectionId: COCOS_TOOLCHAIN_SECTION_ID
   }
 ])
@@ -52,7 +56,9 @@ const WARNING_STATES = new Set<A5ToolchainStatus['state']>([
 ])
 
 function Code({ children }: { children: React.ReactNode }): React.JSX.Element {
-  return <code className="rounded bg-muted px-1 py-0.5 font-mono text-2xs break-all">{children}</code>
+  return (
+    <code className="rounded bg-muted px-1 py-0.5 font-mono text-2xs break-all">{children}</code>
+  )
 }
 
 async function copy(text: string): Promise<void> {
@@ -75,7 +81,12 @@ function installLabel(status: A5ToolchainStatus): string | null {
       return cocosText('toolchain.action.repair', 'Repair')
     case 'failed':
       return cocosText('toolchain.action.retry', 'Retry')
-    default:
+    case 'checking':
+    case 'installing':
+    case 'ready':
+    case 'incompatible':
+    case 'no-npm':
+    case 'unavailable':
       return null
   }
 }
@@ -99,16 +110,10 @@ function CocosToolchainSection(): React.JSX.Element | null {
     return null
   }
 
-  const run = async (action: () => Promise<A5ToolchainStatus>): Promise<void> => {
-    setBusy(true)
-    try {
-      setStatus(await action())
-    } catch (error) {
+  const run = (action: () => Promise<A5ToolchainStatus>): Promise<void> =>
+    withBusyFlag(setBusy, action).then(setStatus, (error: unknown) => {
       toast.error(error instanceof Error ? error.message : String(error))
-    } finally {
-      setBusy(false)
-    }
-  }
+    })
   const working = busy || status.state === 'installing' || status.state === 'checking'
   const manualCommand = status.manualCommand
   const action = installLabel(status)
@@ -124,7 +129,7 @@ function CocosToolchainSection(): React.JSX.Element | null {
             <div className="min-w-0 space-y-0.5">
               <Label>{cocosText('toolchain.commands', 'a5-game-context and cocos-cli')}</Label>
               <p
-                className={`text-xs ${warning ? 'text-amber-700 dark:text-amber-400' : 'text-muted-foreground'}`}
+                className={`text-xs ${warning ? 'text-status-warning-text' : 'text-muted-foreground'}`}
               >
                 {toolchainSummary(status)}
               </p>
@@ -187,9 +192,11 @@ function CocosToolchainSection(): React.JSX.Element | null {
           {status.state === 'failed' && status.failure ? (
             <div role="alert" className="space-y-2.5 rounded-lg border bg-muted/40 px-3.5 py-3">
               <div className="flex gap-2">
-                <TriangleAlert className="mt-0.5 size-4 shrink-0 text-amber-700 dark:text-amber-400" />
+                <TriangleAlert className="mt-0.5 size-4 shrink-0 text-status-warning" />
                 <div className="min-w-0 space-y-1">
-                  <p className="text-sm font-medium">{toolchainFailureReason(status.failure.code)}</p>
+                  <p className="text-sm font-medium">
+                    {toolchainFailureReason(status.failure.code)}
+                  </p>
                   {status.failure.detail ? (
                     <p className="font-mono text-2xs break-all text-muted-foreground">
                       {status.failure.detail}
@@ -231,12 +238,14 @@ function CocosToolchainSection(): React.JSX.Element | null {
           <div className="space-y-1 text-xs text-muted-foreground">
             {status.commandPath ? (
               <p>
-                {cocosText('toolchain.commandPath', 'Command path:')} <Code>{status.commandPath}</Code>
+                {cocosText('toolchain.commandPath', 'Command path:')}{' '}
+                <Code>{status.commandPath}</Code>
               </p>
             ) : null}
             {status.cocosCliPath ? (
               <p>
-                cocos-cli: <Code>{status.cocosCliPath}</Code>
+                {cocosText('toolchain.cocosCliPath', 'cocos-cli:')}{' '}
+                <Code>{status.cocosCliPath}</Code>
               </p>
             ) : null}
             {status.state !== 'no-npm' ? (
@@ -244,11 +253,13 @@ function CocosToolchainSection(): React.JSX.Element | null {
                 {status.sdkRegistered
                   ? cocosText('toolchain.sdkReady', 'Cocos 2.4.13 SDK registered')
                   : cocosText('toolchain.sdkMissing', 'Cocos 2.4.13 SDK not registered')}
-                {status.nodeVersion ? ` · Node ${status.nodeVersion.replace(/^v/, '')}` : ''}
+                {status.nodeVersion
+                  ? ` · ${cocosText('toolchain.nodeVersion', 'Node {{version}}', { version: status.nodeVersion.replace(/^v/, '') })}`
+                  : ''}
               </p>
             ) : null}
             {status.shadowedBy ? (
-              <p className="text-amber-700 dark:text-amber-400">
+              <p className="text-status-warning-text">
                 {cocosText(
                   'toolchain.shadowed',
                   'Terminals find another copy first. Remove it to use the npm global one:'
@@ -267,7 +278,7 @@ function CocosToolchainSection(): React.JSX.Element | null {
           )}
           checked={status.autoInstall}
           disabled={busy}
-          onChange={(enabled) => void run(() => api.setToolchainAutoInstall(enabled))}
+          onChange={() => void run(() => api.setToolchainAutoInstall(!status.autoInstall))}
         />
 
         {status.otherCopies.length > 0 ? (
@@ -286,7 +297,9 @@ function CocosToolchainSection(): React.JSX.Element | null {
                 size="sm"
                 variant="outline"
                 className="shrink-0"
-                onClick={() => void copy(status.otherCopies.map((item) => item.removeCommand).join('\n'))}
+                onClick={() =>
+                  void copy(status.otherCopies.map((item) => item.removeCommand).join('\n'))
+                }
               >
                 {cocosText('toolchain.action.copyCleanup', 'Copy cleanup commands')}
               </Button>

@@ -153,6 +153,9 @@
       "title": "Переустановить a5-game-context {{version}}?",
       "description": "Глобальная {{current}} будет заменена версией, встроенной в cocos-agent, даже если она старше. Используйте, если установленная копия повреждена.",
       "confirm": "Переустановить"
-    }
+    },
+    "searchKeywords": "a5-game-context|cocos-cli|npm|cocos|командная строка",
+    "cocosCliPath": "cocos-cli:",
+    "nodeVersion": "Node {{version}}"
   }
 }

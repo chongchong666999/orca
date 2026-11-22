@@ -22,7 +22,9 @@ async function isExecutable(file: string): Promise<boolean> {
 let globalLauncher: (() => Promise<string | null>) | null = null
 
 /** Set once at startup: the launcher of the npm global copy while it is usable (a5-game-context-toolchain). */
-export function setGlobalA5GameContextLauncher(resolve: (() => Promise<string | null>) | null): void {
+export function setGlobalA5GameContextLauncher(
+  resolve: (() => Promise<string | null>) | null
+): void {
   globalLauncher = resolve
 }
 

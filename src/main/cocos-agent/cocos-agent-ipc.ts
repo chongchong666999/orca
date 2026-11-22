@@ -74,7 +74,13 @@ export function registerCocosAgentIpc(): void {
   )
   ipcMain.handle(A5_TOOLCHAIN_IPC.openLog, async () => {
     const log = toolchain.getStatus().logPath
-    if (log && (await access(log).then(() => true, () => false))) {
+    if (
+      log &&
+      (await access(log).then(
+        () => true,
+        () => false
+      ))
+    ) {
       await shell.openPath(log)
     }
   })
@@ -140,7 +146,11 @@ export function registerCocosAgentIpc(): void {
     const known = cocosEditorService.list()
     const others = (await listCocosRunningServices(known))
       .filter((service) => service.origin === 'external')
-      .map((service) => ({ projectRoot: service.projectRoot, url: service.url, startedByApp: false }))
+      .map((service) => ({
+        projectRoot: service.projectRoot,
+        url: service.url,
+        startedByApp: false
+      }))
     return stopAllCocosServices(cocosEditorService, others, answer)
   })
   ipcMain.handle(COCOS_AGENT_IPC.readSidebarTerminals, () => readSidebarTerminalRecord())

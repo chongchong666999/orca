@@ -32,7 +32,8 @@ const cocosAgentApi: CocosAgentPreloadApi = {
   getToolchainStatus: () => ipcRenderer.invoke(A5_TOOLCHAIN_IPC.getStatus),
   refreshToolchain: () => ipcRenderer.invoke(A5_TOOLCHAIN_IPC.refresh),
   installToolchain: (options) => ipcRenderer.invoke(A5_TOOLCHAIN_IPC.install, options),
-  setToolchainAutoInstall: (enabled) => ipcRenderer.invoke(A5_TOOLCHAIN_IPC.setAutoInstall, enabled),
+  setToolchainAutoInstall: (enabled) =>
+    ipcRenderer.invoke(A5_TOOLCHAIN_IPC.setAutoInstall, enabled),
   openToolchainLog: () => ipcRenderer.invoke(A5_TOOLCHAIN_IPC.openLog),
   onToolchainStatus: (listener) => {
     const handler = (_event: Electron.IpcRendererEvent, status: A5ToolchainStatus): void =>

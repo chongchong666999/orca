@@ -1,6 +1,9 @@
 import { useEffect, useState, useSyncExternalStore } from 'react'
 import { toast } from 'sonner'
-import type { CocosRunningService } from '../../../shared/cocos-agent/cocos-editor-types'
+import type {
+  CocosRunningService,
+  CocosStopAllResult
+} from '../../../shared/cocos-agent/cocos-editor-types'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -14,6 +17,7 @@ import { useAppStore } from '@/store'
 import { cocosText } from './cocos-text'
 import { focusOrOpenCocosEditor, handOffCocosEditors } from './cocos-editor-tabs'
 import { cocosAgentApi, localCocosWorkspacePath } from './cocos-workspace-project'
+import { withBusyFlag } from './with-busy-flag'
 
 let open = false
 const listeners = new Set<() => void>()
@@ -42,7 +46,7 @@ function useDialogOpen(): boolean {
 }
 
 function projectName(projectRoot: string): string {
-  return projectRoot.split(/[\\/]/).filter(Boolean).at(-1) ?? projectRoot
+  return projectRoot.split(/[\\/]/).findLast(Boolean) ?? projectRoot
 }
 
 function displayPath(projectRoot: string): string {
@@ -95,10 +99,51 @@ function reopenTarget(stoppedRoots: string[]): { worktreeId: string; projectPath
   }
   const normalize = (value: string): string => value.replaceAll('\\', '/').replace(/\/+$/, '')
   const project = normalize(projectPath)
-  const inside = stoppedRoots.map(normalize).some(
-    (root) => project === root || project.startsWith(`${root}/`) || root.startsWith(`${project}/`)
-  )
+  const inside = stoppedRoots
+    .map(normalize)
+    .some(
+      (root) => project === root || project.startsWith(`${root}/`) || root.startsWith(`${project}/`)
+    )
   return inside ? { worktreeId, projectPath } : null
+}
+
+/** What Stop all did: the projects it handed back (with a way back into the active one) and any that did not stop. */
+function reportStopAll(result: CocosStopAllResult): void {
+  handOffCocosEditors(result.stopped)
+  if (result.stopped.length > 0) {
+    const target = reopenTarget(result.stopped.map((record) => record.projectRoot))
+    toast.success(
+      cocosText('editor.stopAll.done', 'Stopped {{count}} Cocos services', {
+        count: result.stopped.length
+      }),
+      {
+        description: cocosText(
+          'editor.stopAll.doneDescription',
+          'Asset sync and preview ports are released. Cocos Creator needs no restart.'
+        ),
+        ...(target
+          ? {
+              action: {
+                label: cocosText('editor.stopAll.reopen', 'Reopen {{name}}', {
+                  name: projectName(target.projectPath)
+                }),
+                onClick: () => void focusOrOpenCocosEditor(target.worktreeId, target.projectPath)
+              }
+            }
+          : {})
+      }
+    )
+  }
+  if (result.failed.length > 0) {
+    toast.warning(
+      cocosText('editor.stopAll.partial', '{{count}} Cocos services did not stop', {
+        count: result.failed.length
+      }),
+      {
+        description: result.failed.map((failure) => projectName(failure.projectRoot)).join(', ')
+      }
+    )
+  }
 }
 
 export function CocosStopAllDialogHost(): React.JSX.Element | null {
@@ -130,52 +175,18 @@ export function CocosStopAllDialogHost(): React.JSX.Element | null {
   }
   const hasUnsaved = (services ?? []).some((service) => service.unsavedDocuments > 0)
 
-  const stop = async (preset?: 'save' | 'discard'): Promise<void> => {
-    setBusy(true)
-    try {
-      const result = await api.stopAllServices(preset)
-      handOffCocosEditors(result.stopped)
-      setOpen(false)
-      if (result.stopped.length > 0) {
-        const target = reopenTarget(result.stopped.map((record) => record.projectRoot))
-        toast.success(
-          cocosText('editor.stopAll.done', 'Stopped {{count}} Cocos services', {
-            count: result.stopped.length
-          }),
-          {
-            description: cocosText(
-              'editor.stopAll.doneDescription',
-              'Asset sync and preview ports are released. Cocos Creator needs no restart.'
-            ),
-            ...(target
-              ? {
-                  action: {
-                    label: cocosText('editor.stopAll.reopen', 'Reopen {{name}}', {
-                      name: projectName(target.projectPath)
-                    }),
-                    onClick: () => void focusOrOpenCocosEditor(target.worktreeId, target.projectPath)
-                  }
-                }
-              : {})
-          }
-        )
+  const stop = (preset?: 'save' | 'discard'): Promise<void> =>
+    withBusyFlag(setBusy, () => api.stopAllServices(preset)).then(
+      (result) => {
+        setOpen(false)
+        reportStopAll(result)
+      },
+      (error: unknown) => {
+        toast.error(cocosText('editor.stopAll.failed', 'Could not stop the Cocos services'), {
+          description: error instanceof Error ? error.message : String(error)
+        })
       }
-      if (result.failed.length > 0) {
-        toast.warning(
-          cocosText('editor.stopAll.partial', '{{count}} Cocos services did not stop', {
-            count: result.failed.length
-          }),
-          { description: result.failed.map((failure) => projectName(failure.projectRoot)).join(', ') }
-        )
-      }
-    } catch (error) {
-      toast.error(cocosText('editor.stopAll.failed', 'Could not stop the Cocos services'), {
-        description: error instanceof Error ? error.message : String(error)
-      })
-    } finally {
-      setBusy(false)
-    }
-  }
+    )
 
   return (
     <Dialog open={isOpen} onOpenChange={(next) => !busy && setOpen(next)}>

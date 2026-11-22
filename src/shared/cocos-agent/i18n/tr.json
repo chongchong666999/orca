@@ -141,6 +141,9 @@
       "title": "a5-game-context {{version}} yeniden yüklensin mi?",
       "description": "Genel {{current}} sürümünü, daha eski olsa bile cocos-agent ile gelen sürümle değiştirir. Yüklü kopya bozulduğunda kullanın.",
       "confirm": "Yeniden yükle"
-    }
+    },
+    "searchKeywords": "a5-game-context|cocos-cli|npm|cocos|komut satırı",
+    "cocosCliPath": "cocos-cli:",
+    "nodeVersion": "Node {{version}}"
   }
 }

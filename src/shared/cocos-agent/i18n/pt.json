@@ -145,6 +145,9 @@
       "title": "Reinstalar o a5-game-context {{version}}?",
       "description": "Isso substitui a {{current}} global pela versão que vem com o cocos-agent, mesmo que seja mais antiga. Use quando a cópia instalada estiver danificada.",
       "confirm": "Reinstalar"
-    }
+    },
+    "searchKeywords": "a5-game-context|cocos-cli|npm|cocos|linha de comando",
+    "cocosCliPath": "cocos-cli:",
+    "nodeVersion": "Node {{version}}"
   }
 }

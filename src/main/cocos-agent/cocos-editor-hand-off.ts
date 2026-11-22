@@ -57,7 +57,9 @@ export async function stopAllCocosServices(
       result.failed.push({ projectRoot: record.projectRoot, reason: 'refused' })
     }
   }
-  for (const record of others.filter((other) => !known.some((item) => isSameEditor(item.url, other.url)))) {
+  for (const record of others.filter(
+    (other) => !known.some((item) => isSameEditor(item.url, other.url))
+  )) {
     const outcome = await stopExternalEditor(record, preset, deps)
     if (outcome === 'closed') {
       result.stopped.push(record)

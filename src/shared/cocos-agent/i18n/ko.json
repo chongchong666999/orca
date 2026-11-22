@@ -141,6 +141,9 @@
       "title": "a5-game-context {{version}}을(를) 다시 설치할까요?",
       "description": "전역 {{current}}을(를) cocos-agent에 포함된 버전으로 바꿉니다. 더 오래된 버전이어도 마찬가지입니다. 설치된 사본이 손상되었을 때 사용하세요.",
       "confirm": "다시 설치"
-    }
+    },
+    "searchKeywords": "a5-game-context|cocos-cli|npm|cocos|명령줄",
+    "cocosCliPath": "cocos-cli:",
+    "nodeVersion": "Node {{version}}"
   }
 }

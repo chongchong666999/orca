@@ -141,6 +141,9 @@
       "title": "重新安装 a5-game-context {{version}}？",
       "description": "这会用 cocos-agent 自带的版本替换全局的 {{current}}，即使自带的更旧。适用于已安装的副本损坏时。",
       "confirm": "重新安装"
-    }
+    },
+    "searchKeywords": "a5-game-context|cocos-cli|npm|cocos|命令行",
+    "cocosCliPath": "cocos-cli：",
+    "nodeVersion": "Node {{version}}"
   }
 }

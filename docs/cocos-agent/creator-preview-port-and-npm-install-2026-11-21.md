@@ -28,14 +28,14 @@
 
 在 macOS 上用 Node 模拟三方的监听方式（orca 入口：`127.0.0.1` 和 `::1` 两个 `ipv6Only` 监听；GitNexus：`0.0.0.0`；Creator：`listen(port)`），然后分别请求 `127.0.0.1`、`::1`、`localhost`：
 
-| 场景 | 后启动的一方 `listen` | 127.0.0.1 | ::1 | localhost |
-|---|---|---|---|---|
-| orca 入口先启动，Creator 后启动 | 成功 | 入口 | 入口 | 入口 |
-| Creator 先启动，orca 入口后启动 | 成功 | 入口 | 入口 | 入口 |
-| GitNexus `0.0.0.0` 先启动，Creator 后启动 | 成功 | GitNexus | Creator | Creator |
-| Creator 先启动，GitNexus 后启动 | `0.0.0.0` 报 EADDRINUSE，GitNexus 自动 +1 | Creator | Creator | Creator |
-| GitNexus `0.0.0.0` 关闭后（Creator 不重启） | — | Creator | Creator | Creator |
-| 先用双栈 `[::]`（`ipv6Only: false`）监听，Creator 后启动 | **EADDRINUSE**，Creator 自动 +1 | — | — | — |
+| 场景                                                     | 后启动的一方 `listen`                     | 127.0.0.1 | ::1     | localhost |
+| -------------------------------------------------------- | ----------------------------------------- | --------- | ------- | --------- |
+| orca 入口先启动，Creator 后启动                          | 成功                                      | 入口      | 入口    | 入口      |
+| Creator 先启动，orca 入口后启动                          | 成功                                      | 入口      | 入口    | 入口      |
+| GitNexus `0.0.0.0` 先启动，Creator 后启动                | 成功                                      | GitNexus  | Creator | Creator   |
+| Creator 先启动，GitNexus 后启动                          | `0.0.0.0` 报 EADDRINUSE，GitNexus 自动 +1 | Creator   | Creator | Creator   |
+| GitNexus `0.0.0.0` 关闭后（Creator 不重启）              | —                                         | Creator   | Creator | Creator   |
+| 先用双栈 `[::]`（`ipv6Only: false`）监听，Creator 后启动 | **EADDRINUSE**，Creator 自动 +1           | —         | —       | —         |
 
 结论：
 
@@ -47,14 +47,34 @@
 ```js
 import http from 'node:http'
 const P = 17456
-const srv = (name) => http.createServer((_, res) => { res.setHeader('connection', 'close'); res.end(name) })
-const listen = (s, opts) => new Promise((r) => { s.once('error', (e) => r(e.code)); s.listen(opts, () => r('ok')) })
-const get = (host) => new Promise((r) => {
-  http.get({ host, port: P, agent: false }, (res) => { let b = ''; res.on('data', (d) => (b += d)); res.on('end', () => r(b)) })
-    .on('error', (e) => r(e.code))
-})
-console.log('router 127.0.0.1', await listen(srv('orca-router'), { host: '127.0.0.1', port: P, ipv6Only: true }))
-console.log('router ::1', await listen(srv('orca-router'), { host: '::1', port: P, ipv6Only: true }))
+const srv = (name) =>
+  http.createServer((_, res) => {
+    res.setHeader('connection', 'close')
+    res.end(name)
+  })
+const listen = (s, opts) =>
+  new Promise((r) => {
+    s.once('error', (e) => r(e.code))
+    s.listen(opts, () => r('ok'))
+  })
+const get = (host) =>
+  new Promise((r) => {
+    http
+      .get({ host, port: P, agent: false }, (res) => {
+        let b = ''
+        res.on('data', (d) => (b += d))
+        res.on('end', () => r(b))
+      })
+      .on('error', (e) => r(e.code))
+  })
+console.log(
+  'router 127.0.0.1',
+  await listen(srv('orca-router'), { host: '127.0.0.1', port: P, ipv6Only: true })
+)
+console.log(
+  'router ::1',
+  await listen(srv('orca-router'), { host: '::1', port: P, ipv6Only: true })
+)
 console.log('creator listen(port)', await listen(srv('creator'), { port: P }))
 console.log(await get('127.0.0.1'), await get('::1'), await get('localhost'))
 process.exit(0)
@@ -67,7 +87,7 @@ process.exit(0)
 UI 稿：<https://claude.ai/artifact/XLqMWfByKz8r58frpnv7dV>（私有链接，分享前只有作者能打开），共 4 个画板：+ 菜单、确认框、停止后的标签页和提示、a5-game-context 安装提示。
 
 - **入口：**
-  - + 菜单里现有"停止 Cocos Creator"（`src/renderer/src/cocos-agent/CocosEditorMenuItems.tsx`）的下方，文案"停止所有 Cocos 服务…"，右侧用弱化文字显示"3 个运行中"。省略号表示会先弹确认框。
+  - - 菜单里现有"停止 Cocos Creator"（`src/renderer/src/cocos-agent/CocosEditorMenuItems.tsx`）的下方，文案"停止所有 Cocos 服务…"，右侧用弱化文字显示"3 个运行中"。省略号表示会先弹确认框。
   - "停止 Cocos Creator"保留，只停当前工作区；当前工作区没有编辑器时只显示"停止所有"。
   - 命令面板。
   - 只要有任何 Cocos 服务在运行就显示，不限当前工作区；一个都没有时两项都不显示。
@@ -132,12 +152,12 @@ cocos-agent 现在没有走 npm 安装。
 
 本机同时有 4 份：
 
-| 位置 | 版本 | 来源 |
-|---|---|---|
-| nvm v16.20.2 全局 | 3.3.23 | 早期 npm 安装 |
-| nvm v22.22.3 全局 | 3.8.67 | 早期 npm 安装 |
+| 位置                           | 版本   | 来源                                                                                                                                                               |
+| ------------------------------ | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| nvm v16.20.2 全局              | 3.3.23 | 早期 npm 安装                                                                                                                                                      |
+| nvm v22.22.3 全局              | 3.8.67 | 早期 npm 安装                                                                                                                                                      |
 | nvm v22.23.4 全局（默认 Node） | 5.0.27 | poker-game-dev 插件提示的 `npm install -g @a5labs-prime/a5-game-context --@a5labs-prime:registry=https://npm.pkg.github.com`（`hooks/toolchain.json` 锁定 5.0.27） |
-| cocos-agent app 内置 | 5.0.22 | `config/cocos-agent/a5-game-context.lock.json` |
+| cocos-agent app 内置           | 5.0.22 | `config/cocos-agent/a5-game-context.lock.json`                                                                                                                     |
 
 `~/.local/bin` 和 `/opt/homebrew/bin` 里的 `a5-game-context`、`cocos-cli` 都链到 nvm v22.23.4 的那份。这是别人建的链接，app 不覆盖。
 
@@ -183,6 +203,7 @@ a5-game-context 以后仍然随 cocos-agent 一起发（包在 app 里），问�
   4. 打进包里的依赖都没有自己的安装脚本，不会再执行别的东西。
 
   所以 `cocos-cli` 是跟着装好的，但"装好"只是建链接和注册 SDK，不会执行任何 cocos-cli 命令。app 的 `prepare-editor.cjs` 现在调用的正是同一个脚本里的 `registerBundledSdks`，改用 npm 后它就不需要了。
+
 - **防止 postinstall 被跳过：** 用户的 npm 配置里如果有 `ignore-scripts=true`，就既没有 `cocos-cli` 也不注册 SDK。安装命令显式加 `--ignore-scripts=false`，装完检查 `cocos-cli` 能否解析、SDK 是否已注册；没有的话，用 `npm_config_global=true` 和 `npm_config_prefix=<prefix>` 再执行一次这个脚本。
 - **装好后用哪个 Node 运行：** 两个 CLI 的 shebang 都是 `#!/usr/bin/env node`，所以由用户自己的 Node 运行（包要求 `>=16.20.0`），不再用 app 的 Electron。
 - Windows 上调用 `npm.cmd` 必须经过 shell（新版 Node 不允许不带 shell 直接 spawn `.cmd`），用 Orca 现有的进程封装，参照 `docs/agents-md-refs/cross-platform-support.md`。
@@ -225,15 +246,15 @@ a5-game-context 以后仍然随 cocos-agent 一起发（包在 app 里），问�
 
 **检查什么，结果怎么处理：**
 
-| 检查结果 | 处理 |
-|---|---|
-| 全局没有这个包 | 安装自带版本 |
-| 全局版本低于自带版本 | 安装自带版本 |
-| 全局版本相同，或是更高的 5.x | 不动，不提示 |
-| 全局主版本号不同（如 6.x） | 不替换全局那份；cocos-agent 内部用自带版本，提示升级 cocos-agent |
-| 版本对，但 `cocos-cli` 找不到，或 SDK 没注册（postinstall 被跳过） | 补跑 `install-cocos-cli-bin.cjs` |
-| PATH 上先找到的是另一份（例如 `~/.local/bin` 里指向旧副本的链接） | cocos-agent 自己以前建的链接直接删；别人建的列出来，给出删除命令 |
-| 找不到 npm | 用自带版本（N5），设置里说明原因 |
+| 检查结果                                                           | 处理                                                             |
+| ------------------------------------------------------------------ | ---------------------------------------------------------------- |
+| 全局没有这个包                                                     | 安装自带版本                                                     |
+| 全局版本低于自带版本                                               | 安装自带版本                                                     |
+| 全局版本相同，或是更高的 5.x                                       | 不动，不提示                                                     |
+| 全局主版本号不同（如 6.x）                                         | 不替换全局那份；cocos-agent 内部用自带版本，提示升级 cocos-agent |
+| 版本对，但 `cocos-cli` 找不到，或 SDK 没注册（postinstall 被跳过） | 补跑 `install-cocos-cli-bin.cjs`                                 |
+| PATH 上先找到的是另一份（例如 `~/.local/bin` 里指向旧副本的链接）  | cocos-agent 自己以前建的链接直接删；别人建的列出来，给出删除命令 |
+| 找不到 npm                                                         | 用自带版本（N5），设置里说明原因                                 |
 
 **灵活的地方：**
 
@@ -336,11 +357,11 @@ which -a a5-game-context   # 只剩 ~/.nvm/versions/node/v22.23.4/bin/a5-game-co
 
 ## 风险
 
-| 风险 | 处理 |
-|---|---|
-| 同一主版本内，更新的全局版本改了 `editor open` 的输出或 MCP 绑定协议 | 在 GitNexus 修；N3 只拦主版本号不同的情况 |
-| 用户的 npm 全局目录需要 sudo（系统自带 Node） | 安装失败时 toast 给出手动命令，这次启动按 N5 运行 |
-| 双栈 `[::]` 在个别网络配置下不可用 | 退回 `0.0.0.0`，行为和现在一样 |
+| 风险                                                                 | 处理                                              |
+| -------------------------------------------------------------------- | ------------------------------------------------- |
+| 同一主版本内，更新的全局版本改了 `editor open` 的输出或 MCP 绑定协议 | 在 GitNexus 修；N3 只拦主版本号不同的情况         |
+| 用户的 npm 全局目录需要 sudo（系统自带 Node）                        | 安装失败时 toast 给出手动命令，这次启动按 N5 运行 |
+| 双栈 `[::]` 在个别网络配置下不可用                                   | 退回 `0.0.0.0`，行为和现在一样                    |
 
 ## 实现记录（2026-11-22）
 

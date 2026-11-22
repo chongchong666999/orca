@@ -24,7 +24,8 @@ export function a5GameContextToolchain(): A5GameContextToolchain {
     contextHome: () => a5ContextHomeDir(),
     loginEnv: () => hostShellEnvironment(),
     run: (spec) => runProcess(spec),
-    removeLegacyRegistration: () => removeLegacyA5GameContextRegistration(process.platform, homedir()),
+    removeLegacyRegistration: () =>
+      removeLegacyA5GameContextRegistration(process.platform, homedir()),
     writeExecutable: async (file, content) => {
       await mkdir(path.dirname(file), { recursive: true, mode: 0o700 })
       await publishCocosAgentFile(file, content, 0o700)
