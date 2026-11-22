@@ -10,7 +10,10 @@ import product from '../cocos-agent/desktop-product.json' with { type: 'json' }
 const skipTypecheck = process.argv.includes('--skip-typecheck')
 const release = process.argv.includes('--release')
 const pnpm = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm'
-const appPath = `dist/mac-${process.arch}/cocos-agent-beta.app`
+const appPath =
+  process.arch === 'x64'
+    ? 'dist/mac/cocos-agent-beta.app'
+    : `dist/mac-${process.arch}/cocos-agent-beta.app`
 
 function run(
   args,
@@ -19,12 +22,16 @@ function run(
   execFileSync(pnpm, args, { env, stdio: 'inherit' })
 }
 
-if (process.platform !== 'darwin' || process.arch !== 'arm64') {
-  throw new Error('cocos-agent v0.1 builds require an Apple Silicon Mac')
+if (process.platform !== 'darwin' || !['arm64', 'x64'].includes(process.arch)) {
+  throw new Error('cocos-agent v0.1 builds require a macOS (arm64 or x64) host')
 }
 const signing = prepareInternalSigning()
 
-execFileSync(process.execPath, ['config/scripts/import-a5-game-context.mjs'], { stdio: 'inherit' })
+execFileSync(
+  process.execPath,
+  ['config/scripts/import-a5-game-context.mjs', '--target', `darwin-${process.arch}`],
+  { stdio: 'inherit' }
+)
 run(['run', skipTypecheck ? 'build:desktop:assets' : 'build:desktop'])
 run(['run', 'build:native'])
 run(['run', 'ensure:electron-runtime'])
@@ -84,7 +91,7 @@ if (!requirement.toLowerCase().includes(signing.identity.toLowerCase())) {
 console.log(`[build:cocos-agent] privacy identity: ${bundleId}`)
 if (release) {
   for (const ext of ['dmg', 'zip']) {
-    const file = `cocos-agent-beta-${beta}-arm64.${ext}`
+    const file = `cocos-agent-beta-${beta}-${process.arch}.${ext}`
     const output = path.join('dist', file)
     const hash = createHash('sha256').update(readFileSync(output)).digest('hex')
     writeFileSync(`${output}.sha256`, `${hash}  ${file}\n`)

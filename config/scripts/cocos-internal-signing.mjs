@@ -81,6 +81,15 @@ export function prepareInternalSigning() {
         '-T',
         '/usr/bin/codesign'
       ])
+      run('/usr/bin/security', [
+        'set-key-partition-list',
+        '-S',
+        'apple-tool:,apple:,codesign:',
+        '-s',
+        '-k',
+        password,
+        keychain
+      ])
       const fingerprint = run('/usr/bin/openssl', [
         'x509',
         '-in',

@@ -111,7 +111,9 @@ module.exports = {
         `${context.packager.appInfo.productFilename}.app`,
         'Contents/Resources/a5-game-context'
       ),
-      (await import('./scripts/import-a5-game-context.mjs')).readA5GameContextLock('darwin-arm64')
+      (await import('./scripts/import-a5-game-context.mjs')).readA5GameContextLock(
+        context.appOutDir.endsWith('mac-arm64') ? 'darwin-arm64' : 'darwin-x64'
+      )
     )
   },
   // Packaged package.json name drives Electron's default userData, keeping the official Orca profile untouched.

@@ -1,0 +1,151 @@
+name: Cocos Agent Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag (leave blank for automatic cocos-agent-dev-<run_number> prerelease)
+        required: false
+        type: string
+        default: ''
+      publish_release:
+        description: Create or update the GitHub Release with all platform installers
+        required: false
+        type: boolean
+        default: true
+  push:
+    tags:
+      - 'cocos-agent-v*'
+
+permissions:
+  contents: write
+
+env:
+  COCOS_AGENT_DESKTOP: '1'
+  ORCA_BACKGROUND_LAUNCH: '1'
+  ORCA_SKIP_DEV_CLI_INSTALL: '1'
+  NODE_OPTIONS: --max-old-space-size=4096
+
+jobs:
+  build-mac:
+    name: Build macOS (${{ matrix.target }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: darwin-arm64
+            os: macos-15
+          - target: darwin-x64
+            os: macos-15-intel
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install dependencies and native runtime
+        uses: ./.github/actions/install-node-dependencies
+        with:
+          native-runtime: electron
+
+      - name: Build macOS desktop package (${{ matrix.target }})
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node config/scripts/build-cocos-agent-mac.mjs --release --skip-typecheck
+
+      - name: Upload macOS installers
+        uses: actions/upload-artifact@v7
+        with:
+          name: cocos-agent-${{ matrix.target }}
+          path: |
+            dist/cocos-agent-beta-*.dmg
+            dist/cocos-agent-beta-*.dmg.sha256
+            dist/cocos-agent-beta-*.zip
+            dist/cocos-agent-beta-*.zip.sha256
+          if-no-files-found: error
+
+  build-win:
+    name: Build Windows (win32-x64)
+    runs-on: windows-2022
+    timeout-minutes: 90
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install dependencies and native runtime
+        uses: ./.github/actions/install-node-dependencies
+        with:
+          native-runtime: electron
+
+      - name: Build Windows desktop installer
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node config/scripts/build-cocos-agent-win.mjs --release --skip-typecheck
+
+      - name: Compute installer checksum
+        shell: bash
+        run: |
+          cd dist
+          sha256sum cocos-agent-beta-windows-setup.exe > cocos-agent-beta-windows-setup.exe.sha256
+
+      - name: Upload Windows installer
+        uses: actions/upload-artifact@v7
+        with:
+          name: cocos-agent-win32-x64
+          path: |
+            dist/cocos-agent-beta-windows-setup.exe
+            dist/cocos-agent-beta-windows-setup.exe.sha256
+          if-no-files-found: error
+
+  release:
+    name: Publish GitHub Release
+    needs: [build-mac, build-win]
+    if: ${{ github.event_name == 'push' || inputs.publish_release }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v8
+        with:
+          path: release-artifacts
+          merge-multiple: true
+
+      - name: Create or update release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          INPUT_TAG: ${{ inputs.tag }}
+          EVENT_NAME: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
+          RUN_NUMBER: ${{ github.run_number }}
+          COMMIT_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT_NAME" = "push" ]; then
+            TAG="$REF_NAME"
+            PRERELEASE_FLAG="--prerelease"
+          elif [ -n "$INPUT_TAG" ]; then
+            TAG="$INPUT_TAG"
+            PRERELEASE_FLAG="--prerelease"
+          else
+            TAG="cocos-agent-dev-$RUN_NUMBER"
+            PRERELEASE_FLAG="--prerelease"
+          fi
+
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$TAG" release-artifacts/* --repo "$GITHUB_REPOSITORY" --clobber
+          else
+            gh release create "$TAG" release-artifacts/* \
+              --repo "$GITHUB_REPOSITORY" \
+              --target "$COMMIT_SHA" \
+              $PRERELEASE_FLAG \
+              --title "Cocos Agent $TAG" \
+              --notes "Built from commit $COMMIT_SHA across darwin-arm64, darwin-x64, and win32-x64."
+          fi
