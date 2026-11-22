@@ -4,8 +4,8 @@
   "file": "a5labs-prime-a5-game-context-5.0.29-all-platform-offline-bundled.tgz",
   "sha256": "e96e870d92e0b7e5b6d80e78a6bdb60e1d9adfee0ad7aec5f8b3314db20f6737",
   "release": {
-    "repo": "A5Labs-Prime/a5-game-context-server",
-    "tag": "v5.0.29"
+    "repo": "sky-jp_A5labsco/cocos-agent",
+    "tag": "a5-game-context-v5.0.29"
   },
-  "source": "A5Labs-Prime/a5-game-context-server release v5.0.29 all-platform offline bundle; each import keeps only its target's native packages"
+  "source": "sky-jp_A5labsco/cocos-agent release a5-game-context-v5.0.29 (mirrored from A5Labs-Prime/a5-game-context-server v5.0.29) all-platform offline bundle; each import keeps only its target's native packages"
 }
