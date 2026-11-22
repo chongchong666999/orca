@@ -41,6 +41,33 @@ export function setCocosEditorSuspended(tabId: string, suspended: boolean): void
   notify()
 }
 
+/** Workspaces whose editor Stop all Cocos services handed back to Cocos Creator; they stay stopped until resumed. */
+const handedBackWorktrees = new Set<string>()
+
+export function setCocosEditorHandedBack(worktreeId: string, handedBack: boolean): void {
+  if (handedBack === handedBackWorktrees.has(worktreeId)) {
+    return
+  }
+  if (handedBack) {
+    handedBackWorktrees.add(worktreeId)
+  } else {
+    handedBackWorktrees.delete(worktreeId)
+  }
+  notify()
+}
+
+export function isCocosEditorHandedBack(worktreeId: string): boolean {
+  return handedBackWorktrees.has(worktreeId)
+}
+
+export function useCocosEditorHandedBack(worktreeId: string): boolean {
+  return useSyncExternalStore(
+    subscribe,
+    () => handedBackWorktrees.has(worktreeId),
+    () => false
+  )
+}
+
 export function markCocosEditorEvicted(identity: string): void {
   evictedIdentities.add(identity)
 }

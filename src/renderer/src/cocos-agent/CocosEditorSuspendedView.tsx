@@ -5,6 +5,7 @@ import { cocosText } from './cocos-text'
 import { useAppStore } from '@/store'
 import { localCocosWorkspacePath } from './cocos-workspace-project'
 import { openCocosEditorTab } from './cocos-editor-tabs'
+import { useCocosEditorHandedBack } from './cocos-editor-tab-state'
 
 /** `stopped`: a tab restored from an earlier session whose editor this session could not open. */
 export function CocosEditorSuspendedView({
@@ -15,6 +16,7 @@ export function CocosEditorSuspendedView({
   stopped?: boolean
 }): React.JSX.Element {
   const [pending, setPending] = useState(false)
+  const handedBack = useCocosEditorHandedBack(worktreeId)
   const resume = async (): Promise<void> => {
     const projectPath = localCocosWorkspacePath(useAppStore.getState(), worktreeId)
     if (!projectPath) {
@@ -30,11 +32,25 @@ export function CocosEditorSuspendedView({
   }
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col items-center justify-center gap-3 bg-background text-foreground">
-      <p className="text-sm text-muted-foreground">
-        {stopped
-          ? cocosText('editor.notRunning', 'The Cocos Creator editor is not running.')
-          : cocosText('editor.suspended', 'This editor was paused to free memory.')}
-      </p>
+      {handedBack ? (
+        <div className="flex flex-col items-center gap-1 text-center">
+          <p className="text-sm font-medium">
+            {cocosText('editor.handedBack.title', 'The editor service is stopped')}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {cocosText(
+              'editor.handedBack.description',
+              'The project is back with Cocos Creator. Resume whenever you need it.'
+            )}
+          </p>
+        </div>
+      ) : (
+        <p className="text-sm text-muted-foreground">
+          {stopped
+            ? cocosText('editor.notRunning', 'The Cocos Creator editor is not running.')
+            : cocosText('editor.suspended', 'This editor was paused to free memory.')}
+        </p>
+      )}
       <Button variant="outline" disabled={pending} onClick={() => void resume()}>
         {pending
           ? cocosText('editor.resuming', 'Resuming editor…')

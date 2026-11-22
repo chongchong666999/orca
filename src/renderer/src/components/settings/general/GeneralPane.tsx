@@ -4,6 +4,7 @@ import type { GlobalSettings } from '../../../../../shared/settings/global-setti
 import { desktopProduct } from '../../../../../shared/app-lifecycle/desktop-product'
 import { useAppStore } from '../../../store/index'
 import { CliSection } from '../cli/install/CliSection'
+import { CocosToolchainSettings } from '../../../cocos-agent/settings/CocosToolchainSection'
 import { GeneralEditorSettingsSection } from '../editor/GeneralEditorSettingsSection'
 import { GeneralAutoSaveSetting } from '../editor/GeneralAutoSaveSetting'
 import { GeneralSupportSection } from './GeneralSupportSection'
@@ -292,6 +293,7 @@ function GeneralRootSettings({
           wslCapabilitiesLoading={wslCapabilitiesLoading}
         />
       ) : null}
+      {desktopProduct ? <CocosToolchainSettings query={query} /> : null}
       {aboutMatches ? (
         <GeneralUpdateSettingsSection>
           <GeneralSupportSection hasPrecedingSections={false} inline />

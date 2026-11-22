@@ -23,7 +23,9 @@ const hooks = [
     'cocosSidebarActivityItems()'
   ],
   [`${renderer}/right-sidebar/right-sidebar-panel-content.tsx`, '<SidebarTerminalPanel'],
-  ['src/renderer/src/store/index.ts', '...createSidebarTerminalSlice(']
+  ['src/renderer/src/store/index.ts', '...createSidebarTerminalSlice('],
+  [`${renderer}/settings/general/GeneralPane.tsx`, '<CocosToolchainSettings'],
+  ['package.json', '"cocos:check"']
 ]
 
 let failed = checkTouchPoints(process.argv.slice(2)) !== 0

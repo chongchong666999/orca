@@ -1,0 +1,158 @@
+{
+  "editor": {
+    "menu": {
+      "running_few": "{{count}} работают",
+      "running_many": "{{count}} работают",
+      "goTo": "Перейти в Cocos Creator",
+      "open": "Cocos Creator",
+      "stop": "Остановить Cocos Creator",
+      "stopAll": "Остановить все службы Cocos…",
+      "running_one": "{{count}} работает",
+      "running_other": "{{count}} работают"
+    },
+    "stopAll": {
+      "done_few": "Остановлены {{count}} службы Cocos",
+      "done_many": "Остановлено {{count}} служб Cocos",
+      "partial_few": "{{count}} службы Cocos не остановились",
+      "partial_many": "{{count}} служб Cocos не остановились",
+      "unsaved_few": "{{count}} несохранённых документа",
+      "unsaved_many": "{{count}} несохранённых документов",
+      "openedByApp": "Открыто cocos-agent",
+      "openedElsewhere": "Открыто агентом или CLI",
+      "previewPort": "Предпросмотр :{{port}}",
+      "doneDescription": "Синхронизация ресурсов и порты предпросмотра освобождены. Перезапускать Cocos Creator не нужно.",
+      "reopen": "Снова открыть {{name}}",
+      "failed": "Не удалось остановить службы Cocos",
+      "title": "Остановить все службы Cocos?",
+      "description": "cocos-agent перестанет синхронизировать ресурсы и файлы .meta этих проектов и освободит их порты предпросмотра. Cocos Creator сможет сразу продолжить работу без перезапуска.",
+      "loading": "Поиск запущенных служб…",
+      "none": "Нет запущенных служб Cocos.",
+      "note": "Службы, открытые сеансами агентов, тоже остановятся; эти сеансы снова откроют проект, прежде чем использовать инструменты редактора. Сами сеансы и их серверы MCP продолжат работу.",
+      "discard": "Остановить без сохранения",
+      "save": "Сохранить и остановить",
+      "confirm": "Остановить все",
+      "unsaved_one": "{{count}} несохранённый документ",
+      "unsaved_other": "{{count}} несохранённого документа",
+      "done_one": "Остановлена {{count}} служба Cocos",
+      "done_other": "Остановлено {{count}} службы Cocos",
+      "partial_one": "{{count}} служба Cocos не остановилась",
+      "partial_other": "{{count}} службы Cocos не остановились"
+    },
+    "errors": {
+      "reopen": "Не удалось снова открыть редактор Cocos Creator",
+      "unavailable": "cocos-agent недоступен в этом окне.",
+      "open": "Не удалось открыть редактор Cocos Creator",
+      "unsupportedVersion": "Редактор cocos-agent поддерживает только проекты Cocos Creator 2.4; этот проект использует {{version}}.",
+      "aiResume": "Не удалось снова подключить терминал ИИ"
+    },
+    "tab": {
+      "title": "Cocos Creator"
+    },
+    "starting": "Загрузка Cocos Creator",
+    "notRunning": "Редактор Cocos Creator не запущен.",
+    "suspended": "Редактор приостановлен, чтобы освободить память.",
+    "resuming": "Возобновление редактора…",
+    "resume": "Возобновить Cocos Creator",
+    "retryAiConnection": "Повторить подключение",
+    "close": {
+      "cancel": "Отмена",
+      "ok": "ОК",
+      "message": "Сохранить изменения в редакторе перед закрытием?",
+      "save": "Сохранить",
+      "discard": "Не сохранять",
+      "failed": "Не удалось подтвердить, что редактор закрыт. Проверьте его состояние и повторите попытку.",
+      "keepService": "Выйти из приложения и оставить службу редактора",
+      "keepWarning": "Если оставить службу, несохранённый ввод на странице не сохранится. Вернитесь в редактор, если его нужно сохранить.",
+      "stillClosing": "Служба приняла запрос на закрытие, но ещё не завершила работу.",
+      "unconfirmed": "Не удалось подтвердить запрос на закрытие. Проверьте, нет ли конфликтов сохранения и не занят ли редактор."
+    },
+    "handedBack": {
+      "title": "Служба редактора остановлена",
+      "description": "Проект снова в Cocos Creator. Возобновите работу, когда понадобится."
+    }
+  },
+  "brand": {
+    "starPrompt": "Поставьте звезду Cocos Agent на GitHub, чтобы поддержать проект."
+  },
+  "sidebar": {
+    "creator": {
+      "unavailable": "Выберите рабочее пространство с проектом Cocos Creator 2.4, чтобы открыть его редактор."
+    },
+    "terminal": {
+      "createFailed": "Не удалось открыть терминал. Проверьте подключение рабочего пространства и настройки агента.",
+      "newSession": "Новый сеанс",
+      "title": "Терминал",
+      "history": "История сеансов",
+      "sessions": "Сеансы терминала",
+      "closeSession": "Закрыть {{name}}",
+      "connecting": "Подключение к терминалу…",
+      "empty": "Откройте терминал или выберите ИИ-агента с помощью +.",
+      "moveExisting": "Переместить сюда существующий терминал"
+    }
+  },
+  "toolchain": {
+    "failure": {
+      "permission": "npm не может писать в свою глобальную папку (EACCES). Выполните команду ниже в терминале; она запросит ваш пароль.",
+      "busy": "Файлы старой версии ещё используются. Закройте сеансы Claude и Codex, которые её используют, остановите все службы Cocos и повторите попытку.",
+      "noSpace": "Диск заполнен (ENOSPC). Освободите место и повторите попытку.",
+      "timedOut": "npm не завершил работу за 10 минут.",
+      "unknown": "npm остановился с ошибкой. Посмотрите журнал установки."
+    },
+    "state": {
+      "checking": "Проверка…",
+      "installing": "Установка {{version}} через npm…",
+      "readySame": "{{version}} · глобально через npm · версия, которая входит в cocos-agent",
+      "readyNewer": "{{version}} · глобально через npm · новее встроенной {{bundled}}",
+      "missing": "Не установлено · cocos-agent использует встроенную {{version}}",
+      "outdated": "Установлена {{version}} · доступна {{bundled}}",
+      "incomplete": "{{version}} · нет cocos-cli или Cocos SDK",
+      "incompatible": "{{version}} несовместима с этим cocos-agent · он использует встроенную {{bundled}}",
+      "failed": "Не удалось установить {{bundled}} · cocos-agent использует встроенную {{bundled}}",
+      "noNpm": "npm не найден · cocos-agent использует встроенную {{version}}",
+      "unavailable": "Недоступно в этой сборке"
+    },
+    "notice": {
+      "details": "Подробности",
+      "installing": "Установка a5-game-context {{version}}",
+      "installingDescription": "cocos-agent устанавливает встроенную версию через npm для всех терминалов и агентов.",
+      "noNpm": "npm не найден",
+      "incompatible": "a5-game-context {{version}} несовместим с этим cocos-agent",
+      "noNpmDescription": "cocos-agent использует встроенный a5-game-context {{version}}. Установите Node.js, чтобы терминалы использовали ту же копию.",
+      "incompatibleDescription": "cocos-agent использует встроенную {{version}}, пока вы его не обновите.",
+      "ready": "a5-game-context {{version}} готов",
+      "readyDescription": "Терминалы, Claude, Codex и cocos-agent теперь используют одну версию.",
+      "failed": "Не удалось установить a5-game-context"
+    },
+    "title": "Инструменты командной строки Cocos",
+    "searchDescription": "a5-game-context и cocos-cli, которые используют все терминалы и агенты; устанавливаются через npm.",
+    "copied": "Скопировано",
+    "copyFailed": "Не удалось скопировать в буфер обмена",
+    "action": {
+      "install": "Установить {{version}}",
+      "update": "Обновить до {{version}}",
+      "repair": "Восстановить",
+      "retry": "Повторить",
+      "reinstall": "Переустановить встроенную {{version}}",
+      "openLog": "Открыть журнал установки",
+      "copyCommand": "Скопировать команду",
+      "copyCleanup": "Скопировать команды очистки"
+    },
+    "commands": "a5-game-context и cocos-cli",
+    "refresh": "Проверить снова",
+    "more": "Другие действия",
+    "manualHint": "Выполнив команду самостоятельно, нажмите «Проверить снова».",
+    "commandPath": "Путь к команде:",
+    "sdkReady": "Cocos 2.4.13 SDK зарегистрирован",
+    "sdkMissing": "Cocos 2.4.13 SDK не зарегистрирован",
+    "shadowed": "Терминалы сначала находят другую копию. Удалите её, чтобы использовать глобальную копию npm:",
+    "autoInstall": "Устанавливать после обновлений cocos-agent",
+    "autoInstallDescription": "Проверяет при первом запуске каждой новой версии и только повышает версию. Если выключено, cocos-agent лишь сообщает.",
+    "otherCopies": "Другие копии на этом компьютере",
+    "otherCopiesDescription": "Их нет в PATH, поэтому они не используются; они только путают версии.",
+    "reinstall": {
+      "title": "Переустановить a5-game-context {{version}}?",
+      "description": "Глобальная {{current}} будет заменена версией, встроенной в cocos-agent, даже если она старше. Используйте, если установленная копия повреждена.",
+      "confirm": "Переустановить"
+    }
+  }
+}

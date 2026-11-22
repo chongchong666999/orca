@@ -1,0 +1,146 @@
+{
+  "editor": {
+    "menu": {
+      "running": "{{count}} çalışıyor",
+      "goTo": "Cocos Creator’a git",
+      "open": "Cocos Creator",
+      "stop": "Cocos Creator’ı durdur",
+      "stopAll": "Tüm Cocos hizmetlerini durdur…"
+    },
+    "stopAll": {
+      "done": "{{count}} Cocos hizmeti durduruldu",
+      "partial": "{{count}} Cocos hizmeti durmadı",
+      "unsaved": "{{count}} kaydedilmemiş belge",
+      "openedByApp": "cocos-agent açtı",
+      "openedElsewhere": "Bir ajan veya CLI açtı",
+      "previewPort": "Önizleme :{{port}}",
+      "doneDescription": "Varlık eşitleme ve önizleme bağlantı noktaları serbest bırakıldı. Cocos Creator’ın yeniden başlatılması gerekmez.",
+      "reopen": "{{name}} yeniden aç",
+      "failed": "Cocos hizmetleri durdurulamadı",
+      "title": "Tüm Cocos hizmetleri durdurulsun mu?",
+      "description": "cocos-agent bu projelerin varlıklarını ve .meta dosyalarını eşitlemeyi bırakır ve önizleme bağlantı noktalarını serbest bırakır. Cocos Creator yeniden başlatmadan hemen devralabilir.",
+      "loading": "Çalışan hizmetler aranıyor…",
+      "none": "Çalışan Cocos hizmeti yok.",
+      "note": "Ajan oturumlarının açtığı hizmetler de durur; bu oturumlar düzenleyici araçlarını yeniden kullanmadan önce projeyi tekrar açar. Oturumlar ve MCP sunucuları çalışmaya devam eder.",
+      "discard": "Kaydetmeden durdur",
+      "save": "Kaydet ve durdur",
+      "confirm": "Tümünü durdur"
+    },
+    "errors": {
+      "reopen": "Cocos Creator düzenleyicisi yeniden açılamadı",
+      "unavailable": "cocos-agent bu pencerede kullanılamıyor.",
+      "open": "Cocos Creator düzenleyicisi açılamadı",
+      "unsupportedVersion": "cocos-agent düzenleyicisi yalnızca Cocos Creator 2.4 projelerini destekler; bu proje {{version}} kullanıyor.",
+      "aiResume": "Yapay zekâ terminaline yeniden bağlanılamadı"
+    },
+    "tab": {
+      "title": "Cocos Creator"
+    },
+    "starting": "Cocos Creator yükleniyor",
+    "notRunning": "Cocos Creator düzenleyicisi çalışmıyor.",
+    "suspended": "Bu düzenleyici bellek boşaltmak için duraklatıldı.",
+    "resuming": "Düzenleyici devam ettiriliyor…",
+    "resume": "Cocos Creator’ı devam ettir",
+    "retryAiConnection": "Bağlantıyı yeniden dene",
+    "close": {
+      "cancel": "İptal",
+      "ok": "Tamam",
+      "message": "Kapatmadan önce düzenleyicideki değişiklikler kaydedilsin mi?",
+      "save": "Kaydet",
+      "discard": "Kaydetme",
+      "failed": "Düzenleyicinin kapandığı doğrulanamadı. Durumunu kontrol edip yeniden deneyin.",
+      "keepService": "Uygulamadan çık ve düzenleyici hizmetini koru",
+      "keepWarning": "Hizmeti korumak sayfadaki bekleyen girişleri kaydetmez. Bunları saklamanız gerekiyorsa düzenleyiciye dönün.",
+      "stillClosing": "Hizmet kapatma isteğini kabul etti ancak henüz kapanmadı.",
+      "unconfirmed": "Kapatma isteği doğrulanamadı. Kaydetme çakışmalarını veya düzenleyicinin meşgul olup olmadığını kontrol edin."
+    },
+    "handedBack": {
+      "title": "Düzenleyici hizmeti durduruldu",
+      "description": "Proje Cocos Creator’a geri verildi. İstediğiniz zaman devam ettirebilirsiniz."
+    }
+  },
+  "brand": {
+    "starPrompt": "Projeyi desteklemek için GitHub’da Cocos Agent’a yıldız verin."
+  },
+  "sidebar": {
+    "creator": {
+      "unavailable": "Düzenleyicisini açmak için Cocos Creator 2.4 projesi içeren bir çalışma alanı seçin."
+    },
+    "terminal": {
+      "createFailed": "Terminal açılamadı. Çalışma alanı bağlantısını ve ajan ayarlarını kontrol edin.",
+      "newSession": "Yeni oturum",
+      "title": "Terminal",
+      "history": "Oturum geçmişi",
+      "sessions": "Terminal oturumları",
+      "closeSession": "{{name}} kapat",
+      "connecting": "Terminale bağlanılıyor…",
+      "empty": "+ ile bir terminal açın veya bir yapay zekâ ajanı seçin.",
+      "moveExisting": "Mevcut terminali buraya taşı"
+    }
+  },
+  "toolchain": {
+    "failure": {
+      "permission": "npm genel klasörüne yazamıyor (EACCES). Aşağıdaki komutu bir terminalde çalıştırın; parolanızı soracaktır.",
+      "busy": "Eski sürümün dosyaları hâlâ kullanımda. Onu kullanan Claude ve Codex oturumlarını kapatın, tüm Cocos hizmetlerini durdurun ve yeniden deneyin.",
+      "noSpace": "Disk dolu (ENOSPC). Yer açıp yeniden deneyin.",
+      "timedOut": "npm 10 dakika içinde bitmedi.",
+      "unknown": "npm bir hatayla durdu. Kurulum günlüğüne bakın."
+    },
+    "state": {
+      "checking": "Kontrol ediliyor…",
+      "installing": "{{version}} npm ile yükleniyor…",
+      "readySame": "{{version}} · npm genel · cocos-agent ile gelen sürüm",
+      "readyNewer": "{{version}} · npm genel · birlikte gelen {{bundled}} sürümünden yeni",
+      "missing": "Yüklü değil · cocos-agent birlikte gelen {{version}} sürümünü kullanıyor",
+      "outdated": "{{version}} yüklü · {{bundled}} kullanılabilir",
+      "incomplete": "{{version}} · cocos-cli veya Cocos SDK eksik",
+      "incompatible": "{{version}} bu cocos-agent ile uyumlu değil · birlikte gelen {{bundled}} kullanılıyor",
+      "failed": "{{bundled}} yüklenemedi · cocos-agent birlikte gelen {{bundled}} sürümünü kullanıyor",
+      "noNpm": "npm bulunamadı · cocos-agent birlikte gelen {{version}} sürümünü kullanıyor",
+      "unavailable": "Bu derlemede kullanılamıyor"
+    },
+    "notice": {
+      "details": "Ayrıntılar",
+      "installing": "a5-game-context {{version}} yükleniyor",
+      "installingDescription": "cocos-agent birlikte gelen sürümü tüm terminaller ve ajanlar için npm ile yüklüyor.",
+      "noNpm": "npm bulunamadı",
+      "incompatible": "a5-game-context {{version}} bu cocos-agent ile uyumlu değil",
+      "noNpmDescription": "cocos-agent birlikte gelen a5-game-context {{version}} sürümünü kullanıyor. Terminallerinizle tek bir kopyayı paylaşmak için Node.js yükleyin.",
+      "incompatibleDescription": "cocos-agent güncellenene kadar birlikte gelen {{version}} sürümünü kullanır.",
+      "ready": "a5-game-context {{version}} hazır",
+      "readyDescription": "Terminaller, Claude, Codex ve cocos-agent artık aynı sürümü kullanıyor.",
+      "failed": "a5-game-context yüklenemedi"
+    },
+    "title": "Cocos komut satırı araçları",
+    "searchDescription": "Tüm terminallerin ve ajanların kullandığı, npm ile yüklenen a5-game-context ve cocos-cli.",
+    "copied": "Kopyalandı",
+    "copyFailed": "Panoya kopyalanamadı",
+    "action": {
+      "install": "{{version}} yükle",
+      "update": "{{version}} sürümüne güncelle",
+      "repair": "Onar",
+      "retry": "Yeniden dene",
+      "reinstall": "Birlikte gelen {{version}} sürümünü yeniden yükle",
+      "openLog": "Kurulum günlüğünü aç",
+      "copyCommand": "Komutu kopyala",
+      "copyCleanup": "Temizleme komutlarını kopyala"
+    },
+    "commands": "a5-game-context ve cocos-cli",
+    "refresh": "Yeniden kontrol et",
+    "more": "Diğer işlemler",
+    "manualHint": "Komutu kendiniz çalıştırdıktan sonra Yeniden kontrol et’i kullanın.",
+    "commandPath": "Komut yolu:",
+    "sdkReady": "Cocos 2.4.13 SDK kayıtlı",
+    "sdkMissing": "Cocos 2.4.13 SDK kayıtlı değil",
+    "shadowed": "Terminaller önce başka bir kopyayı buluyor. npm genel kopyasını kullanmak için onu kaldırın:",
+    "autoInstall": "cocos-agent güncellemelerinden sonra yükle",
+    "autoInstallDescription": "Her yeni sürümün ilk açılışında kontrol eder ve yalnızca yükseltir. Kapalıyken cocos-agent yalnızca haber verir.",
+    "otherCopies": "Bu bilgisayardaki diğer kopyalar",
+    "otherCopiesDescription": "PATH üzerinde değiller, bu yüzden hiçbir şey onları kullanmıyor; yalnızca sürümleri karıştırıyorlar.",
+    "reinstall": {
+      "title": "a5-game-context {{version}} yeniden yüklensin mi?",
+      "description": "Genel {{current}} sürümünü, daha eski olsa bile cocos-agent ile gelen sürümle değiştirir. Yüklü kopya bozulduğunda kullanın.",
+      "confirm": "Yeniden yükle"
+    }
+  }
+}

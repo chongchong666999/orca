@@ -1,9 +1,9 @@
-import { BrowserWindow, ipcMain } from 'electron'
+import { BrowserWindow, ipcMain, shell } from 'electron'
+import { access } from 'node:fs/promises'
 import path from 'node:path'
-import {
-  registerA5GameContextCommands,
-  reportA5GameContextCommands
-} from './a5-game-context-commands'
+import { A5_TOOLCHAIN_IPC } from '../../shared/cocos-agent/a5-game-context-toolchain-types'
+import { setGlobalA5GameContextLauncher } from './a5-game-context-binary'
+import { a5GameContextToolchain } from './a5-game-context-toolchain-instance'
 import { refreshCocosEditorMcpLauncher } from './cocos-editor-mcp-launcher'
 import { refreshCocosEditorBindings } from './cocos-editor-mcp-bindings'
 import {
@@ -18,6 +18,8 @@ import {
   reportCocosEditorCloseFailure
 } from './cocos-editor-close'
 import { stopAppStartedEditorsOnQuit } from './cocos-editor-quit'
+import { stopAllCocosServices } from './cocos-editor-hand-off'
+import { listCocosRunningServices } from './cocos-editor-running-services'
 import { cocosEditorService, onCocosEditorEvicted } from './cocos-editor-service-instance'
 import { detectCocosProject, findCocosEditorForWorkspace } from './cocos-project-detection'
 import { readSidebarTerminalRecord, writeSidebarTerminalRecord } from './sidebar-terminal-store'
@@ -33,12 +35,18 @@ export function registerCocosAgentIpc(): void {
   cocosEditorService.setCloseHandlers(prepareCocosEditorClose, (outcome, forQuit) =>
     reportCocosEditorCloseFailure(describeCocosEditorCloseFailure(outcome === 'closing'), forQuit)
   )
-  void refreshCocosEditorMcpLauncher().catch(() =>
-    console.error('Could not update the bundled Cocos MCP launcher')
-  )
-  void registerA5GameContextCommands()
-    .then(reportA5GameContextCommands)
-    .catch((error) => console.error('Could not register the a5-game-context commands', error))
+  const toolchain = a5GameContextToolchain()
+  setGlobalA5GameContextLauncher(() => toolchain.launcher())
+  const refreshMcpLauncher = (): Promise<void> =>
+    refreshCocosEditorMcpLauncher().then(
+      () => undefined,
+      () => console.error('Could not update the Cocos MCP launcher')
+    )
+  // Why: the MCP launcher points at whichever copy the launch sync settles on, so it is refreshed after it.
+  void toolchain
+    .syncOnLaunch()
+    .catch((error: unknown) => console.error('Could not check the a5-game-context install', error))
+    .then(refreshMcpLauncher)
   unsubscribeEvictions?.()
   unsubscribeEvictions = onCocosEditorEvicted((record) => {
     for (const window of BrowserWindow.getAllWindows()) {
@@ -47,9 +55,29 @@ export function registerCocosAgentIpc(): void {
       }
     }
   })
-  for (const channel of Object.values(COCOS_AGENT_IPC)) {
+  for (const channel of [...Object.values(COCOS_AGENT_IPC), ...Object.values(A5_TOOLCHAIN_IPC)]) {
     ipcMain.removeHandler(channel)
   }
+  ipcMain.handle(A5_TOOLCHAIN_IPC.getStatus, () => toolchain.getStatus())
+  ipcMain.handle(A5_TOOLCHAIN_IPC.refresh, () => toolchain.refresh())
+  ipcMain.handle(A5_TOOLCHAIN_IPC.install, async (_event, options: unknown) => {
+    const reinstallBundled =
+      !!options && typeof options === 'object' && 'reinstallBundled' in options
+        ? options.reinstallBundled === true
+        : false
+    const status = await toolchain.install({ reinstallBundled })
+    await refreshMcpLauncher()
+    return status
+  })
+  ipcMain.handle(A5_TOOLCHAIN_IPC.setAutoInstall, (_event, enabled: unknown) =>
+    toolchain.setAutoInstall(enabled === true)
+  )
+  ipcMain.handle(A5_TOOLCHAIN_IPC.openLog, async () => {
+    const log = toolchain.getStatus().logPath
+    if (log && (await access(log).then(() => true, () => false))) {
+      await shell.openPath(log)
+    }
+  })
   ipcMain.handle(COCOS_AGENT_IPC.refreshEditorBindings, async (_event, args: unknown) => {
     const value = args && typeof args === 'object' ? args : {}
     const projectPath = 'projectPath' in value ? value.projectPath : undefined
@@ -104,6 +132,17 @@ export function registerCocosAgentIpc(): void {
       isAbsolutePath(projectRoot) ? cocosEditorService.stop(projectRoot) : false
   )
   ipcMain.handle(COCOS_AGENT_IPC.listEditors, (): CocosEditorRecord[] => cocosEditorService.list())
+  ipcMain.handle(COCOS_AGENT_IPC.listServices, () =>
+    listCocosRunningServices(cocosEditorService.list())
+  )
+  ipcMain.handle(COCOS_AGENT_IPC.stopAllServices, async (_event, preset: unknown) => {
+    const answer = preset === 'save' || preset === 'discard' ? preset : undefined
+    const known = cocosEditorService.list()
+    const others = (await listCocosRunningServices(known))
+      .filter((service) => service.origin === 'external')
+      .map((service) => ({ projectRoot: service.projectRoot, url: service.url, startedByApp: false }))
+    return stopAllCocosServices(cocosEditorService, others, answer)
+  })
   ipcMain.handle(COCOS_AGENT_IPC.readSidebarTerminals, () => readSidebarTerminalRecord())
   ipcMain.handle(COCOS_AGENT_IPC.writeSidebarTerminals, (_event, record: unknown) =>
     writeSidebarTerminalRecord(record)

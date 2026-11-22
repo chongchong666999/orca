@@ -1,36 +1,146 @@
 {
-  "brand": { "starPrompt": "在 GitHub 上為 Cocos Agent 加星，支持這個專案。" },
   "editor": {
     "menu": {
+      "running": "{{count}} 個執行中",
       "goTo": "前往 Cocos Creator",
       "open": "Cocos Creator",
-      "stop": "停止 Cocos Creator"
+      "stop": "停止 Cocos Creator",
+      "stopAll": "停止所有 Cocos 服務…"
+    },
+    "stopAll": {
+      "done": "已停止 {{count}} 個 Cocos 服務",
+      "partial": "{{count}} 個 Cocos 服務沒有停止",
+      "unsaved": "{{count}} 個文件未儲存",
+      "openedByApp": "cocos-agent 開啟",
+      "openedElsewhere": "智慧體或命令列開啟",
+      "previewPort": "預覽 :{{port}}",
+      "doneDescription": "資源同步和預覽連接埠都已釋放，Cocos Creator 不需要重新啟動。",
+      "reopen": "重新開啟 {{name}}",
+      "failed": "無法停止 Cocos 服務",
+      "title": "停止所有 Cocos 服務？",
+      "description": "停止後 cocos-agent 不再同步這些專案的資源和 .meta，也不再占用預覽連接埠。Cocos Creator 不需要重新啟動，可以直接使用。",
+      "loading": "正在尋找執行中的服務…",
+      "none": "沒有正在執行的 Cocos 服務。",
+      "note": "由智慧體工作階段開啟的服務也會停止；這些工作階段再使用編輯器工具前會重新開啟專案。工作階段本身和它們的 MCP 不受影響。",
+      "discard": "不儲存並停止",
+      "save": "儲存並停止",
+      "confirm": "全部停止"
     },
     "errors": {
       "reopen": "無法重新開啟 Cocos Creator 編輯器",
+      "unavailable": "此視窗無法使用 cocos-agent。",
       "open": "無法開啟 Cocos Creator 編輯器",
-      "unsupportedVersion": "cocos-agent 的編輯器只支援 Cocos Creator 2.4 專案，此專案使用 {{version}}。"
+      "unsupportedVersion": "cocos-agent 的編輯器只支援 Cocos Creator 2.4 專案，此專案使用 {{version}}。",
+      "aiResume": "無法重新連線 AI 終端機"
+    },
+    "tab": {
+      "title": "Cocos Creator"
     },
     "starting": "正在載入 Cocos Creator",
     "notRunning": "Cocos Creator 編輯器沒有在執行。",
     "suspended": "此編輯器已暫停以釋放記憶體。",
     "resuming": "正在恢復編輯器…",
-    "resume": "恢復 Cocos Creator"
+    "resume": "恢復 Cocos Creator",
+    "retryAiConnection": "重試連線",
+    "close": {
+      "cancel": "取消",
+      "ok": "確定",
+      "message": "關閉前要儲存編輯器中的變更嗎？",
+      "save": "儲存",
+      "discard": "不儲存",
+      "failed": "無法確認編輯器是否已關閉，請檢查狀態後再試。",
+      "keepService": "結束應用程式並保留編輯器服務",
+      "keepWarning": "保留服務不會儲存尚未提交的頁面輸入。需要保留這些輸入時，請取消結束並回到編輯器處理。",
+      "stillClosing": "服務已接受關閉要求，但尚未完成結束。",
+      "unconfirmed": "無法確認關閉要求是否完成，請檢查儲存衝突或編輯器是否仍在忙碌。"
+    },
+    "handedBack": {
+      "title": "編輯器服務已停止",
+      "description": "專案已交還給 Cocos Creator，需要時可以隨時恢復。"
+    }
+  },
+  "brand": {
+    "starPrompt": "在 GitHub 上為 Cocos Agent 加星，支持這個專案。"
   },
   "sidebar": {
     "creator": {
       "unavailable": "選擇一個 Cocos Creator 2.4 專案工作區後即可開啟編輯器。"
     },
     "terminal": {
-      "moveExisting": "移入現有終端",
+      "createFailed": "無法開啟終端機，請檢查工作區連線與智慧體設定。",
+      "newSession": "新增工作階段",
       "title": "終端機",
       "history": "工作階段歷史",
       "sessions": "終端機工作階段",
       "closeSession": "關閉 {{name}}",
       "connecting": "正在連線終端機…",
       "empty": "點擊 + 開啟終端機或選擇 AI 智慧體。",
-      "newSession": "新增工作階段",
-      "createFailed": "無法開啟終端機，請檢查工作區連線與智慧體設定。"
+      "moveExisting": "移入現有終端"
+    }
+  },
+  "toolchain": {
+    "failure": {
+      "permission": "npm 沒有寫入全域資料夾的權限（EACCES）。請在終端機執行下面的指令，它會要求輸入密碼。",
+      "busy": "舊版本的檔案仍在使用中。請關閉正在使用它的 Claude 和 Codex 工作階段，停止所有 Cocos 服務後重試。",
+      "noSpace": "磁碟空間不足（ENOSPC）。請釋放空間後重試。",
+      "timedOut": "npm 未在 10 分鐘內完成。",
+      "unknown": "npm 發生錯誤而停止，請查看安裝記錄檔。"
+    },
+    "state": {
+      "checking": "正在檢查…",
+      "installing": "正在用 npm 安裝 {{version}}…",
+      "readySame": "{{version}} · npm 全域安裝 · 與 cocos-agent 內建的版本一致",
+      "readyNewer": "{{version}} · npm 全域安裝 · 比 cocos-agent 內建的 {{bundled}} 更新",
+      "missing": "未安裝 · cocos-agent 暫用內建的 {{version}}",
+      "outdated": "已安裝 {{version}} · 可更新至 {{bundled}}",
+      "incomplete": "{{version}} · 缺少 cocos-cli 或 Cocos SDK",
+      "incompatible": "{{version}} 與此版本 cocos-agent 不相容 · 暫用內建的 {{bundled}}",
+      "failed": "安裝 {{bundled}} 失敗 · cocos-agent 暫用內建的 {{bundled}}",
+      "noNpm": "找不到 npm · cocos-agent 使用內建的 {{version}}",
+      "unavailable": "此組建無法使用"
+    },
+    "notice": {
+      "details": "詳情",
+      "installing": "正在安裝 a5-game-context {{version}}",
+      "installingDescription": "cocos-agent 正在用 npm 安裝內建的版本，供所有終端機和智慧體使用。",
+      "noNpm": "找不到 npm",
+      "incompatible": "a5-game-context {{version}} 與此版本 cocos-agent 不相容",
+      "noNpmDescription": "cocos-agent 使用內建的 a5-game-context {{version}}。安裝 Node.js 後即可與終端機共用同一份。",
+      "incompatibleDescription": "更新 cocos-agent 之前，它會使用內建的 {{version}}。",
+      "ready": "a5-game-context {{version}} 已就緒",
+      "readyDescription": "終端機、Claude、Codex 和 cocos-agent 現在使用同一個版本。",
+      "failed": "無法安裝 a5-game-context"
+    },
+    "title": "Cocos 命令列工具",
+    "searchDescription": "所有終端機和智慧體使用的 a5-game-context 與 cocos-cli，透過 npm 安裝。",
+    "copied": "已複製",
+    "copyFailed": "無法複製到剪貼簿",
+    "action": {
+      "install": "安裝 {{version}}",
+      "update": "更新至 {{version}}",
+      "repair": "修復",
+      "retry": "重試",
+      "reinstall": "重新安裝內建的 {{version}}",
+      "openLog": "開啟安裝記錄檔",
+      "copyCommand": "複製指令",
+      "copyCleanup": "複製清理指令"
+    },
+    "commands": "a5-game-context 和 cocos-cli",
+    "refresh": "重新檢查",
+    "more": "更多操作",
+    "manualHint": "自行執行指令後，請點「重新檢查」。",
+    "commandPath": "指令路徑：",
+    "sdkReady": "Cocos 2.4.13 SDK 已註冊",
+    "sdkMissing": "Cocos 2.4.13 SDK 未註冊",
+    "shadowed": "終端機會先找到另一份副本。移除它才會使用 npm 全域安裝的版本：",
+    "autoInstall": "更新 cocos-agent 後自動安裝",
+    "autoInstallDescription": "每個新版本第一次啟動時檢查，只升級不降級。關閉後只提示。",
+    "otherCopies": "這台電腦上的其他副本",
+    "otherCopiesDescription": "不在 PATH 上，不會被使用；留著容易混淆版本。",
+    "reinstall": {
+      "title": "重新安裝 a5-game-context {{version}}？",
+      "description": "這會用 cocos-agent 內建的版本取代全域的 {{current}}，即使內建的較舊。適用於已安裝的副本損壞時。",
+      "confirm": "重新安裝"
     }
   }
 }

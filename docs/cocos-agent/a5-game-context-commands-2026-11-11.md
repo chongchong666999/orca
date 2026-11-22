@@ -1,5 +1,7 @@
 # 安装 cocos-agent 即可使用 a5-game-context 命令
 
+> 已被取代：cocos-agent 0.1.3 起改用 npm 全局安装，见 [Creator 预览端口与 npm 安装](creator-preview-port-and-npm-install-2026-11-21.md)。本文记录的是 0.1.2 及更早的做法。
+
 2026-11-11。目标：在 macOS 和 Windows 上装好 cocos-agent，任何终端、Claude Code 和 Codex 用到的 `a5-game-context` 与 `cocos-cli` 都是 cocos-agent 自带的那一份，不再单独 `npm install -g`，版本始终跟随 cocos-agent。
 
 ## 起因

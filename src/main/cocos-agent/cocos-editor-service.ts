@@ -67,11 +67,18 @@ export class CocosEditorService {
     })
   }
 
-  /** True once the editor stopped or had already exited; false keeps it listed so the stop can be retried. */
-  async stop(projectPath: string, forQuit = false): Promise<boolean> {
+  /**
+   * True once the editor stopped or had already exited; false keeps it listed so the stop can be retried. `handOff`
+   * (Stop all Cocos services) stops it whoever started it, with `preset` answering unsaved changes.
+   */
+  async stop(
+    projectPath: string,
+    forQuit = false,
+    handOff?: { preset?: 'save' | 'discard' }
+  ): Promise<boolean> {
     return this.serialize(async () => {
       const editor = await findCocosEditorForWorkspace(projectPath, this.list())
-      return editor ? this.stopEditor(editor.projectRoot, false, forQuit) : false
+      return editor ? this.stopEditor(editor.projectRoot, false, forQuit, handOff) : false
     })
   }
 
@@ -87,7 +94,6 @@ export class CocosEditorService {
   shutdownForQuit(): void {
     this.quitting = true
     this.activationRequest++
-    void this.deps.preview?.close()
     for (const record of this.editors.values()) {
       const shutdownUrl = record.startedByApp ? editorShutdownUrl(record.url) : null
       if (shutdownUrl) {
@@ -108,7 +114,6 @@ export class CocosEditorService {
 
   async activate(projectPath: string | null): Promise<void> {
     const request = ++this.activationRequest
-    this.deps.preview?.select(null)
     const editor = projectPath
       ? await findCocosEditorForWorkspace(projectPath, this.list())
       : undefined
@@ -118,7 +123,6 @@ export class CocosEditorService {
     // Activation during an open must affect its next eviction decision immediately.
     if (editor && this.editors.has(editor.projectRoot)) {
       this.activationOrder.set(editor.projectRoot, ++this.activationSequence)
-      this.deps.preview?.select(editor)
       await this.releaseIfExited(editor.projectRoot)
     }
   }
@@ -139,7 +143,6 @@ export class CocosEditorService {
   private forget(record: CocosEditorRecord): void {
     this.closingEditors.delete(record.projectRoot)
     this.editors.delete(record.projectRoot)
-    this.deps.preview?.remove(record)
     this.activationOrder.delete(record.projectRoot)
   }
 
@@ -221,7 +224,6 @@ export class CocosEditorService {
     let result: ProcessResult
     try {
       await prepareBundledCocosSdk(binary)
-      await this.deps.preview?.start()
       if (this.quitting) {
         return failure('stopping', 'cocos-agent is quitting.')
       }
@@ -260,22 +262,17 @@ export class CocosEditorService {
       startedByApp: startedEarlierByApp || !output.reused
     })
     this.activationOrder.set(projectRoot, ++this.activationSequence)
-    return {
-      ok: true,
-      url: output.url,
-      projectRoot,
-      reused: output.reused,
-      ...(this.deps.preview?.warning ? { previewWarning: this.deps.preview.warning } : {})
-    }
+    return { ok: true, url: output.url, projectRoot, reused: output.reused }
   }
 
   private async stopEditor(
     projectRoot: string,
     onlyIdle = false,
-    forQuit = false
+    forQuit = false,
+    handOff?: { preset?: 'save' | 'discard' }
   ): Promise<boolean> {
     const record = this.editors.get(projectRoot)
-    if (!record || !record.startedByApp) {
+    if (!record || (!record.startedByApp && !handOff)) {
       return false
     }
     const shutdownUrl = editorShutdownUrl(record.url)
@@ -287,7 +284,7 @@ export class CocosEditorService {
     if (onlyIdle) {
       url.searchParams.set('onlyIdle', '1')
     } else if (this.deps.prepareClose) {
-      const choice = await this.deps.prepareClose(record, forQuit)
+      const choice = await this.deps.prepareClose(record, forQuit, handOff?.preset)
       if (choice === false) {
         return false
       }
@@ -305,8 +302,7 @@ export class CocosEditorService {
     }
     const outcome = await this.shutdown.request(url.toString())
     if (outcome === 'closed') {
-      this.deps.preview?.remove(record)
-      this.editors.delete(projectRoot)
+        this.editors.delete(projectRoot)
       this.closingEditors.delete(projectRoot)
     } else if (outcome === 'closing') {
       this.closingEditors.set(projectRoot, new URL(shutdownUrl).origin)

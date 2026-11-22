@@ -28,8 +28,8 @@
     {
       "path": "src/renderer/src/components/settings/general/GeneralPane.tsx",
       "kind": "hook",
-      "change": "Cocos 桌面不展示上游 CLI 安装项",
-      "onConflict": "保留上游设置结构，按 Cocos 产品构建判断是否显示"
+      "change": "Cocos 桌面不展示上游 CLI 安装项，在同一位置渲染 Cocos 命令行工具分区（1 行 + 1 个 import）",
+      "onConflict": "保留上游设置结构，按 Cocos 产品构建隐藏 CliSection，并在其后接回 CocosToolchainSettings"
     },
     {
       "path": "src/renderer/src/components/sidebar/chrome/SidebarSettingsHelpMenu.tsx",
@@ -330,6 +330,12 @@
       "kind": "enum",
       "change": "共享侧栏标签列表接受 terminal，RPC 直接读此列表",
       "onConflict": "只添加 terminal 枚举值"
+    },
+    {
+      "path": "package.json",
+      "kind": "hook",
+      "change": "新增 cocos:check 脚本（1 行）",
+      "onConflict": "保留上游 scripts，重新加上 cocos:check 这一行"
     }
   ],
   "retired": [

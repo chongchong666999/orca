@@ -2,8 +2,10 @@ import type { CocosEditorRecord } from '../../../shared/cocos-agent/cocos-editor
 import { destroyWorkspaceWebviews } from '@/store/slices/browser/cleanup/browser-webview-cleanup'
 import {
   beginCocosEditorStart,
+  isCocosEditorHandedBack,
   isCocosEditorSuspended,
   markCocosEditorLive,
+  setCocosEditorHandedBack,
   setCocosEditorSuspended,
   markCocosEditorEvicted,
   wasCocosEditorEvicted
@@ -46,14 +48,15 @@ export function findCocosEditorTabId(state: AppState, worktreeId: string): strin
     : null
 }
 
-/** Keep the workspace tab while releasing only this editor's browser guests. */
-export function suspendCocosEditor(record: CocosEditorRecord): void {
+/** Suspends the tabs that show `record`'s editor, keeping them; the workspaces they belong to. */
+function suspendEditorTabs(record: CocosEditorRecord): string[] {
   const identity = editorIdentity(record.url, false)
   if (!identity) {
-    return
+    return []
   }
   markCocosEditorEvicted(identity)
   const state = useAppStore.getState()
+  const worktrees: string[] = []
   for (const worktreeId of Object.keys(state.browserTabsByWorktree)) {
     for (const tab of findEditorPageTabs(state, worktreeId)) {
       if (tab.identity !== identity) {
@@ -61,9 +64,25 @@ export function suspendCocosEditor(record: CocosEditorRecord): void {
       }
       setCocosEditorSuspended(tab.tabId, true)
       destroyWorkspaceWebviews(state.browserPagesByWorkspace, tab.tabId)
+      worktrees.push(worktreeId)
     }
   }
+  return worktrees
+}
+
+/** Keep the workspace tab while releasing only this editor's browser guests. */
+export function suspendCocosEditor(record: CocosEditorRecord): void {
+  suspendEditorTabs(record)
   resumeVisibleCocosEditor()
+}
+
+/** Stop all Cocos services: their tabs stay, stopped, until the user resumes them; nothing restarts on its own. */
+export function handOffCocosEditors(records: readonly CocosEditorRecord[]): void {
+  for (const record of records) {
+    for (const worktreeId of suspendEditorTabs(record)) {
+      setCocosEditorHandedBack(worktreeId, true)
+    }
+  }
 }
 
 /** The suspended editor in the tab on screen starts again; one in a background workspace waits until it is selected. */
@@ -75,7 +94,8 @@ export function resumeVisibleCocosEditor(): void {
     !worktreeId ||
     state.activeTabType !== 'browser' ||
     !tabId ||
-    !isCocosEditorSuspended(tabId)
+    !isCocosEditorSuspended(tabId) ||
+    isCocosEditorHandedBack(worktreeId)
   ) {
     return
   }
@@ -169,12 +189,6 @@ async function startEditorTab(
   if (!result.ok) {
     return { kind: 'failed', message: result.message }
   }
-  if (result.previewWarning) {
-    toast.warning(
-      cocosText('editor.previewEntryUnavailable', 'Shared preview entry is unavailable'),
-      { description: result.previewWarning }
-    )
-  }
   if (state.activeWorktreeId === worktreeId) {
     void api.activateEditor(projectPath).catch(() => undefined)
   }
@@ -185,6 +199,7 @@ async function startEditorTab(
   if (identity) {
     markCocosEditorLive(identity)
   }
+  setCocosEditorHandedBack(worktreeId, false)
   if (retainedTabs.length > 0) {
     let resumed = false
     for (const tab of retainedTabs) {

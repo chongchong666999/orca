@@ -1,5 +1,13 @@
 import type { i18n as I18nInstance, ThirdPartyModule, TOptions } from 'i18next'
+import de from './i18n/de.json'
 import en from './i18n/en.json'
+import es from './i18n/es.json'
+import fr from './i18n/fr.json'
+import ja from './i18n/ja.json'
+import ko from './i18n/ko.json'
+import pt from './i18n/pt.json'
+import ru from './i18n/ru.json'
+import tr from './i18n/tr.json'
 import zh from './i18n/zh.json'
 import zhHant from './i18n/zh-Hant.json'
 import { desktopProduct } from '../app-lifecycle/desktop-product'
@@ -7,7 +15,20 @@ import { desktopProduct } from '../app-lifecycle/desktop-product'
 /** cocos-agent copy lives in its own namespace so upstream's locale catalogs stay untouched. */
 export const COCOS_AGENT_I18N_NAMESPACE = 'cocosAgent'
 
-const CATALOGS: Record<string, Record<string, unknown>> = { en, zh, 'zh-Hant': zhHant }
+// Why: every UI language Orca ships (src/renderer/src/i18n/locales), so cocos-agent copy never falls back mid-screen.
+const CATALOGS: Record<string, Record<string, unknown>> = {
+  en,
+  zh,
+  'zh-Hant': zhHant,
+  ja,
+  ko,
+  de,
+  es,
+  fr,
+  pt,
+  ru,
+  tr
+}
 
 /** Prefixes a bundle key (`sidebar.terminal.title`) with the namespace i18next resolves it from. */
 export function cocosAgentKey(key: string): string {

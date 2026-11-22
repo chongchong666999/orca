@@ -1,10 +1,15 @@
 {
-  "brand": { "starPrompt": "Star Cocos Agent on GitHub to support the project." },
+  "brand": {
+    "starPrompt": "Star Cocos Agent on GitHub to support the project."
+  },
   "editor": {
     "menu": {
       "goTo": "Go to Cocos Creator",
       "open": "Cocos Creator",
-      "stop": "Stop Cocos Creator"
+      "stop": "Stop Cocos Creator",
+      "stopAll": "Stop all Cocos services…",
+      "running_one": "{{count}} running",
+      "running_other": "{{count}} running"
     },
     "errors": {
       "reopen": "Could not reopen the Cocos Creator editor",
@@ -22,7 +27,6 @@
     "resuming": "Resuming editor…",
     "resume": "Resume Cocos Creator",
     "retryAiConnection": "Retry connection",
-    "previewEntryUnavailable": "Shared preview entry is unavailable",
     "close": {
       "cancel": "Cancel",
       "ok": "OK",
@@ -34,6 +38,32 @@
       "keepWarning": "Keeping the service does not save pending page edits. Return to the editor if you need to preserve those edits.",
       "stillClosing": "The service accepted the close request but has not finished exiting.",
       "unconfirmed": "The close request could not be confirmed. Check for save conflicts or a busy editor."
+    },
+    "handedBack": {
+      "title": "The editor service is stopped",
+      "description": "The project is back with Cocos Creator. Resume whenever you need it."
+    },
+    "stopAll": {
+      "openedByApp": "Opened by cocos-agent",
+      "openedElsewhere": "Opened by an agent or the CLI",
+      "previewPort": "Preview :{{port}}",
+      "doneDescription": "Asset sync and preview ports are released. Cocos Creator needs no restart.",
+      "reopen": "Reopen {{name}}",
+      "failed": "Could not stop the Cocos services",
+      "title": "Stop all Cocos services?",
+      "description": "cocos-agent stops syncing these projects’ assets and .meta files and releases their preview ports. Cocos Creator can take over right away, no restart needed.",
+      "loading": "Looking for running services…",
+      "none": "No Cocos services are running.",
+      "note": "Services opened by agent sessions stop too; those sessions reopen the project before using editor tools again. The sessions and their MCP servers keep running.",
+      "discard": "Stop without saving",
+      "save": "Save and stop",
+      "confirm": "Stop all",
+      "unsaved_one": "{{count}} unsaved document",
+      "unsaved_other": "{{count}} unsaved documents",
+      "done_one": "Stopped {{count}} Cocos service",
+      "done_other": "Stopped {{count}} Cocos services",
+      "partial_one": "{{count}} Cocos service did not stop",
+      "partial_other": "{{count}} Cocos services did not stop"
     }
   },
   "sidebar": {
@@ -50,6 +80,71 @@
       "connecting": "Connecting to terminal…",
       "empty": "Open a terminal or choose an AI agent with +.",
       "moveExisting": "Move existing terminal here"
+    }
+  },
+  "toolchain": {
+    "failure": {
+      "permission": "npm may not write to its global folder (EACCES). Run the command below in a terminal; it asks for your password.",
+      "busy": "Files of the old version are still in use. Close the Claude and Codex sessions that use it, stop all Cocos services, then retry.",
+      "noSpace": "The disk is full (ENOSPC). Free some space, then retry.",
+      "timedOut": "npm did not finish within 10 minutes.",
+      "unknown": "npm stopped with an error. See the install log."
+    },
+    "state": {
+      "checking": "Checking…",
+      "installing": "Installing {{version}} with npm…",
+      "readySame": "{{version}} · npm global · the version cocos-agent ships",
+      "readyNewer": "{{version}} · npm global · newer than the {{bundled}} cocos-agent ships",
+      "missing": "Not installed · cocos-agent uses the {{version}} it ships",
+      "outdated": "{{version}} installed · {{bundled}} is available",
+      "incomplete": "{{version}} · cocos-cli or the Cocos SDK is missing",
+      "incompatible": "{{version}} does not fit this cocos-agent · it uses the {{bundled}} it ships",
+      "failed": "Installing {{bundled}} failed · cocos-agent uses the {{bundled}} it ships",
+      "noNpm": "npm not found · cocos-agent uses the {{version}} it ships",
+      "unavailable": "Not available in this build"
+    },
+    "notice": {
+      "details": "Details",
+      "installing": "Installing a5-game-context {{version}}",
+      "installingDescription": "cocos-agent installs the version it ships with npm, for every terminal and agent.",
+      "noNpm": "npm was not found",
+      "incompatible": "a5-game-context {{version}} does not fit this cocos-agent",
+      "noNpmDescription": "cocos-agent uses the a5-game-context {{version}} it ships. Install Node.js to share one copy with your terminals.",
+      "incompatibleDescription": "cocos-agent uses the {{version}} it ships until you update cocos-agent.",
+      "ready": "a5-game-context {{version}} is ready",
+      "readyDescription": "Terminals, Claude, Codex and cocos-agent now use the same version.",
+      "failed": "Could not install a5-game-context"
+    },
+    "title": "Cocos command-line tools",
+    "searchDescription": "The a5-game-context and cocos-cli every terminal and agent uses, installed with npm.",
+    "copied": "Copied",
+    "copyFailed": "Could not copy to the clipboard",
+    "action": {
+      "install": "Install {{version}}",
+      "update": "Update to {{version}}",
+      "repair": "Repair",
+      "retry": "Retry",
+      "reinstall": "Reinstall the bundled {{version}}",
+      "openLog": "Open the install log",
+      "copyCommand": "Copy command",
+      "copyCleanup": "Copy cleanup commands"
+    },
+    "commands": "a5-game-context and cocos-cli",
+    "refresh": "Check again",
+    "more": "More actions",
+    "manualHint": "After running the command yourself, use Check again.",
+    "commandPath": "Command path:",
+    "sdkReady": "Cocos 2.4.13 SDK registered",
+    "sdkMissing": "Cocos 2.4.13 SDK not registered",
+    "shadowed": "Terminals find another copy first. Remove it to use the npm global one:",
+    "autoInstall": "Install after cocos-agent updates",
+    "autoInstallDescription": "Checks on the first launch of each new version and only ever upgrades. When off, cocos-agent only tells you.",
+    "otherCopies": "Other copies on this machine",
+    "otherCopiesDescription": "Not on PATH, so nothing uses them; they only make versions confusing.",
+    "reinstall": {
+      "title": "Reinstall a5-game-context {{version}}?",
+      "description": "This replaces the global {{current}} with the version cocos-agent ships, even if it is older. Use it when the installed copy is broken.",
+      "confirm": "Reinstall"
     }
   }
 }

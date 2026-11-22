@@ -1,21 +1,47 @@
 {
-  "brand": { "starPrompt": "在 GitHub 上给 Cocos Agent 加星，支持这个项目。" },
   "editor": {
     "menu": {
+      "running": "{{count}} 个运行中",
       "goTo": "转到 Cocos Creator",
       "open": "Cocos Creator",
-      "stop": "停止 Cocos Creator"
+      "stop": "停止 Cocos Creator",
+      "stopAll": "停止所有 Cocos 服务…"
+    },
+    "stopAll": {
+      "done": "已停止 {{count}} 个 Cocos 服务",
+      "partial": "{{count}} 个 Cocos 服务没有停止",
+      "unsaved": "{{count}} 个文档未保存",
+      "openedByApp": "cocos-agent 打开",
+      "openedElsewhere": "Agent 或命令行打开",
+      "previewPort": "预览 :{{port}}",
+      "doneDescription": "资源同步和预览端口都已释放，Cocos Creator 无需重启。",
+      "reopen": "重新打开 {{name}}",
+      "failed": "无法停止 Cocos 服务",
+      "title": "停止所有 Cocos 服务？",
+      "description": "停止后 cocos-agent 不再同步这些项目的资源和 .meta，也不再占用预览端口。Cocos Creator 无需重启，可以直接使用。",
+      "loading": "正在查找运行中的服务…",
+      "none": "没有正在运行的 Cocos 服务。",
+      "note": "由 Agent 会话打开的服务也会停止；这些会话再用编辑器工具前会重新打开项目。会话本身和它们的 MCP 不受影响。",
+      "discard": "不保存并停止",
+      "save": "保存并停止",
+      "confirm": "停止全部"
     },
     "errors": {
       "reopen": "无法重新打开 Cocos Creator 编辑器",
+      "unavailable": "当前窗口无法使用 cocos-agent。",
       "open": "无法打开 Cocos Creator 编辑器",
-      "unsupportedVersion": "cocos-agent 的编辑器只支持 Cocos Creator 2.4 项目，此项目使用 {{version}}。"
+      "unsupportedVersion": "cocos-agent 的编辑器只支持 Cocos Creator 2.4 项目，此项目使用 {{version}}。",
+      "aiResume": "无法重新连接 AI 终端"
+    },
+    "tab": {
+      "title": "Cocos Creator"
     },
     "starting": "正在加载 Cocos Creator",
     "notRunning": "Cocos Creator 编辑器没有在运行。",
     "suspended": "此编辑器已暂停以释放内存。",
     "resuming": "正在恢复编辑器…",
     "resume": "恢复 Cocos Creator",
+    "retryAiConnection": "重试连接",
     "close": {
       "cancel": "取消",
       "ok": "确定",
@@ -27,22 +53,94 @@
       "keepWarning": "保留服务不会保存尚未提交的页面输入。需要保留这些输入时，请取消退出并返回编辑器处理。",
       "stillClosing": "服务已接受关闭请求，但尚未完成退出。",
       "unconfirmed": "无法确认关闭请求是否完成，请检查保存冲突或编辑器是否仍忙。"
+    },
+    "handedBack": {
+      "title": "编辑器服务已停止",
+      "description": "项目已交还给 Cocos Creator，需要时可以随时恢复。"
     }
+  },
+  "brand": {
+    "starPrompt": "在 GitHub 上给 Cocos Agent 加星，支持这个项目。"
   },
   "sidebar": {
     "creator": {
       "unavailable": "选择一个 Cocos Creator 2.4 项目工作区后即可打开编辑器。"
     },
     "terminal": {
-      "moveExisting": "移入已有终端",
+      "createFailed": "无法打开终端，请检查工作区连接和智能体设置。",
+      "newSession": "新建会话",
       "title": "终端",
       "history": "会话历史",
       "sessions": "终端会话",
       "closeSession": "关闭 {{name}}",
       "connecting": "正在连接终端…",
       "empty": "点击 + 打开终端或选择 AI 智能体。",
-      "newSession": "新建会话",
-      "createFailed": "无法打开终端，请检查工作区连接和智能体设置。"
+      "moveExisting": "移入已有终端"
+    }
+  },
+  "toolchain": {
+    "failure": {
+      "permission": "npm 没有写入全局目录的权限（EACCES）。请在终端运行下面的命令，它会要求输入密码。",
+      "busy": "旧版本的文件仍在使用中。请关闭正在使用它的 Claude 和 Codex 会话，停止所有 Cocos 服务后重试。",
+      "noSpace": "磁盘空间不足（ENOSPC）。请释放空间后重试。",
+      "timedOut": "npm 在 10 分钟内没有完成。",
+      "unknown": "npm 出错退出，请查看安装日志。"
+    },
+    "state": {
+      "checking": "正在检查…",
+      "installing": "正在用 npm 安装 {{version}}…",
+      "readySame": "{{version}} · npm 全局安装 · 与 cocos-agent 自带的版本一致",
+      "readyNewer": "{{version}} · npm 全局安装 · 比 cocos-agent 自带的 {{bundled}} 更新",
+      "missing": "未安装 · cocos-agent 暂用自带的 {{version}}",
+      "outdated": "已安装 {{version}} · 可更新到 {{bundled}}",
+      "incomplete": "{{version}} · 缺少 cocos-cli 或 Cocos SDK",
+      "incompatible": "{{version}} 与此版本 cocos-agent 不兼容 · 暂用自带的 {{bundled}}",
+      "failed": "安装 {{bundled}} 失败 · cocos-agent 暂用自带的 {{bundled}}",
+      "noNpm": "未找到 npm · cocos-agent 使用自带的 {{version}}",
+      "unavailable": "此构建不可用"
+    },
+    "notice": {
+      "details": "查看详情",
+      "installing": "正在安装 a5-game-context {{version}}",
+      "installingDescription": "cocos-agent 正在用 npm 安装自带的版本，供所有终端和 Agent 使用。",
+      "noNpm": "未找到 npm",
+      "incompatible": "a5-game-context {{version}} 与此版本 cocos-agent 不兼容",
+      "noNpmDescription": "cocos-agent 使用自带的 a5-game-context {{version}}。安装 Node.js 后即可和终端共用同一份。",
+      "incompatibleDescription": "升级 cocos-agent 之前，它会使用自带的 {{version}}。",
+      "ready": "a5-game-context {{version}} 已就绪",
+      "readyDescription": "终端、Claude、Codex 和 cocos-agent 现在使用同一个版本。",
+      "failed": "a5-game-context 安装失败"
+    },
+    "title": "Cocos 命令行工具",
+    "searchDescription": "所有终端和 Agent 使用的 a5-game-context 与 cocos-cli，通过 npm 安装。",
+    "copied": "已复制",
+    "copyFailed": "无法复制到剪贴板",
+    "action": {
+      "install": "安装 {{version}}",
+      "update": "更新到 {{version}}",
+      "repair": "修复",
+      "retry": "重试",
+      "reinstall": "重新安装自带的 {{version}}",
+      "openLog": "打开安装日志",
+      "copyCommand": "复制命令",
+      "copyCleanup": "复制清理命令"
+    },
+    "commands": "a5-game-context 和 cocos-cli",
+    "refresh": "重新检查",
+    "more": "更多操作",
+    "manualHint": "自己运行命令后，点“重新检查”。",
+    "commandPath": "命令路径：",
+    "sdkReady": "Cocos 2.4.13 SDK 已注册",
+    "sdkMissing": "Cocos 2.4.13 SDK 未注册",
+    "shadowed": "终端会先找到另一份副本。删除它才会用到 npm 全局安装的版本：",
+    "autoInstall": "更新 cocos-agent 后自动安装",
+    "autoInstallDescription": "每个新版本第一次启动时检查，只升级不降级。关闭后只提示。",
+    "otherCopies": "机器上的其他副本",
+    "otherCopiesDescription": "不在 PATH 上，不会被用到；留着容易搞混版本。",
+    "reinstall": {
+      "title": "重新安装 a5-game-context {{version}}？",
+      "description": "这会用 cocos-agent 自带的版本替换全局的 {{current}}，即使自带的更旧。适用于已安装的副本损坏时。",
+      "confirm": "重新安装"
     }
   }
 }

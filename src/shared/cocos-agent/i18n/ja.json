@@ -1,0 +1,146 @@
+{
+  "editor": {
+    "menu": {
+      "running": "{{count}} 件実行中",
+      "goTo": "Cocos Creator に移動",
+      "open": "Cocos Creator",
+      "stop": "Cocos Creator を停止",
+      "stopAll": "すべての Cocos サービスを停止…"
+    },
+    "stopAll": {
+      "done": "{{count}} 件の Cocos サービスを停止しました",
+      "partial": "{{count}} 件の Cocos サービスが停止しませんでした",
+      "unsaved": "未保存のドキュメント {{count}} 件",
+      "openedByApp": "cocos-agent が起動",
+      "openedElsewhere": "エージェントまたは CLI が起動",
+      "previewPort": "プレビュー :{{port}}",
+      "doneDescription": "アセットの同期とプレビューポートを解放しました。Cocos Creator の再起動は不要です。",
+      "reopen": "{{name}} を再度開く",
+      "failed": "Cocos サービスを停止できませんでした",
+      "title": "すべての Cocos サービスを停止しますか？",
+      "description": "cocos-agent はこれらのプロジェクトのアセットと .meta の同期をやめ、プレビューポートを解放します。Cocos Creator は再起動せずにそのまま使えます。",
+      "loading": "実行中のサービスを探しています…",
+      "none": "実行中の Cocos サービスはありません。",
+      "note": "エージェントのセッションが起動したサービスも停止します。そのセッションは次にエディターツールを使う前にプロジェクトを開き直します。セッションと MCP サーバーはそのまま動作します。",
+      "discard": "保存せずに停止",
+      "save": "保存して停止",
+      "confirm": "すべて停止"
+    },
+    "errors": {
+      "reopen": "Cocos Creator エディターを再度開けませんでした",
+      "unavailable": "このウィンドウでは cocos-agent を使用できません。",
+      "open": "Cocos Creator エディターを開けませんでした",
+      "unsupportedVersion": "cocos-agent のエディターは Cocos Creator 2.4 のプロジェクトにのみ対応しています。このプロジェクトは {{version}} を使用しています。",
+      "aiResume": "AI ターミナルに再接続できませんでした"
+    },
+    "tab": {
+      "title": "Cocos Creator"
+    },
+    "starting": "Cocos Creator を読み込んでいます",
+    "notRunning": "Cocos Creator エディターは実行されていません。",
+    "suspended": "メモリを解放するため、このエディターを一時停止しました。",
+    "resuming": "エディターを再開しています…",
+    "resume": "Cocos Creator を再開",
+    "retryAiConnection": "接続を再試行",
+    "close": {
+      "cancel": "キャンセル",
+      "ok": "OK",
+      "message": "閉じる前にエディターの変更を保存しますか？",
+      "save": "保存",
+      "discard": "保存しない",
+      "failed": "エディターが閉じたことを確認できませんでした。状態を確認してから再試行してください。",
+      "keepService": "アプリを終了してエディターサービスを残す",
+      "keepWarning": "サービスを残しても、未確定のページ入力は保存されません。残す必要がある場合はエディターに戻って処理してください。",
+      "stillClosing": "サービスは終了要求を受け付けましたが、まだ終了していません。",
+      "unconfirmed": "終了要求が完了したか確認できませんでした。保存の競合や、エディターが処理中でないか確認してください。"
+    },
+    "handedBack": {
+      "title": "エディターサービスは停止しています",
+      "description": "プロジェクトは Cocos Creator に戻されました。必要なときにいつでも再開できます。"
+    }
+  },
+  "brand": {
+    "starPrompt": "GitHub で Cocos Agent にスターを付けて、プロジェクトを応援してください。"
+  },
+  "sidebar": {
+    "creator": {
+      "unavailable": "エディターを開くには、Cocos Creator 2.4 プロジェクトのワークスペースを選択してください。"
+    },
+    "terminal": {
+      "createFailed": "ターミナルを開けませんでした。ワークスペースの接続とエージェントの設定を確認してください。",
+      "newSession": "新しいセッション",
+      "title": "ターミナル",
+      "history": "セッション履歴",
+      "sessions": "ターミナルセッション",
+      "closeSession": "{{name}} を閉じる",
+      "connecting": "ターミナルに接続しています…",
+      "empty": "+ からターミナルを開くか、AI エージェントを選択してください。",
+      "moveExisting": "既存のターミナルをここに移動"
+    }
+  },
+  "toolchain": {
+    "failure": {
+      "permission": "npm にグローバルフォルダーへの書き込み権限がありません（EACCES）。下のコマンドをターミナルで実行してください。パスワードを求められます。",
+      "busy": "旧バージョンのファイルがまだ使用中です。それを使っている Claude と Codex のセッションを閉じ、すべての Cocos サービスを停止してから再試行してください。",
+      "noSpace": "ディスクの空き容量が不足しています（ENOSPC）。空き容量を確保してから再試行してください。",
+      "timedOut": "npm が 10 分以内に完了しませんでした。",
+      "unknown": "npm がエラーで停止しました。インストールログを確認してください。"
+    },
+    "state": {
+      "checking": "確認しています…",
+      "installing": "npm で {{version}} をインストールしています…",
+      "readySame": "{{version}} · npm グローバル · cocos-agent 同梱のバージョンと同じ",
+      "readyNewer": "{{version}} · npm グローバル · cocos-agent 同梱の {{bundled}} より新しい",
+      "missing": "未インストール · cocos-agent は同梱の {{version}} を使用中",
+      "outdated": "{{version}} をインストール済み · {{bundled}} に更新できます",
+      "incomplete": "{{version}} · cocos-cli または Cocos SDK がありません",
+      "incompatible": "{{version}} はこの cocos-agent と互換性がありません · 同梱の {{bundled}} を使用中",
+      "failed": "{{bundled}} のインストールに失敗 · cocos-agent は同梱の {{bundled}} を使用中",
+      "noNpm": "npm が見つかりません · cocos-agent は同梱の {{version}} を使用",
+      "unavailable": "このビルドでは利用できません"
+    },
+    "notice": {
+      "details": "詳細",
+      "installing": "a5-game-context {{version}} をインストールしています",
+      "installingDescription": "cocos-agent が同梱のバージョンを npm でインストールし、すべてのターミナルとエージェントで使えるようにします。",
+      "noNpm": "npm が見つかりません",
+      "incompatible": "a5-game-context {{version}} はこの cocos-agent と互換性がありません",
+      "noNpmDescription": "cocos-agent は同梱の a5-game-context {{version}} を使います。Node.js をインストールすると、ターミナルと同じものを共有できます。",
+      "incompatibleDescription": "cocos-agent を更新するまで、同梱の {{version}} を使います。",
+      "ready": "a5-game-context {{version}} の準備ができました",
+      "readyDescription": "ターミナル、Claude、Codex、cocos-agent が同じバージョンを使うようになりました。",
+      "failed": "a5-game-context をインストールできませんでした"
+    },
+    "title": "Cocos コマンドラインツール",
+    "searchDescription": "すべてのターミナルとエージェントが使う a5-game-context と cocos-cli。npm でインストールします。",
+    "copied": "コピーしました",
+    "copyFailed": "クリップボードにコピーできませんでした",
+    "action": {
+      "install": "{{version}} をインストール",
+      "update": "{{version}} に更新",
+      "repair": "修復",
+      "retry": "再試行",
+      "reinstall": "同梱の {{version}} を再インストール",
+      "openLog": "インストールログを開く",
+      "copyCommand": "コマンドをコピー",
+      "copyCleanup": "削除コマンドをコピー"
+    },
+    "commands": "a5-game-context と cocos-cli",
+    "refresh": "再確認",
+    "more": "その他の操作",
+    "manualHint": "コマンドを自分で実行したら、「再確認」を押してください。",
+    "commandPath": "コマンドのパス：",
+    "sdkReady": "Cocos 2.4.13 SDK 登録済み",
+    "sdkMissing": "Cocos 2.4.13 SDK 未登録",
+    "shadowed": "ターミナルは別のコピーを先に見つけます。npm グローバルのものを使うには、これを削除してください：",
+    "autoInstall": "cocos-agent の更新後に自動インストール",
+    "autoInstallDescription": "新しいバージョンの初回起動時に確認し、アップグレードのみ行います。オフにすると通知だけになります。",
+    "otherCopies": "このマシン上のその他のコピー",
+    "otherCopiesDescription": "PATH 上にないため使われませんが、バージョンの混乱のもとになります。",
+    "reinstall": {
+      "title": "a5-game-context {{version}} を再インストールしますか？",
+      "description": "グローバルの {{current}} を、cocos-agent 同梱のバージョンで置き換えます（古い場合でも）。インストール済みのコピーが壊れているときに使ってください。",
+      "confirm": "再インストール"
+    }
+  }
+}

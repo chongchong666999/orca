@@ -1,0 +1,150 @@
+{
+  "brand": {
+    "starPrompt": "Gib Cocos Agent auf GitHub einen Stern, um das Projekt zu unterstützen."
+  },
+  "editor": {
+    "menu": {
+      "goTo": "Zu Cocos Creator wechseln",
+      "open": "Cocos Creator",
+      "stop": "Cocos Creator beenden",
+      "stopAll": "Alle Cocos-Dienste beenden…",
+      "running_one": "{{count}} aktiv",
+      "running_other": "{{count}} aktiv"
+    },
+    "errors": {
+      "reopen": "Der Cocos-Creator-Editor konnte nicht erneut geöffnet werden",
+      "unavailable": "cocos-agent ist in diesem Fenster nicht verfügbar.",
+      "open": "Der Cocos-Creator-Editor konnte nicht geöffnet werden",
+      "unsupportedVersion": "Der Editor von cocos-agent unterstützt nur Projekte für Cocos Creator 2.4; dieses Projekt verwendet {{version}}.",
+      "aiResume": "Das KI-Terminal konnte nicht wieder verbunden werden"
+    },
+    "tab": {
+      "title": "Cocos Creator"
+    },
+    "starting": "Cocos Creator wird geladen",
+    "notRunning": "Der Cocos-Creator-Editor läuft nicht.",
+    "suspended": "Dieser Editor wurde pausiert, um Arbeitsspeicher freizugeben.",
+    "resuming": "Editor wird fortgesetzt…",
+    "resume": "Cocos Creator fortsetzen",
+    "retryAiConnection": "Verbindung erneut versuchen",
+    "close": {
+      "cancel": "Abbrechen",
+      "ok": "OK",
+      "message": "Änderungen im Editor vor dem Schließen speichern?",
+      "save": "Speichern",
+      "discard": "Nicht speichern",
+      "failed": "Es ließ sich nicht bestätigen, dass der Editor geschlossen wurde. Prüfe seinen Status und versuche es dann erneut.",
+      "keepService": "App beenden und Editor-Dienst behalten",
+      "keepWarning": "Wenn der Dienst weiterläuft, werden ausstehende Eingaben auf der Seite nicht gespeichert. Kehre zum Editor zurück, wenn du sie behalten musst.",
+      "stillClosing": "Der Dienst hat die Anfrage zum Schließen angenommen, ist aber noch nicht beendet.",
+      "unconfirmed": "Die Anfrage zum Schließen ließ sich nicht bestätigen. Prüfe, ob es Speicherkonflikte gibt oder der Editor beschäftigt ist."
+    },
+    "handedBack": {
+      "title": "Der Editor-Dienst ist beendet",
+      "description": "Das Projekt ist zurück bei Cocos Creator. Du kannst jederzeit fortsetzen."
+    },
+    "stopAll": {
+      "openedByApp": "Von cocos-agent geöffnet",
+      "openedElsewhere": "Von einem Agenten oder der CLI geöffnet",
+      "previewPort": "Vorschau :{{port}}",
+      "doneDescription": "Asset-Synchronisierung und Vorschau-Ports sind freigegeben. Cocos Creator muss nicht neu gestartet werden.",
+      "reopen": "{{name}} erneut öffnen",
+      "failed": "Die Cocos-Dienste konnten nicht beendet werden",
+      "title": "Alle Cocos-Dienste beenden?",
+      "description": "cocos-agent synchronisiert die Assets und .meta-Dateien dieser Projekte nicht mehr und gibt ihre Vorschau-Ports frei. Cocos Creator kann sofort übernehmen, ohne Neustart.",
+      "loading": "Laufende Dienste werden gesucht…",
+      "none": "Es laufen keine Cocos-Dienste.",
+      "note": "Auch von Agentensitzungen geöffnete Dienste werden beendet; diese Sitzungen öffnen das Projekt erneut, bevor sie wieder Editor-Werkzeuge nutzen. Die Sitzungen und ihre MCP-Server laufen weiter.",
+      "discard": "Ohne Speichern beenden",
+      "save": "Speichern und beenden",
+      "confirm": "Alle beenden",
+      "unsaved_one": "{{count}} ungespeichertes Dokument",
+      "unsaved_other": "{{count}} ungespeicherte Dokumente",
+      "done_one": "{{count}} Cocos-Dienst beendet",
+      "done_other": "{{count}} Cocos-Dienste beendet",
+      "partial_one": "{{count}} Cocos-Dienst wurde nicht beendet",
+      "partial_other": "{{count}} Cocos-Dienste wurden nicht beendet"
+    }
+  },
+  "sidebar": {
+    "creator": {
+      "unavailable": "Wähle einen Arbeitsbereich mit einem Cocos-Creator-2.4-Projekt, um seinen Editor zu öffnen."
+    },
+    "terminal": {
+      "createFailed": "Das Terminal konnte nicht geöffnet werden. Prüfe die Verbindung zum Arbeitsbereich und die Agenteneinstellungen.",
+      "newSession": "Neue Sitzung",
+      "title": "Terminal",
+      "history": "Sitzungsverlauf",
+      "sessions": "Terminal-Sitzungen",
+      "closeSession": "{{name}} schließen",
+      "connecting": "Verbindung zum Terminal wird hergestellt…",
+      "empty": "Öffne mit + ein Terminal oder wähle einen KI-Agenten.",
+      "moveExisting": "Vorhandenes Terminal hierher verschieben"
+    }
+  },
+  "toolchain": {
+    "failure": {
+      "permission": "npm darf nicht in seinen globalen Ordner schreiben (EACCES). Führe den Befehl unten in einem Terminal aus; er fragt nach deinem Passwort.",
+      "busy": "Dateien der alten Version werden noch verwendet. Schließe die Claude- und Codex-Sitzungen, die sie nutzen, beende alle Cocos-Dienste und versuche es dann erneut.",
+      "noSpace": "Der Datenträger ist voll (ENOSPC). Gib Speicherplatz frei und versuche es dann erneut.",
+      "timedOut": "npm wurde nicht innerhalb von 10 Minuten fertig.",
+      "unknown": "npm hat mit einem Fehler abgebrochen. Sieh im Installationsprotokoll nach."
+    },
+    "state": {
+      "checking": "Wird geprüft…",
+      "installing": "{{version}} wird mit npm installiert…",
+      "readySame": "{{version}} · npm global · die Version, die cocos-agent mitbringt",
+      "readyNewer": "{{version}} · npm global · neuer als die mitgelieferte {{bundled}}",
+      "missing": "Nicht installiert · cocos-agent nutzt die mitgelieferte {{version}}",
+      "outdated": "{{version}} installiert · {{bundled}} ist verfügbar",
+      "incomplete": "{{version}} · cocos-cli oder das Cocos SDK fehlt",
+      "incompatible": "{{version}} passt nicht zu diesem cocos-agent · er nutzt die mitgelieferte {{bundled}}",
+      "failed": "Installation von {{bundled}} fehlgeschlagen · cocos-agent nutzt die mitgelieferte {{bundled}}",
+      "noNpm": "npm nicht gefunden · cocos-agent nutzt die mitgelieferte {{version}}",
+      "unavailable": "In diesem Build nicht verfügbar"
+    },
+    "notice": {
+      "details": "Details",
+      "installing": "a5-game-context {{version}} wird installiert",
+      "installingDescription": "cocos-agent installiert die mitgelieferte Version mit npm, für jedes Terminal und jeden Agenten.",
+      "noNpm": "npm wurde nicht gefunden",
+      "incompatible": "a5-game-context {{version}} passt nicht zu diesem cocos-agent",
+      "noNpmDescription": "cocos-agent nutzt das mitgelieferte a5-game-context {{version}}. Installiere Node.js, um eine Kopie mit deinen Terminals zu teilen.",
+      "incompatibleDescription": "cocos-agent nutzt die mitgelieferte {{version}}, bis du cocos-agent aktualisierst.",
+      "ready": "a5-game-context {{version}} ist bereit",
+      "readyDescription": "Terminals, Claude, Codex und cocos-agent nutzen jetzt dieselbe Version.",
+      "failed": "a5-game-context konnte nicht installiert werden"
+    },
+    "title": "Cocos-Befehlszeilenwerkzeuge",
+    "searchDescription": "Das a5-game-context und cocos-cli, das jedes Terminal und jeder Agent nutzt, mit npm installiert.",
+    "copied": "Kopiert",
+    "copyFailed": "Konnte nicht in die Zwischenablage kopiert werden",
+    "action": {
+      "install": "{{version}} installieren",
+      "update": "Auf {{version}} aktualisieren",
+      "repair": "Reparieren",
+      "retry": "Erneut versuchen",
+      "reinstall": "Mitgelieferte {{version}} neu installieren",
+      "openLog": "Installationsprotokoll öffnen",
+      "copyCommand": "Befehl kopieren",
+      "copyCleanup": "Aufräumbefehle kopieren"
+    },
+    "commands": "a5-game-context und cocos-cli",
+    "refresh": "Erneut prüfen",
+    "more": "Weitere Aktionen",
+    "manualHint": "Nachdem du den Befehl selbst ausgeführt hast, wähle „Erneut prüfen“.",
+    "commandPath": "Befehlspfad:",
+    "sdkReady": "Cocos 2.4.13 SDK registriert",
+    "sdkMissing": "Cocos 2.4.13 SDK nicht registriert",
+    "shadowed": "Terminals finden zuerst eine andere Kopie. Entferne sie, um die globale npm-Kopie zu nutzen:",
+    "autoInstall": "Nach cocos-agent-Updates installieren",
+    "autoInstallDescription": "Prüft beim ersten Start jeder neuen Version und aktualisiert nur nach oben. Wenn aus, gibt cocos-agent nur Bescheid.",
+    "otherCopies": "Weitere Kopien auf diesem Computer",
+    "otherCopiesDescription": "Nicht im PATH, also nutzt sie nichts; sie sorgen nur für Verwirrung bei den Versionen.",
+    "reinstall": {
+      "title": "a5-game-context {{version}} neu installieren?",
+      "description": "Damit wird die globale {{current}} durch die Version ersetzt, die cocos-agent mitbringt, auch wenn sie älter ist. Nutze das, wenn die installierte Kopie defekt ist.",
+      "confirm": "Neu installieren"
+    }
+  }
+}

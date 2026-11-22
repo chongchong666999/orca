@@ -1,0 +1,146 @@
+{
+  "editor": {
+    "menu": {
+      "running": "{{count}}개 실행 중",
+      "goTo": "Cocos Creator로 이동",
+      "open": "Cocos Creator",
+      "stop": "Cocos Creator 중지",
+      "stopAll": "모든 Cocos 서비스 중지…"
+    },
+    "stopAll": {
+      "done": "Cocos 서비스 {{count}}개를 중지했습니다",
+      "partial": "Cocos 서비스 {{count}}개가 중지되지 않았습니다",
+      "unsaved": "저장하지 않은 문서 {{count}}개",
+      "openedByApp": "cocos-agent가 실행",
+      "openedElsewhere": "에이전트 또는 CLI가 실행",
+      "previewPort": "미리보기 :{{port}}",
+      "doneDescription": "에셋 동기화와 미리보기 포트를 해제했습니다. Cocos Creator를 다시 시작할 필요가 없습니다.",
+      "reopen": "{{name}} 다시 열기",
+      "failed": "Cocos 서비스를 중지할 수 없습니다",
+      "title": "모든 Cocos 서비스를 중지할까요?",
+      "description": "cocos-agent가 이 프로젝트들의 에셋과 .meta 동기화를 멈추고 미리보기 포트를 해제합니다. Cocos Creator는 다시 시작하지 않고 바로 사용할 수 있습니다.",
+      "loading": "실행 중인 서비스를 찾는 중…",
+      "none": "실행 중인 Cocos 서비스가 없습니다.",
+      "note": "에이전트 세션이 실행한 서비스도 중지됩니다. 해당 세션은 다음에 편집기 도구를 쓰기 전에 프로젝트를 다시 엽니다. 세션과 MCP 서버는 계속 실행됩니다.",
+      "discard": "저장하지 않고 중지",
+      "save": "저장하고 중지",
+      "confirm": "모두 중지"
+    },
+    "errors": {
+      "reopen": "Cocos Creator 편집기를 다시 열 수 없습니다",
+      "unavailable": "이 창에서는 cocos-agent를 사용할 수 없습니다.",
+      "open": "Cocos Creator 편집기를 열 수 없습니다",
+      "unsupportedVersion": "cocos-agent 편집기는 Cocos Creator 2.4 프로젝트만 지원합니다. 이 프로젝트는 {{version}}을(를) 사용합니다.",
+      "aiResume": "AI 터미널에 다시 연결할 수 없습니다"
+    },
+    "tab": {
+      "title": "Cocos Creator"
+    },
+    "starting": "Cocos Creator 불러오는 중",
+    "notRunning": "Cocos Creator 편집기가 실행 중이 아닙니다.",
+    "suspended": "메모리를 확보하기 위해 이 편집기를 일시 중지했습니다.",
+    "resuming": "편집기를 재개하는 중…",
+    "resume": "Cocos Creator 재개",
+    "retryAiConnection": "연결 다시 시도",
+    "close": {
+      "cancel": "취소",
+      "ok": "확인",
+      "message": "닫기 전에 편집기 변경 사항을 저장할까요?",
+      "save": "저장",
+      "discard": "저장하지 않음",
+      "failed": "편집기가 닫혔는지 확인할 수 없습니다. 상태를 확인한 뒤 다시 시도하세요.",
+      "keepService": "앱을 종료하고 편집기 서비스 유지",
+      "keepWarning": "서비스를 유지해도 아직 반영되지 않은 페이지 입력은 저장되지 않습니다. 해당 입력을 보존해야 하면 편집기로 돌아가 처리하세요.",
+      "stillClosing": "서비스가 종료 요청을 받았지만 아직 종료되지 않았습니다.",
+      "unconfirmed": "종료 요청이 완료되었는지 확인할 수 없습니다. 저장 충돌이나 편집기가 작업 중인지 확인하세요."
+    },
+    "handedBack": {
+      "title": "편집기 서비스가 중지되었습니다",
+      "description": "프로젝트가 Cocos Creator로 돌아갔습니다. 필요할 때 언제든 재개할 수 있습니다."
+    }
+  },
+  "brand": {
+    "starPrompt": "GitHub에서 Cocos Agent에 별표를 눌러 프로젝트를 응원해 주세요."
+  },
+  "sidebar": {
+    "creator": {
+      "unavailable": "편집기를 열려면 Cocos Creator 2.4 프로젝트 작업 공간을 선택하세요."
+    },
+    "terminal": {
+      "createFailed": "터미널을 열 수 없습니다. 작업 공간 연결과 에이전트 설정을 확인하세요.",
+      "newSession": "새 세션",
+      "title": "터미널",
+      "history": "세션 기록",
+      "sessions": "터미널 세션",
+      "closeSession": "{{name}} 닫기",
+      "connecting": "터미널에 연결하는 중…",
+      "empty": "+로 터미널을 열거나 AI 에이전트를 선택하세요.",
+      "moveExisting": "기존 터미널을 여기로 이동"
+    }
+  },
+  "toolchain": {
+    "failure": {
+      "permission": "npm에 전역 폴더 쓰기 권한이 없습니다(EACCES). 아래 명령을 터미널에서 실행하세요. 비밀번호를 묻습니다.",
+      "busy": "이전 버전의 파일이 아직 사용 중입니다. 이를 사용하는 Claude와 Codex 세션을 닫고 모든 Cocos 서비스를 중지한 뒤 다시 시도하세요.",
+      "noSpace": "디스크 공간이 부족합니다(ENOSPC). 공간을 확보한 뒤 다시 시도하세요.",
+      "timedOut": "npm이 10분 안에 끝나지 않았습니다.",
+      "unknown": "npm이 오류로 중단되었습니다. 설치 로그를 확인하세요."
+    },
+    "state": {
+      "checking": "확인하는 중…",
+      "installing": "npm으로 {{version}} 설치 중…",
+      "readySame": "{{version}} · npm 전역 · cocos-agent에 포함된 버전과 같음",
+      "readyNewer": "{{version}} · npm 전역 · cocos-agent에 포함된 {{bundled}}보다 최신",
+      "missing": "설치되지 않음 · cocos-agent가 포함된 {{version}} 사용 중",
+      "outdated": "{{version}} 설치됨 · {{bundled}}(으)로 업데이트 가능",
+      "incomplete": "{{version}} · cocos-cli 또는 Cocos SDK가 없음",
+      "incompatible": "{{version}}은(는) 이 cocos-agent와 호환되지 않음 · 포함된 {{bundled}} 사용 중",
+      "failed": "{{bundled}} 설치 실패 · cocos-agent가 포함된 {{bundled}} 사용 중",
+      "noNpm": "npm을 찾을 수 없음 · cocos-agent가 포함된 {{version}} 사용",
+      "unavailable": "이 빌드에서는 사용할 수 없음"
+    },
+    "notice": {
+      "details": "세부 정보",
+      "installing": "a5-game-context {{version}} 설치 중",
+      "installingDescription": "cocos-agent가 포함된 버전을 npm으로 설치해 모든 터미널과 에이전트가 사용하게 합니다.",
+      "noNpm": "npm을 찾을 수 없습니다",
+      "incompatible": "a5-game-context {{version}}은(는) 이 cocos-agent와 호환되지 않습니다",
+      "noNpmDescription": "cocos-agent는 포함된 a5-game-context {{version}}을(를) 사용합니다. Node.js를 설치하면 터미널과 같은 사본을 함께 씁니다.",
+      "incompatibleDescription": "cocos-agent를 업데이트할 때까지 포함된 {{version}}을(를) 사용합니다.",
+      "ready": "a5-game-context {{version}} 준비 완료",
+      "readyDescription": "터미널, Claude, Codex, cocos-agent가 이제 같은 버전을 사용합니다.",
+      "failed": "a5-game-context를 설치할 수 없습니다"
+    },
+    "title": "Cocos 명령줄 도구",
+    "searchDescription": "모든 터미널과 에이전트가 사용하는 a5-game-context와 cocos-cli로, npm으로 설치됩니다.",
+    "copied": "복사됨",
+    "copyFailed": "클립보드에 복사할 수 없습니다",
+    "action": {
+      "install": "{{version}} 설치",
+      "update": "{{version}}(으)로 업데이트",
+      "repair": "복구",
+      "retry": "다시 시도",
+      "reinstall": "포함된 {{version}} 다시 설치",
+      "openLog": "설치 로그 열기",
+      "copyCommand": "명령 복사",
+      "copyCleanup": "정리 명령 복사"
+    },
+    "commands": "a5-game-context와 cocos-cli",
+    "refresh": "다시 확인",
+    "more": "추가 작업",
+    "manualHint": "명령을 직접 실행한 뒤 \"다시 확인\"을 누르세요.",
+    "commandPath": "명령 경로:",
+    "sdkReady": "Cocos 2.4.13 SDK 등록됨",
+    "sdkMissing": "Cocos 2.4.13 SDK 등록되지 않음",
+    "shadowed": "터미널이 다른 사본을 먼저 찾습니다. npm 전역 사본을 쓰려면 이것을 삭제하세요:",
+    "autoInstall": "cocos-agent 업데이트 후 자동 설치",
+    "autoInstallDescription": "새 버전을 처음 실행할 때 확인하며 업그레이드만 합니다. 끄면 알림만 표시합니다.",
+    "otherCopies": "이 컴퓨터의 다른 사본",
+    "otherCopiesDescription": "PATH에 없어 사용되지 않지만 버전을 헷갈리게 합니다.",
+    "reinstall": {
+      "title": "a5-game-context {{version}}을(를) 다시 설치할까요?",
+      "description": "전역 {{current}}을(를) cocos-agent에 포함된 버전으로 바꿉니다. 더 오래된 버전이어도 마찬가지입니다. 설치된 사본이 손상되었을 때 사용하세요.",
+      "confirm": "다시 설치"
+    }
+  }
+}

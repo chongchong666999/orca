@@ -1,6 +1,7 @@
-import React, { useEffect, useSyncExternalStore } from 'react'
-import { Gamepad2, Square } from 'lucide-react'
+import React, { useEffect, useState, useSyncExternalStore } from 'react'
+import { Gamepad2, Power, Square } from 'lucide-react'
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu'
+import { openCocosStopAllDialog } from './CocosStopAllDialog'
 import { useUiLanguageRevision } from '@/i18n/use-ui-language-revision'
 import { cocosText } from './cocos-text'
 import { useAppStore } from '@/store'
@@ -56,7 +57,7 @@ function CocosEditorMenuItemsForWorkspace({ worktreeId }: { worktreeId: string }
     detection?.kind !== 'cocos' ||
     !isSupportedCreatorVersion(detection.creatorVersion)
   ) {
-    return null
+    return <StopAllCocosServicesItem />
   }
   return (
     <>
@@ -78,6 +79,40 @@ function CocosEditorMenuItemsForWorkspace({ worktreeId }: { worktreeId: string }
           {cocosText('editor.menu.stop', 'Stop Cocos Creator')}
         </DropdownMenuItem>
       ) : null}
+      <StopAllCocosServicesItem />
     </>
+  )
+}
+
+/** Shown while any editor service runs, in every workspace: hands all projects back to Cocos Creator. */
+function StopAllCocosServicesItem(): React.ReactNode {
+  const [running, setRunning] = useState(0)
+  useEffect(() => {
+    let cancelled = false
+    void cocosAgentApi()
+      ?.listServices()
+      .then((services) => {
+        if (!cancelled) {
+          setRunning(services.length)
+        }
+      })
+      .catch(() => undefined)
+    return () => {
+      cancelled = true
+    }
+  }, [])
+  if (running === 0) {
+    return null
+  }
+  return (
+    <DropdownMenuItem variant="create" onSelect={() => openCocosStopAllDialog()}>
+      <Power className="size-4 text-muted-foreground" />
+      <span className="min-w-0 flex-1 truncate">
+        {cocosText('editor.menu.stopAll', 'Stop all Cocos services…')}
+      </span>
+      <span className="shrink-0 text-xs whitespace-nowrap text-muted-foreground">
+        {cocosText('editor.menu.running', '{{count}} running', { count: running })}
+      </span>
+    </DropdownMenuItem>
   )
 }

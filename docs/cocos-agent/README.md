@@ -18,10 +18,11 @@
 
 macOS 无证书内部分发与反复文件授权的根因、打包处理和验收边界见 [权限记录](macos-internal-distribution-2026-11-06.md)。
 
-装好 cocos-agent 即可在任何终端、Claude Code 和 Codex 使用内置的 `a5-game-context` 与 `cocos-cli`，不再单独 npm 安装，版本跟随 cocos-agent。macOS 和 Windows 的做法、决策与 Windows 剩余阻塞见 [命令注册记录](a5-game-context-commands-2026-11-11.md)。
+0.1.3 起，cocos-agent 每个新版本第一次启动时，用 npm 把自带的 `a5-game-context`（含 `cocos-cli`）装成全局唯一的一份，只升不降；终端、Claude Code、Codex 和 cocos-agent 自己都用这一份。设置 ▸ 通用 ▸ Cocos 命令行工具可以查看状态、重试或复制手动命令。做法与决策见 [Creator 预览端口与 npm 安装](creator-preview-port-and-npm-install-2026-11-21.md)；0.1.2 及更早的做法见 [命令注册记录](a5-game-context-commands-2026-11-11.md)（已被取代）。
 
 ## 专项设计与后续范围
 
+- [Creator 预览端口冲突与 a5-game-context 改用 npm 安装（2026-11-21）](creator-preview-port-and-npm-install-2026-11-21.md)：7456 被 orca 预览入口悄悄截走的根因与复现，"停止所有 Cocos 服务"按钮；npm 全局作为唯一安装、只升不降；尚未实现。
 - [Figma 设计稿画布调研（2026-11-17）](figma-canvas-research-2026-11-17.md)：在 Web 编辑器中解析并渲染本地 `.fig`，作为 M1 的参考图输入；包括像素门槛和交付顺序，尚未实现。
 - [对照 Creator 2.4.13 的缺陷与修复清单（2026-11-07）](creator-parity-audit-2026-11-07.md)：依据 REA 恢复资料与当前实现，列出 9 项问题、修复顺序及验收条件，区分源码确认和隔离实测。
 

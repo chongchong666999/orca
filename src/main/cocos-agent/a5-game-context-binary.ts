@@ -19,13 +19,23 @@ async function isExecutable(file: string): Promise<boolean> {
   )
 }
 
-/** The env override, else the packaged launcher; null when neither exists. */
+let globalLauncher: (() => Promise<string | null>) | null = null
+
+/** Set once at startup: the launcher of the npm global copy while it is usable (a5-game-context-toolchain). */
+export function setGlobalA5GameContextLauncher(resolve: (() => Promise<string | null>) | null): void {
+  globalLauncher = resolve
+}
+
+/** The env override, else the npm global copy every terminal uses, else the packaged launcher; null when none exists. */
 export async function resolveA5GameContextBinary(
   env: NodeJS.ProcessEnv = process.env,
   resourcesPath: string | undefined = process.resourcesPath
 ): Promise<string | null> {
+  const override = env[A5_GAME_CONTEXT_BIN_ENV]
+  const global = await (globalLauncher?.() ?? Promise.resolve(null)).catch(() => null)
   const candidates = [
-    env[A5_GAME_CONTEXT_BIN_ENV],
+    override,
+    global,
     resourcesPath ? bundledA5GameContextLauncher(resourcesPath) : undefined
   ]
   for (const candidate of candidates) {
