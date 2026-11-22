@@ -1,7 +1,11 @@
 {
   "version": "5.0.29",
-  "target": "darwin-arm64",
-  "file": "a5-game-context-5.0.29-darwin-arm64.tgz",
-  "sha256": "a2a7cd480c918c363681bf8b867d79c29598c8ede705247b270a0e25ee243127",
-  "source": "Local macOS build of GitNexus fix/devices-preview-port-handoff with the browser Play entry fix"
+  "targets": ["darwin-arm64", "darwin-x64", "win32-x64"],
+  "file": "a5labs-prime-a5-game-context-5.0.29-all-platform-offline-bundled.tgz",
+  "sha256": "e96e870d92e0b7e5b6d80e78a6bdb60e1d9adfee0ad7aec5f8b3314db20f6737",
+  "release": {
+    "repo": "A5Labs-Prime/a5-game-context-server",
+    "tag": "v5.0.29"
+  },
+  "source": "A5Labs-Prime/a5-game-context-server release v5.0.29 all-platform offline bundle; each import keeps only its target's native packages"
 }

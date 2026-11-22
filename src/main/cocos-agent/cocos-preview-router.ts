@@ -28,7 +28,8 @@ export class CocosPreviewRouter {
   private starting: Promise<boolean> | undefined
   private closing: Promise<void> | undefined
   private selected: CocosEditorRecord | null = null
-  private retry: ReturnType<typeof setInterval> | undefined
+  private retryTimer: NodeJS.Timeout | undefined
+  private retryDelayMs = 500
   private readonly clients = new Set<Socket>()
   private warnedBindFailure = false
 
@@ -42,21 +43,43 @@ export class CocosPreviewRouter {
       return
     }
     this.selected = editor
-    if (editor && !this.retry) {
-      this.retry = setInterval(() => {
-        if (!this.closing && !this.listeners.length) {
-          void this.start()
-        }
-      }, 1000)
-      this.retry.unref()
-    } else if (!editor && this.retry) {
-      clearInterval(this.retry)
-      this.retry = undefined
+    this.stopRetry()
+    if (editor && !this.listeners.length) {
+      this.scheduleRetry()
     }
     // Connections retained by Electron must reconnect to the newly selected project.
     for (const client of this.clients) {
       client.destroy()
     }
+  }
+
+  private stopRetry(): void {
+    if (this.retryTimer) {
+      clearTimeout(this.retryTimer)
+      this.retryTimer = undefined
+    }
+    this.retryDelayMs = 500
+  }
+
+  private scheduleRetry(): void {
+    if (this.retryTimer || this.closing || !this.selected || this.listeners.length) {
+      return
+    }
+    this.retryTimer = setTimeout(() => {
+      this.retryTimer = undefined
+      if (this.closing || !this.selected || this.listeners.length) {
+        return
+      }
+      void this.start().then((ready) => {
+        if (!ready && !this.closing && this.selected && !this.listeners.length) {
+          this.retryDelayMs = Math.min(Math.round(this.retryDelayMs * 1.5), 4000)
+          this.scheduleRetry()
+        } else {
+          this.retryDelayMs = 500
+        }
+      })
+    }, this.retryDelayMs)
+    this.retryTimer.unref?.()
   }
 
   remove(editor: CocosEditorRecord): void {
@@ -100,6 +123,7 @@ export class CocosPreviewRouter {
         }
       }
       this.warnedBindFailure = false
+      this.stopRetry()
       return true
     } catch (error) {
       await this.dispose()
@@ -110,6 +134,7 @@ export class CocosPreviewRouter {
           error
         )
       }
+      this.scheduleRetry()
       return false
     }
   }
