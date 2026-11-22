@@ -1,3 +1,15 @@
+import type {
+  CocosEditorFailureCode,
+  CocosEditorOpenResult
+} from '../../shared/cocos-agent/cocos-editor-types'
+
+export function editorOpenFailure(
+  code: CocosEditorFailureCode,
+  message: string
+): CocosEditorOpenResult {
+  return { ok: false, code, message: message.slice(0, 500) }
+}
+
 const LOOPBACK_HOSTS = new Set(['127.0.0.1', 'localhost', '[::1]'])
 
 export type EditorOpenOutput = { url: string; projectRoot: string; reused: boolean }

@@ -3,6 +3,7 @@ import type { CocosEditorRecord } from '../../shared/cocos-agent/cocos-editor-ty
 import { resolveA5GameContextBinary } from './a5-game-context-binary'
 import { CocosEditorService } from './cocos-editor-service'
 import { runCocosEditorProcess } from './cocos-editor-process'
+import { CocosPreviewRouter } from './cocos-preview-router'
 
 const evictionListeners = new Set<(record: CocosEditorRecord) => void>()
 
@@ -15,6 +16,7 @@ export function onCocosEditorEvicted(listener: (record: CocosEditorRecord) => vo
 
 /** The app's editors: the a5-game-context it resolves and the processes that starts. */
 export const cocosEditorService = new CocosEditorService({
+  preview: new CocosPreviewRouter((input, init) => fetch(input, init)),
   onEvicted: (record) => evictionListeners.forEach((listener) => listener(record)),
   resolveBinary: () => resolveA5GameContextBinary(),
   runProcess: (spec) =>

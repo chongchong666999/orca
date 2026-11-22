@@ -12,6 +12,7 @@
       "running_other": "{{count}} running"
     },
     "errors": {
+      "localWorkspace": "Could not resolve the local project for this editor.",
       "reopen": "Could not reopen the Cocos Creator editor",
       "unavailable": "cocos-agent is not available in this window.",
       "open": "Could not open the Cocos Creator editor",

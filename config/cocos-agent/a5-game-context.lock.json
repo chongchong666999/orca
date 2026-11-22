@@ -1,7 +1,7 @@
 {
-  "version": "5.0.22",
+  "version": "5.0.29",
   "target": "darwin-arm64",
-  "file": "a5-game-context-5.0.22-darwin-arm64.tgz",
-  "sha256": "711e0732550be986e27a8ca91aef39bbc1453a54132349f820d36abd4c0bc773",
-  "source": "Local build of GitNexus github/main fcf2ec74b1, npm run build:native && npm run pack:platform -- --target darwin-arm64"
+  "file": "a5-game-context-5.0.29-darwin-arm64.tgz",
+  "sha256": "a2a7cd480c918c363681bf8b867d79c29598c8ede705247b270a0e25ee243127",
+  "source": "Local macOS build of GitNexus fix/devices-preview-port-handoff with the browser Play entry fix"
 }

@@ -1,9 +1,11 @@
 import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
+import { createServer, type Server } from 'node:http'
 import os from 'node:os'
 import path from 'node:path'
 import type { ProcessResult, ProcessSpec } from '@orca/process-host/process-spec'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { CocosEditorService } from './cocos-editor-service'
+import { CocosPreviewRouter } from './cocos-preview-router'
 import { detectCocosProject } from './cocos-project-detection'
 
 function processResult(overrides: Partial<ProcessResult>): ProcessResult {
@@ -29,6 +31,25 @@ function editorFetch(shutdown: () => Promise<Response>): typeof fetch {
   )
 }
 
+async function listenPreview(server: Server, port = 0, host = '127.0.0.1'): Promise<number> {
+  await new Promise<void>((resolve, reject) => {
+    server.once('error', reject)
+    server.listen(port, host, resolve)
+  })
+  const address = server.address()
+  if (!address || typeof address === 'string') {
+    throw new Error('Expected a TCP listener')
+  }
+  return address.port
+}
+
+async function closePreview(server: Server): Promise<void> {
+  await new Promise<void>((resolve) => {
+    server.close(() => resolve())
+    server.closeAllConnections()
+  })
+}
+
 describe('CocosEditorService', () => {
   let projectRoot: string
 
@@ -40,6 +61,121 @@ describe('CocosEditorService', () => {
 
   afterEach(() => {
     rmSync(projectRoot, { recursive: true, force: true })
+  })
+
+  it('keeps the preview origin across project switches and releases it on hand-off', async () => {
+    const secondProject = path.join(projectRoot, 'second')
+    mkdirSync(path.join(secondProject, 'assets'), { recursive: true })
+    writeFileSync(path.join(secondProject, 'project.json'), '{"version":"2.4.13"}')
+    const previews = ['first', 'second'].map((project) =>
+      createServer((req, res) => res.end(`${project} ${req.headers.host}${req.url}`))
+    )
+    const native = createServer((_req, res) => res.end('native Creator'))
+    const entryPort = await listenPreview(native, 0, '0.0.0.0')
+    const fetchEditor: typeof fetch = async (input, init) => {
+      const url = new URL(String(input))
+      if (url.pathname === '/project/devices') {
+        return Response.json({ port: ports[url.port === '40000' ? 0 : 1] })
+      }
+      if (url.pathname === '/editor/lifecycle') {
+        return Response.json({ dirty: false, busy: false })
+      }
+      if (init?.method === 'POST') {
+        return Response.json({ stopping: true })
+      }
+      throw refused()
+    }
+    const preview = new CocosPreviewRouter(fetchEditor, entryPort)
+    const service = new CocosEditorService({
+      preview,
+      resolveBinary: async () => '/opt/a5-game-context',
+      runProcess: async (spec) =>
+        spec.cwd === secondProject
+          ? openOutput(secondProject, true, 'http://127.0.0.1:40001/?token=t2')
+          : openOutput(projectRoot, true),
+      fetch: fetchEditor
+    })
+    const entry = `http://localhost:${entryPort}/preview?scene=lobby`
+    const read = async () => {
+      const response = await fetch(entry, { redirect: 'error' })
+      return response.text()
+    }
+    const ports: number[] = []
+    try {
+      expect(await preview.start()).toBe(false)
+      expect(await read()).toBe('native Creator')
+      for (const server of previews) {
+        ports.push(await listenPreview(server))
+      }
+      expect(await service.open(projectRoot)).toMatchObject({ ok: true })
+      expect(await service.open(secondProject)).toMatchObject({ ok: true })
+      await service.activate(projectRoot)
+      expect(await read()).toBe('native Creator')
+      await closePreview(native)
+      await vi.waitFor(
+        async () => {
+          expect(await read()).toBe(`first localhost:${entryPort}/preview?scene=lobby`)
+        },
+        { timeout: 5000 }
+      )
+      expect(await read()).toBe(`first localhost:${entryPort}/preview?scene=lobby`)
+      await service.activate(secondProject)
+      expect(await read()).toBe(`second localhost:${entryPort}/preview?scene=lobby`)
+      expect(await service.stop(projectRoot, false, {})).toBe(true)
+      expect(await service.stop(secondProject, false, {})).toBe(true)
+      await listenPreview(native, entryPort, '0.0.0.0')
+      expect(await read()).toBe('native Creator')
+      await closePreview(native)
+      expect(await service.open(projectRoot)).toMatchObject({ ok: true })
+      expect(await read()).toBe(`first localhost:${entryPort}/preview?scene=lobby`)
+      await service.activate(projectRoot)
+      expect(await read()).toBe(`first localhost:${entryPort}/preview?scene=lobby`)
+    } finally {
+      await preview.close()
+      await Promise.all([...previews, native].map(closePreview))
+    }
+  })
+
+  it('releases the preview entry when the last editor enters closing state', async () => {
+    const target = createServer((_req, res) => res.end('preview'))
+    const native = createServer((_req, res) => res.end('native Creator'))
+    const targetPort = await listenPreview(target)
+    const entryPort = await listenPreview(native, 0, '0.0.0.0')
+    await closePreview(native)
+    const fetchEditor: typeof fetch = async (input, init) => {
+      const url = new URL(String(input))
+      if (url.pathname === '/project/devices') {
+        return Response.json({ port: targetPort })
+      }
+      if (init?.method === 'POST') {
+        return Response.json({ stopping: true })
+      }
+      return new Response('still settling')
+    }
+    const preview = new CocosPreviewRouter(fetchEditor, entryPort)
+    const service = new CocosEditorService({
+      preview,
+      resolveBinary: async () => '/opt/a5-game-context',
+      runProcess: async () => openOutput(projectRoot, false),
+      fetch: fetchEditor,
+      shutdownSettleMs: 1
+    })
+    try {
+      expect(await service.open(projectRoot)).toMatchObject({ ok: true })
+      const previewResponse = await fetch(`http://localhost:${entryPort}/preview`, {
+        redirect: 'error'
+      })
+      expect(await previewResponse.text()).toBe('preview')
+      expect(await service.stop(projectRoot, false, {})).toBe(false)
+      await listenPreview(native, entryPort, '0.0.0.0')
+      const nativeResponse = await fetch(`http://localhost:${entryPort}/preview`, {
+        redirect: 'error'
+      })
+      expect(await nativeResponse.text()).toBe('native Creator')
+    } finally {
+      await preview.close()
+      await Promise.all([target, native].map(closePreview))
+    }
   })
 
   it('opens through `editor open --project` and stops through the reported editor', async () => {

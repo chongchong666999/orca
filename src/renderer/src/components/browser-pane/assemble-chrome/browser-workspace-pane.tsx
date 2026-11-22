@@ -124,13 +124,12 @@ export default function BrowserPane({
     }
   }, [activeBrowserPageId])
 
-  if (cocosView === 'starting') {
-    return <CocosEditorStartingView />
-  }
-  if (cocosView === 'stopped' || cocosView === 'suspended') {
+  if (cocosView === 'stopped' || cocosView === 'suspended' || cocosView === 'starting') {
     return (
       <CocosEditorSuspendedView
         worktreeId={browserTab.worktreeId}
+        tabId={browserTab.id}
+        starting={cocosView === 'starting'}
         stopped={cocosView === 'stopped'}
       />
     )

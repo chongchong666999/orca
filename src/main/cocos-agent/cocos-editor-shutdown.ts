@@ -1,3 +1,6 @@
+import type { CocosEditorRecord } from '../../shared/cocos-agent/cocos-editor-types'
+import type { CocosEditorServiceDeps } from './cocos-editor-service-deps'
+
 const SHUTDOWN_TIMEOUT_MS = 120_000
 const SHUTDOWN_PROBE_INTERVAL_MS = 100
 
@@ -36,6 +39,35 @@ export class CocosEditorShutdown {
       return posted
     }
     return (await this.waitUntilClosed(new URL(url).origin)) ? 'closed' : 'closing'
+  }
+
+  async requestEditor(
+    record: CocosEditorRecord,
+    shutdownUrl: string,
+    options: {
+      onlyIdle: boolean
+      forQuit: boolean
+      preset?: 'save' | 'discard'
+      prepareClose?: CocosEditorServiceDeps['prepareClose']
+    }
+  ): Promise<'closed' | 'closing' | 'refused' | 'cancelled' | 'keep'> {
+    const url = new URL(shutdownUrl)
+    if (options.onlyIdle) {
+      url.searchParams.set('onlyIdle', '1')
+    } else {
+      const choice = await options.prepareClose?.(record, options.forQuit, options.preset)
+      if (choice === false || (choice?.action === 'keep' && !options.forQuit)) {
+        return 'cancelled'
+      }
+      if (choice?.action === 'keep') {
+        return 'keep'
+      }
+      if (choice) {
+        url.searchParams.set('action', choice.action)
+        url.searchParams.set('revision', choice.revision)
+      }
+    }
+    return this.request(url.toString())
   }
 
   async waitUntilClosed(origin: string): Promise<boolean> {

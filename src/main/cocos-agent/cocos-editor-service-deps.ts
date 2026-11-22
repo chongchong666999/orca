@@ -1,8 +1,10 @@
 import type { ProcessResult, ProcessSpec } from '@orca/process-host/process-spec'
 import type { CocosEditorRecord } from '../../shared/cocos-agent/cocos-editor-types'
 import type { CocosEditorCloseChoice } from './cocos-editor-close'
+import type { CocosPreviewRouter } from './cocos-preview-router'
 
 export type CocosEditorServiceDeps = {
+  preview?: CocosPreviewRouter
   resolveBinary: () => Promise<string | null>
   runProcess: (spec: ProcessSpec) => Promise<ProcessResult>
   fetch: typeof fetch

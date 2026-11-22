@@ -4,27 +4,23 @@ import type { CocosEditorServiceDeps } from './cocos-editor-service-deps'
 export type { CocosEditorServiceDeps } from './cocos-editor-service-deps'
 import type { ProcessResult } from '@orca/process-host/process-spec'
 import type {
-  CocosEditorFailureCode,
   CocosEditorOpenResult,
   CocosEditorRecord
 } from '../../shared/cocos-agent/cocos-editor-types'
 import {
   editorShutdownUrl,
+  editorOpenFailure as failure,
   parseEditorOpenOutput,
   lastLine,
   isSameEditor
 } from './cocos-editor-open-output'
 import { findCocosEditorForWorkspace, resolveCocosProjectRoot } from './cocos-project-detection'
 import { prepareBundledCocosSdk } from './cocos-editor-sdk'
+import { findRunningCocosEditor } from './cocos-editor-running-services'
 
 const MAX_LIVE_EDITORS = 3
 // Why: GitNexus waits up to 100 s for another starter's project lock, then up to 60 s for the editor to come up.
 const OPEN_TIMEOUT_MS = 180_000
-const MAX_FAILURE_MESSAGE_LENGTH = 500
-
-function failure(code: CocosEditorFailureCode, message: string): CocosEditorOpenResult {
-  return { ok: false, code, message: message.slice(0, MAX_FAILURE_MESSAGE_LENGTH) }
-}
 
 /** Opens and stops GitNexus Cocos editors through `a5-game-context editor open`, which owns their processes. */
 export class CocosEditorService {
@@ -33,6 +29,7 @@ export class CocosEditorService {
   private readonly activationOrder = new Map<string, number>()
   private activationSequence = 0
   private activationRequest = 0
+  private activeProjectPath: string | null = null
   /** Editors that acknowledged a stop but still answered when the settle time ran out, by project. */
   private readonly closingEditors = new Map<string, string>()
   private quitting = false
@@ -62,7 +59,7 @@ export class CocosEditorService {
     return this.serialize(async () => {
       const projectRoot = await resolveCocosProjectRoot(projectPath)
       return projectRoot
-        ? this.openEditor(projectRoot, document)
+        ? this.openEditor(projectRoot, document).finally(() => this.releasePreviewIfEmpty())
         : failure('not-cocos-project', `Could not resolve one Cocos project in ${projectPath}`)
     })
   }
@@ -78,7 +75,10 @@ export class CocosEditorService {
   ): Promise<boolean> {
     return this.serialize(async () => {
       const editor = await findCocosEditorForWorkspace(projectPath, this.list())
-      return editor ? this.stopEditor(editor.projectRoot, false, forQuit, handOff) : false
+      this.activationRequest++
+      const stopped = editor && (await this.stopEditor(editor.projectRoot, false, forQuit, handOff))
+      await this.releasePreviewIfEmpty()
+      return stopped === true
     })
   }
 
@@ -86,14 +86,11 @@ export class CocosEditorService {
     return [...this.editors.values()]
   }
 
-  /**
-   * App quit: asks every editor this session started to shut down right away, without queueing behind opens in
-   * flight; an open that finishes afterwards shuts down the editor it started. One that outlives the app anyway (the
-   * open was still starting at exit) exits on GitNexus's own idle timeout, since no page connects to it.
-   */
+  /** Quit bypasses queued opens; opens finishing afterwards shut down their own editor. */
   shutdownForQuit(): void {
     this.quitting = true
     this.activationRequest++
+    void this.deps.preview?.close()
     for (const record of this.editors.values()) {
       const shutdownUrl = record.startedByApp ? editorShutdownUrl(record.url) : null
       if (shutdownUrl) {
@@ -105,88 +102,107 @@ export class CocosEditorService {
   // Why: an open racing a stop would reuse the editor that is shutting down and hand out a dead URL.
   private serialize<T>(operation: () => Promise<T>): Promise<T> {
     const result = this.queue.then(operation)
-    this.queue = result.then(
-      () => undefined,
-      () => undefined
-    )
+    const done = () => undefined
+    this.queue = result.then(done, done)
     return result
   }
 
   async activate(projectPath: string | null): Promise<void> {
     const request = ++this.activationRequest
+    if (this.activeProjectPath !== projectPath) {
+      this.deps.preview?.select(null)
+      this.activeProjectPath = projectPath
+    }
     const editor = projectPath
-      ? await findCocosEditorForWorkspace(projectPath, this.list())
+      ? ((await findCocosEditorForWorkspace(projectPath, this.list())) ??
+        (await findRunningCocosEditor(projectPath, this.deps.fetch)))
       : undefined
     if (request !== this.activationRequest || this.quitting) {
       return
     }
-    // Activation during an open must affect its next eviction decision immediately.
-    if (editor && this.editors.has(editor.projectRoot)) {
-      this.activationOrder.set(editor.projectRoot, ++this.activationSequence)
-      await this.releaseIfExited(editor.projectRoot)
+    if (editor && !this.editors.has(editor.projectRoot)) {
+      this.editors.set(editor.projectRoot, editor)
     }
+    // Activation during an open must affect its next eviction decision immediately.
+    if (
+      !editor ||
+      this.editors.get(editor.projectRoot) !== editor ||
+      this.closingEditors.has(editor.projectRoot)
+    ) {
+      this.deps.preview?.select(null)
+      return
+    }
+    this.activationOrder.set(editor.projectRoot, ++this.activationSequence)
+    this.deps.preview?.select(editor)
+    await this.deps.preview?.start()
+    await this.releaseIfExited(editor)
   }
 
   /** GitNexus stops an editor no page used for 10 minutes; its tab is told so it reopens one instead of a dead address. */
-  private async releaseIfExited(projectRoot: string): Promise<void> {
-    const record = this.editors.get(projectRoot)
-    if (!record || this.closingEditors.has(projectRoot)) {
-      return
-    }
+  private async releaseIfExited(record: CocosEditorRecord): Promise<void> {
     const lifecycle = await readCocosEditorLifecycle(record.url, this.deps.fetch)
-    if (lifecycle === 'gone' && !this.quitting && this.editors.get(projectRoot) === record) {
-      this.forget(record)
+    if (
+      lifecycle === 'gone' &&
+      !this.quitting &&
+      this.editors.get(record.projectRoot) === record &&
+      !this.closingEditors.has(record.projectRoot)
+    ) {
+      this.forget(record, true)
+      await this.serialize(() => this.releasePreviewIfEmpty())
+    }
+  }
+
+  private forget(record: CocosEditorRecord, notify = false): void {
+    this.closingEditors.delete(record.projectRoot)
+    this.editors.delete(record.projectRoot)
+    this.activationOrder.delete(record.projectRoot)
+    this.deps.preview?.remove(record)
+    if (notify) {
       this.deps.onEvicted?.(record)
     }
   }
 
-  private forget(record: CocosEditorRecord): void {
-    this.closingEditors.delete(record.projectRoot)
-    this.editors.delete(record.projectRoot)
-    this.activationOrder.delete(record.projectRoot)
+  private async releasePreviewIfEmpty(): Promise<void> {
+    if (![...this.editors.keys()].some((root) => !this.closingEditors.has(root))) {
+      await this.deps.preview?.close()
+    }
   }
 
   private async makeRoom(): Promise<boolean> {
     if (this.editors.size < MAX_LIVE_EDITORS) {
       return true
     }
-    const candidates = [...this.editors.values()].sort(
-      (a, b) =>
-        (this.activationOrder.get(a.projectRoot) ?? 0) -
-        (this.activationOrder.get(b.projectRoot) ?? 0)
-    )
+    const order = (r: CocosEditorRecord): number => this.activationOrder.get(r.projectRoot) ?? 0
+    const candidates = [...this.editors.values()].sort((a, b) => order(a) - order(b))
     for (const record of candidates) {
       if (this.quitting) {
         return false
       }
       const closingOrigin = this.closingEditors.get(record.projectRoot)
-      if (closingOrigin && (await this.shutdown.waitUntilClosed(closingOrigin))) {
-        this.forget(record)
-        this.deps.onEvicted?.(record)
-        return true
-      }
       if (closingOrigin) {
+        if (await this.shutdown.waitUntilClosed(closingOrigin)) {
+          this.forget(record, true)
+          return true
+        }
         continue
       }
       const activation = this.activationOrder.get(record.projectRoot)
       const lifecycle = await readCocosEditorLifecycle(record.url, this.deps.fetch)
       if (lifecycle === 'gone') {
-        this.forget(record)
+        this.forget(record, true)
+        return true
+      }
+      if (
+        lifecycle !== 'idle' ||
+        !record.startedByApp ||
+        activation !== this.activationOrder.get(record.projectRoot)
+      ) {
+        continue
+      }
+      if (await this.stopEditor(record.projectRoot, true)) {
         this.deps.onEvicted?.(record)
         return true
       }
-      if (lifecycle !== 'idle' || !record.startedByApp) {
-        continue
-      }
-      if (activation !== this.activationOrder.get(record.projectRoot)) {
-        continue
-      }
-      if (!(await this.stopEditor(record.projectRoot, true))) {
-        continue
-      }
-      this.activationOrder.delete(record.projectRoot)
-      this.deps.onEvicted?.(record)
-      return true
     }
     return false
   }
@@ -217,13 +233,11 @@ export class CocosEditorService {
         'All 3 Cocos editors are protected or still stopping. Save changes or stop an idle editor, then try again.'
       )
     }
-    const args = ['editor', 'open', '--project', projectRoot]
-    if (document) {
-      args.push(document)
-    }
+    const args = ['editor', 'open', '--project', projectRoot, ...(document ? [document] : [])]
     let result: ProcessResult
     try {
       await prepareBundledCocosSdk(binary)
+      await this.deps.preview?.start()
       if (this.quitting) {
         return failure('stopping', 'cocos-agent is quitting.')
       }
@@ -254,14 +268,18 @@ export class CocosEditorService {
       return failure('stopping', 'cocos-agent is quitting.')
     }
     const previous = this.editors.get(projectRoot)
-    const startedEarlierByApp =
-      previous !== undefined && previous.startedByApp && isSameEditor(previous.url, output.url)
-    this.editors.set(projectRoot, {
-      projectRoot,
-      url: output.url,
-      startedByApp: startedEarlierByApp || !output.reused
-    })
+    const startedByApp =
+      !output.reused || Boolean(previous?.startedByApp && isSameEditor(previous.url, output.url))
+    const record = { projectRoot, url: output.url, startedByApp }
+    this.editors.set(projectRoot, record)
     this.activationOrder.set(projectRoot, ++this.activationSequence)
+    if (
+      this.editors.size === 1 ||
+      (this.activeProjectPath &&
+        (await findCocosEditorForWorkspace(this.activeProjectPath, [record])))
+    ) {
+      this.deps.preview?.select(record)
+    }
     return { ok: true, url: output.url, projectRoot, reused: output.reused }
   }
 
@@ -277,39 +295,27 @@ export class CocosEditorService {
     }
     const shutdownUrl = editorShutdownUrl(record.url)
     if (shutdownUrl === null) {
-      this.editors.delete(projectRoot)
+      this.forget(record)
       return false
     }
-    const url = new URL(shutdownUrl)
-    if (onlyIdle) {
-      url.searchParams.set('onlyIdle', '1')
-    } else if (this.deps.prepareClose) {
-      const choice = await this.deps.prepareClose(record, forQuit, handOff?.preset)
-      if (choice === false) {
-        return false
-      }
-      if (choice) {
-        if (choice.action === 'keep') {
-          if (!forQuit) {
-            return false
-          }
-          record.startedByApp = false
-          return true
-        }
-        url.searchParams.set('action', choice.action)
-        url.searchParams.set('revision', choice.revision)
-      }
+    const outcome = await this.shutdown.requestEditor(record, shutdownUrl, {
+      onlyIdle,
+      forQuit,
+      preset: handOff?.preset,
+      prepareClose: this.deps.prepareClose
+    })
+    if (outcome === 'keep') {
+      record.startedByApp = false
+      return true
     }
-    const outcome = await this.shutdown.request(url.toString())
     if (outcome === 'closed') {
-      this.editors.delete(projectRoot)
-      this.closingEditors.delete(projectRoot)
+      this.forget(record)
     } else if (outcome === 'closing') {
       this.closingEditors.set(projectRoot, new URL(shutdownUrl).origin)
+      this.deps.preview?.remove(record)
     }
-    if (outcome !== 'closed' && !onlyIdle) {
-      const keep = await this.deps.closeFailed?.(outcome, forQuit)
-      if (forQuit && keep) {
+    if ((outcome === 'refused' || outcome === 'closing') && !onlyIdle) {
+      if ((await this.deps.closeFailed?.(outcome, forQuit)) && forQuit) {
         record.startedByApp = false
         return true
       }

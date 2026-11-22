@@ -27,6 +27,7 @@
       "confirm": "停止全部"
     },
     "errors": {
+      "localWorkspace": "无法找到此编辑器对应的本地项目。",
       "reopen": "无法重新打开 Cocos Creator 编辑器",
       "unavailable": "当前窗口无法使用 cocos-agent。",
       "open": "无法打开 Cocos Creator 编辑器",

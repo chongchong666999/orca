@@ -6,8 +6,21 @@ import type {
   CocosRunningService
 } from '../../shared/cocos-agent/cocos-editor-types'
 import { isJsonRecord } from '../../shared/cocos-agent/cocos-json-record'
-import { readCocosEditorLifecycleState } from './cocos-editor-close'
+import { readCocosEditorLifecycleState } from './cocos-editor-lifecycle'
 import { editorShutdownUrl, isSameEditor } from './cocos-editor-open-output'
+import { readCocosPreviewPort } from './cocos-preview-port'
+import { findCocosEditorForWorkspace } from './cocos-project-detection'
+
+export async function findRunningCocosEditor(
+  projectPath: string,
+  fetchImpl: typeof fetch
+): Promise<CocosEditorRecord | undefined> {
+  const running = await listCocosRunningServices([], fetchImpl)
+  return findCocosEditorForWorkspace(
+    projectPath,
+    running.map((service) => ({ ...service, startedByApp: false }))
+  )
+}
 
 const PROBE_TIMEOUT_MS = 1_500
 
@@ -57,35 +70,6 @@ export async function readRunningEditorNotes(
   return records.filter((record): record is CocosEditorRecord => record !== null)
 }
 
-async function readPreviewPort(
-  pageUrl: string,
-  fetchImpl: typeof globalThis.fetch
-): Promise<number | null> {
-  const shutdown = editorShutdownUrl(pageUrl)
-  if (!shutdown) {
-    return null
-  }
-  const url = new URL(shutdown)
-  url.pathname = '/project/devices'
-  try {
-    const response = await fetchImpl(url.toString(), {
-      redirect: 'error',
-      signal: AbortSignal.timeout(PROBE_TIMEOUT_MS)
-    })
-    if (!response.ok) {
-      await response.body?.cancel().catch(() => undefined)
-      return null
-    }
-    const value: unknown = await response.json()
-    const port = value && typeof value === 'object' && 'port' in value ? value.port : null
-    return typeof port === 'number' && Number.isInteger(port) && port > 0 && port <= 65_535
-      ? port
-      : null
-  } catch {
-    return null
-  }
-}
-
 async function probe(
   record: CocosEditorRecord,
   origin: CocosRunningService['origin'],
@@ -96,7 +80,7 @@ async function probe(
   try {
     const [state, previewPort] = await Promise.all([
       readCocosEditorLifecycleState(record.url, timedFetch),
-      readPreviewPort(record.url, fetchImpl)
+      readCocosPreviewPort(record.url, fetchImpl)
     ])
     return {
       projectRoot: record.projectRoot,

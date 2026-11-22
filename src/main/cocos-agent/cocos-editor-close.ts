@@ -1,8 +1,7 @@
 import { BrowserWindow, dialog, webContents, type MessageBoxOptions } from 'electron'
 import type { CocosEditorRecord } from '../../shared/cocos-agent/cocos-editor-types'
-import { z } from 'zod'
 import { cocosTextMain } from './cocos-text-main'
-import { editorShutdownUrl } from './cocos-editor-open-output'
+import { readCocosEditorLifecycleState } from './cocos-editor-lifecycle'
 
 export type CocosEditorCloseChoice =
   | { action: 'save' | 'discard'; revision: string }
@@ -53,37 +52,6 @@ async function flushPages(pageUrl: string): Promise<void> {
       }
     })
   )
-}
-
-const editorLifecycleState = z.object({
-  closeSupported: z.number().optional(),
-  dirty: z.boolean().optional(),
-  busy: z.boolean().optional(),
-  revision: z.string().optional(),
-  documents: z
-    .array(z.object({ path: z.string().optional(), dirty: z.boolean().optional() }))
-    .optional()
-})
-
-export type CocosEditorLifecycleState = z.infer<typeof editorLifecycleState>
-
-/** The editor's `/editor/lifecycle`: whether it can close and which documents have unsaved changes. */
-export async function readCocosEditorLifecycleState(
-  pageUrl: string,
-  fetchImpl: typeof globalThis.fetch = fetch
-): Promise<CocosEditorLifecycleState> {
-  const shutdown = editorShutdownUrl(pageUrl)
-  if (!shutdown) {
-    throw new Error('Invalid editor address')
-  }
-  const url = new URL(shutdown)
-  url.pathname = '/editor/lifecycle'
-  const response = await fetchImpl(url, { signal: AbortSignal.timeout(3_000), redirect: 'error' })
-  if (!response.ok) {
-    await response.body?.cancel().catch(() => undefined)
-    throw new Error('Could not check unsaved editor changes.')
-  }
-  return editorLifecycleState.parse(await response.json())
 }
 
 /** `preset` answers the unsaved-changes question up front (Stop all Cocos services asked it once for every editor). */
