@@ -9,11 +9,13 @@ import product from '../cocos-agent/desktop-product.json' with { type: 'json' }
 
 const skipTypecheck = process.argv.includes('--skip-typecheck')
 const release = process.argv.includes('--release')
+const archFlagIndex = process.argv.indexOf('--arch')
+const targetArch = archFlagIndex > 0 ? process.argv[archFlagIndex + 1] : process.arch
 const pnpm = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm'
 const appPath =
-  process.arch === 'x64'
+  targetArch === 'x64'
     ? 'dist/mac/cocos-agent-beta.app'
-    : `dist/mac-${process.arch}/cocos-agent-beta.app`
+    : `dist/mac-${targetArch}/cocos-agent-beta.app`
 
 function run(
   args,
@@ -22,14 +24,14 @@ function run(
   execFileSync(pnpm, args, { env, stdio: 'inherit' })
 }
 
-if (process.platform !== 'darwin' || !['arm64', 'x64'].includes(process.arch)) {
+if (process.platform !== 'darwin' || !['arm64', 'x64'].includes(targetArch)) {
   throw new Error('cocos-agent v0.1 builds require a macOS (arm64 or x64) host')
 }
 const signing = prepareInternalSigning()
 
 execFileSync(
   process.execPath,
-  ['config/scripts/import-a5-game-context.mjs', '--target', `darwin-${process.arch}`],
+  ['config/scripts/import-a5-game-context.mjs', '--target', `darwin-${targetArch}`],
   { stdio: 'inherit' }
 )
 run(['run', skipTypecheck ? 'build:desktop:assets' : 'build:desktop'])
@@ -40,7 +42,7 @@ const identity = getLocalBuildIdentity()
 // The dmg and zip are named by cocos-agent's version (cocos-agent-beta-build.mjs); the app's own stays Orca's.
 const beta = createCocosAgentBetaBuild(cocosAgentVersion(), new Date(), identity.commit)
 console.log(
-  `[build:cocos-agent] beta ${beta}, internal version ${identity.version} (${process.arch})`
+  `[build:cocos-agent] beta ${beta}, internal version ${identity.version} (${targetArch})`
 )
 run(
   [
@@ -50,7 +52,7 @@ run(
     'config/electron-builder.cocos-agent.cjs',
     '--mac',
     ...(release ? ['dmg', 'zip'] : ['dir']),
-    `--${process.arch}`
+    `--${targetArch}`
   ],
   {
     ...process.env,
@@ -91,7 +93,7 @@ if (!requirement.toLowerCase().includes(signing.identity.toLowerCase())) {
 console.log(`[build:cocos-agent] privacy identity: ${bundleId}`)
 if (release) {
   for (const ext of ['dmg', 'zip']) {
-    const file = `cocos-agent-beta-${beta}-${process.arch}.${ext}`
+    const file = `cocos-agent-beta-${beta}-${targetArch}.${ext}`
     const output = path.join('dist', file)
     const hash = createHash('sha256').update(readFileSync(output)).digest('hex')
     writeFileSync(`${output}.sha256`, `${hash}  ${file}\n`)

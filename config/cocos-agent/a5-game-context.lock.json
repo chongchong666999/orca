@@ -1,11 +1,11 @@
 {
-  "version": "5.0.29",
+  "version": "5.0.30",
   "targets": ["darwin-arm64", "darwin-x64", "win32-x64"],
-  "file": "a5labs-prime-a5-game-context-5.0.29-all-platform-offline-bundled.tgz",
-  "sha256": "e96e870d92e0b7e5b6d80e78a6bdb60e1d9adfee0ad7aec5f8b3314db20f6737",
+  "file": "a5labs-prime-a5-game-context-5.0.30-all-platform-offline-bundled.tgz",
+  "sha256": "83eee21d04866736e97ac56003333c1a8dde206775e7f2f941e043ead3b25431",
   "release": {
     "repo": "sky-jp_A5labsco/cocos-agent",
-    "tag": "a5-game-context-v5.0.29"
+    "tag": "a5-game-context-v5.0.30"
   },
-  "source": "sky-jp_A5labsco/cocos-agent release a5-game-context-v5.0.29 (mirrored from A5Labs-Prime/a5-game-context-server v5.0.29) all-platform offline bundle; each import keeps only its target's native packages"
+  "source": "sky-jp_A5labsco/cocos-agent release a5-game-context-v5.0.30 (mirrored from A5Labs-Prime/a5-game-context-server v5.0.30) all-platform offline bundle; each import keeps only its target's native packages"
 }
